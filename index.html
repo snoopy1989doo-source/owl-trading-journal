@@ -16,6 +16,7 @@ body{
   font-family:'Press Start 2P',monospace;
   font-size:9px;line-height:1.6;
   padding:8px 8px 72px 8px;overflow-x:hidden;
+  width:100%;
 }
 ::-webkit-scrollbar{width:6px;background:#090B15}
 ::-webkit-scrollbar-thumb{background:#304FFE;border:1px solid #111827}
@@ -29,17 +30,18 @@ body{
 }
 .crt.disabled { display: none; }
 
-/* 👾 MASTER HEADER LINK TO PIXEL STEWARD */
+/* 👾 MASTER HEADER LINK TO PIXEL STEWARD (FIXED RESPONSIVE) */
 .master-header {
   display: flex; justify-content: space-between; align-items: center;
   background: #111827; border: 3px solid #304FFE; padding: 8px; margin-bottom: 12px;
   box-shadow: 0 4px 0px rgba(0, 0, 0, 0.3);
+  width: 100%; max-width: 100%; gap: 6px;
 }
-.master-title { color: #33D6FF; font-size: 8px; }
+.master-title { color: #33D6FF; font-size: 7px; white-space: nowrap; }
 .pixel-steward-link {
   text-decoration: none; color: #52FF6B; border: 2px solid #52FF6B;
-  padding: 4px 6px; font-size: 7px; background: #090B15;
-  font-family: inherit; font-weight: bold;
+  padding: 4px 6px; font-size: 6px; background: #090B15;
+  font-family: inherit; font-weight: bold; white-space: nowrap; flex-shrink: 0;
 }
 .pixel-steward-link:active { transform: translateY(1px); background: #111827; }
 
@@ -271,6 +273,12 @@ input:focus,select:focus{color:#F5F5F5;border-color:#33D6FF;}
 .pie-legend{display:flex;flex-direction:column;gap:4px}
 .pie-legend-item{display:flex;align-items:center;gap:6px;font-size:6px}
 .pie-dot{width:8px;height:8px;border:1px solid #090B15;flex-shrink:0}
+
+/* 🎛️ MULTI-PORTFOLIO BALANCES STYLING */
+.bal-card-item {
+  border: 2px solid #304FFE; background: #090B15; padding: 8px; margin-bottom: 8px;
+  display: flex; justify-content: space-between; align-items: center;
+}
 </style>
 </head>
 <body>
@@ -303,14 +311,36 @@ try {
 } catch (e) { console.error("Cloud Connection Failed:", e); }
 
 const KEY = {
-  TRADES:  'rtj_trades_v2',
-  CFS:     'rtj_cfs_v2',
-  BALANCE: 'rtj_balance_v2',
-  SOUND:   'rtj_sound_v2',
-  CRT:     'rtj_crt_v2'
+  TRADES:   'rtj_trades_v2',
+  CFS:      'rtj_cfs_v2',
+  BALANCES: 'rtj_balances_v3', // 💡 Updated to Multi-Balance Key
+  SOUND:    'rtj_sound_v2',
+  CRT:      'rtj_crt_v2'
 };
 
-function load(key, def) { try { const v=localStorage.getItem(key); return v!==null?JSON.parse(v):def; } catch { return def; } }
+const DEFAULT_BALANCES = {
+  Demo: 10000,
+  LIFE: 1000,
+  RISK: 500,
+  Swingtrade: 2000
+};
+
+function load(key, def) { 
+  try { 
+    const v=localStorage.getItem(key); 
+    if (v === null) return def;
+    // Backward compatibility check for single balance
+    if (key === KEY.BALANCES) {
+      const parsed = JSON.parse(v);
+      if (typeof parsed === 'number') {
+        return { ...DEFAULT_BALANCES, Demo: parsed };
+      }
+      return { ...DEFAULT_BALANCES, ...parsed };
+    }
+    return JSON.parse(v);
+  } catch { return def; } 
+}
+
 function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
 
 function beep(type) {
@@ -434,9 +464,18 @@ function getAccountAge(account) {
   return `${years}Y ${months}M ${days}D`;
 }
 
+// Helper to get dynamically registered account names
+function getAccountList() {
+  const defaultAccs = Object.keys(state.balances);
+  const tradeAccs = state.trades.map(t => t.account || 'Demo');
+  const cfAccs = state.cfs.map(c => c.account || 'Demo');
+  return [...new Set([...defaultAccs, ...tradeAccs, ...cfAccs])].filter(Boolean);
+}
+
 const state = {
   page:     'HOME', inputTab: 'TRADE', logTab:   'TRADE',
-  sound:    load(KEY.SOUND,true), balance:  load(KEY.BALANCE,10000),
+  sound:    load(KEY.SOUND,true), 
+  balances: load(KEY.BALANCES, DEFAULT_BALANCES),
   trades:   load(KEY.TRADES,[]), cfs:      load(KEY.CFS,[]),
   crt:      load(KEY.CRT, true),
   calYear:  new Date().getFullYear(),
@@ -448,8 +487,7 @@ const state = {
   },
   cf: { date:today(), type:'Deposit', amount:'', desc:'', account:'Demo' },
   filter: { symbol:'ALL', status:'ALL', period:{mode:'all'}, account:'ALL' },
-  statsPeriod: { mode:'all', account:'ALL' },
-  editBal: false, tempBal: '',
+  statsPeriod: { mode:'all', account:'ALL' }
 };
 
 function getTodayLosses() { return state.trades.filter(tr=>tr.date===today()&&tr.status==='SL').length; }
@@ -457,8 +495,10 @@ function shouldShowAlert() { return getTodayLosses()>=2; }
 
 function syncToCloud() {
   if (!isCloudActive) return;
+  // Calculate single legacy balance for backward compatibility
+  const legacyBalance = state.balances['Demo'] || 10000;
   firebase.database().ref('retro_trading_journal_data').set({
-    trades: state.trades, cfs: state.cfs, balance: state.balance
+    trades: state.trades, cfs: state.cfs, balance: legacyBalance, balances: state.balances
   });
 }
 
@@ -469,8 +509,12 @@ function initCloudDatabase() {
     if (data) {
       if (data.trades) state.trades = data.trades;
       if (data.cfs) state.cfs = data.cfs;
-      if (data.balance) state.balance = data.balance;
-      save(KEY.TRADES, state.trades); save(KEY.CFS, state.cfs); save(KEY.BALANCE, state.balance);
+      if (data.balances) {
+        state.balances = { ...DEFAULT_BALANCES, ...data.balances };
+      } else if (data.balance) {
+        state.balances = { ...DEFAULT_BALANCES, Demo: parseFloat(data.balance) || 10000 };
+      }
+      save(KEY.TRADES, state.trades); save(KEY.CFS, state.cfs); save(KEY.BALANCES, state.balances);
       syncCrtView(); render();
     } else { syncToCloud(); }
   });
@@ -500,17 +544,28 @@ function buildApp() {
   `;
 }
 
-// 🕹️ REPLACEMENT OF FAKE GAME CURRENCIES WITH USEFUL TRADING MASTER INFO
+// 🕹️ REPLACEMENT OF FAKE GAME CURRENCIES WITH USEFUL TRADING MASTER INFO (STRICTLY ISOLATED)
 function buildHubHeader() {
   const allTrades = state.trades;
   const p = state.statsPeriod;
-  let filtered = filterByPeriod(allTrades, p);
-  if (p.account && p.account !== 'ALL') filtered = filtered.filter(t => (t.account || 'Demo') === p.account);
+  const targetAcc = p.account || 'ALL';
+
+  let filteredTrades = filterByPeriod(allTrades, p);
+  if (targetAcc !== 'ALL') filteredTrades = filteredTrades.filter(t => (t.account || 'Demo') === targetAcc);
+
+  // Compute Account Start Balance
+  let accStartBal = 0;
+  if (targetAcc === 'ALL') {
+    accStartBal = Object.values(state.balances).reduce((a, b) => a + (Number(b) || 0), 0);
+  } else {
+    accStartBal = Number(state.balances[targetAcc]) || 0;
+  }
+
+  const netDeposit = state.cfs.filter(c => targetAcc === 'ALL' || (c.account || 'Demo') === targetAcc)
+                              .reduce((s, cf) => s + (cf.type === 'Deposit' ? cf.amount : -cf.amount), 0);
+  const equity = accStartBal + netDeposit + filteredTrades.reduce((s, t) => s + t.pnl, 0);
   
-  const netDeposit = state.cfs.filter(c => p.account === 'ALL' || (c.account || 'Demo') === p.account).reduce((s, cf) => s + (cf.type === 'Deposit' ? cf.amount : -cf.amount), 0);
-  const equity = state.balance + netDeposit + filtered.reduce((s, t) => s + t.pnl, 0);
-  
-  const todayTrades = allTrades.filter(tr => tr.date === today());
+  const todayTrades = allTrades.filter(tr => tr.date === today() && (targetAcc === 'ALL' || (tr.account || 'Demo') === targetAcc));
   const todayPnl = todayTrades.reduce((s, tr) => s + tr.pnl, 0);
   
   return `
@@ -519,7 +574,7 @@ function buildHubHeader() {
       <div class="rpg-hub-info">
         <div class="rpg-hub-row">
           <span class="rpg-hub-label">ACC:</span>
-          <span class="rpg-hub-value" style="color:#33D6FF;">${p.account}</span>
+          <span class="rpg-hub-value" style="color:#33D6FF;">${targetAcc}</span>
         </div>
         <div class="rpg-hub-row">
           <span class="rpg-hub-label">NET EQUITY:</span>
@@ -544,7 +599,7 @@ function buildAlert() {
     </div>`;
 }
 
-// 🕹️ UPDATED BOTTOM NAVIGATION (REMOVED SET TAB)
+// 🕹️ UPDATED BOTTOM NAVIGATION
 function buildNav() {
   const pages=[
     {id:'HOME',icon:'📝',label:'INPUT'},
@@ -573,13 +628,11 @@ function buildHome() {
 
 function buildTradeForm() {
   const f=state.f; const symbols=['GOLD','XAUUSD','BTCUSD','US30','NAS100','EURUSD','GBPUSD','Other']; const tfs=['1M','5M','15M','30M','1H','4H','D1','W1'];
+  const accList = getAccountList();
   return `
     <label>🎯 พอร์ตบัญชีปลายทาง</label>
     <select id="f-account">
-      <option value="Demo" ${f.account==='Demo'?'selected':''}>Demo (พอร์ตซ้อม/ประวัติเก่า)</option>
-      <option value="LIFE" ${f.account==='LIFE'?'selected':''}>LIFE (พอร์ตจริงหลัก)</option>
-      <option value="RISK" ${f.account==='RISK'?'selected':''}>RISK (พอร์ตเสี่ยงสูง)</option>
-      <option value="Swingtrade" ${f.account==='Swingtrade'?'selected':''}>Swingtrade (พอร์ตรันเทรนด์)</option>
+      ${accList.map(a => `<option value="${a}" ${f.account===a?'selected':''}>${a}</option>`).join('')}
     </select>
     <label>วันที่ทำรายการ</label><input type="date" id="f-date" value="${f.date}">
     <label>คู่เงิน / สินทรัพย์</label><select id="f-symbol">${symbols.map(s=>`<option ${f.symbol===s?'selected':''}>${s}</option>`).join('')}</select>
@@ -611,13 +664,11 @@ function buildTradeForm() {
 
 function buildCFForm() {
   const cf=state.cf;
+  const accList = getAccountList();
   return `
     <label>🎯 คลังบัญชีเงินสด</label>
     <select id="cf-account">
-      <option value="Demo" ${cf.account==='Demo'?'selected':''}>Demo (พอร์ตซ้อม)</option>
-      <option value="LIFE" ${cf.account==='LIFE'?'selected':''}>LIFE (พอร์ตจริงหลัก)</option>
-      <option value="RISK" ${cf.account==='RISK'?'selected':''}>RISK (พอร์ตเสี่ยงสูง)</option>
-      <option value="Swingtrade" ${cf.account==='Swingtrade'?'selected':''}>Swingtrade (พอร์ตรันเทรนด์)</option>
+      ${accList.map(a => `<option value="${a}" ${cf.account===a?'selected':''}>${a}</option>`).join('')}
     </select>
     <label>วันที่</label><input type="date" id="cf-date" value="${cf.date}">
     <label>ประเภทกระแสเงินสด</label>
@@ -665,15 +716,14 @@ function buildTradeLog(symbols) {
   if (state.filter.symbol!=='ALL') filtered=filtered.filter(t=>t.symbol===state.filter.symbol);
   if (state.filter.status!=='ALL') filtered=filtered.filter(t=>t.status===state.filter.status);
   if (state.filter.account!=='ALL') filtered=filtered.filter(t=>(t.account||'Demo')===state.filter.account);
+  
+  const accList = getAccountList();
   return `
     ${buildPeriodFilter('log',p)}
     <div class="filter-row" style="gap:4px;margin-bottom:10px">
       <select id="flt-account" style="flex:1;font-size:7px">
         <option value="ALL" ${state.filter.account==='ALL'?'selected':''}>ALL ACCOUNTS</option>
-        <option value="Demo" ${state.filter.account==='Demo'?'selected':''}>Demo</option>
-        <option value="LIFE" ${state.filter.account==='LIFE'?'selected':''}>LIFE</option>
-        <option value="RISK" ${state.filter.account==='RISK'?'selected':''}>RISK</option>
-        <option value="Swingtrade" ${state.filter.account==='Swingtrade'?'selected':''}>Swingtrade</option>
+        ${accList.map(a => `<option value="${a}" ${state.filter.account===a?'selected':''}>${a}</option>`).join('')}
       </select>
       <select id="flt-symbol" style="flex:1;font-size:7px">${symbols.map(s=>`<option ${state.filter.symbol===s?'selected':''}>${s}</option>`).join('')}</select>
       <select id="flt-status" style="flex:1;font-size:7px">${['ALL','TP','SL','BE'].map(s=>`<option ${state.filter.status===s?'selected':''}>${s}</option>`).join('')}</select>
@@ -807,21 +857,33 @@ function buildWeekdayBreakdown(filteredTrades) {
     </div>`;
 }
 
-// ─── 📊 RESTRUCTURED STATS VIEW PORT ────────────────────────────────────────
+// ─── 📊 RESTRUCTURED STATS VIEW PORT (ISOLATED MULTI-PORTFOLIO) ───────────────────
 function buildStats() {
-  const p=state.statsPeriod; const allTrades=state.trades; 
+  const p=state.statsPeriod; const targetAcc = p.account || 'ALL'; const allTrades=state.trades; 
   let filtered=filterByPeriod(allTrades,p);
-  if (p.account && p.account !== 'ALL') filtered = filtered.filter(t => (t.account || 'Demo') === p.account);
+  if (targetAcc !== 'ALL') filtered = filtered.filter(t => (t.account || 'Demo') === targetAcc);
 
-  const todayTrades=allTrades.filter(tr=>tr.date===today()); const todayPnl=todayTrades.reduce((s,tr)=>s+tr.pnl,0); 
-  const st=computeStats(filtered,state.balance); 
-  const netDeposit=state.cfs.filter(c=>p.account==='ALL'||(c.account||'Demo') === p.account).reduce((s,cf)=>s+(cf.type==='Deposit'?cf.amount:-cf.amount),0); 
-  const equity=state.balance+netDeposit+filtered.reduce((s,t)=>s+t.pnl,0);
+  // Calculate isolated Starting Balance
+  let accStartBal = 0;
+  if (targetAcc === 'ALL') {
+    accStartBal = Object.values(state.balances).reduce((a, b) => a + (Number(b) || 0), 0);
+  } else {
+    accStartBal = Number(state.balances[targetAcc]) || 0;
+  }
+
+  const todayTrades=allTrades.filter(tr=>tr.date===today() && (targetAcc === 'ALL' || (tr.account || 'Demo') === targetAcc));
+  const todayPnl=todayTrades.reduce((s,tr)=>s+tr.pnl,0); 
+  const st=computeStats(filtered, accStartBal); 
+  
+  const netDeposit=state.cfs.filter(c=>targetAcc==='ALL'||(c.account||'Demo') === targetAcc)
+                            .reduce((s,cf)=>s+(cf.type==='Deposit'?cf.amount:-cf.amount),0); 
+  const equity=accStartBal + netDeposit + filtered.reduce((s,t)=>s+t.pnl,0);
 
   const pfClass = parseFloat(st.profitFactor) >= 1.5 ? 'glow-green' : (parseFloat(st.profitFactor) < 1.0 ? 'glow-red' : 'txt-white');
   const expClass = parseFloat(st.expectancy) >= 0 ? 'glow-green' : 'glow-red';
   
-  const accAgeStr = getAccountAge(p.account);
+  const accAgeStr = getAccountAge(targetAcc);
+  const accList = getAccountList();
 
   return `
     <div class="card">
@@ -832,16 +894,13 @@ function buildStats() {
       <div class="filter-row" style="margin-bottom:12px">
         <select id="stats-account" style="width:100%;font-size:7px">
           <option value="ALL" ${p.account==='ALL'?'selected':''}>ALL ACCOUNTS CONSOLIDATED</option>
-          <option value="Demo" ${p.account==='Demo'?'selected':''}>Demo (ประวัติซ้อมเก่า)</option>
-          <option value="LIFE" ${p.account==='LIFE'?'selected':''}>LIFE (พอร์ตจริงหลัก)</option>
-          <option value="RISK" ${p.account==='RISK'?'selected':''}>RISK (พอร์ตเสี่ยงสูง)</option>
-          <option value="Swingtrade" ${p.account==='Swingtrade'?'selected':''}>Swingtrade (พอร์ตรันเทรนด์)</option>
+          ${accList.map(a => `<option value="${a}" ${p.account===a?'selected':''}>${a}</option>`).join('')}
         </select>
       </div>
 
       <!-- 📦 BLOCK 1: ACCOUNT PROFILE -->
       <div class="stats-block">
-        <div class="stats-block-title">📦 BLOCK 1: ACCOUNT PROFILE DATABASE</div>
+        <div class="stats-block-title">📦 BLOCK 1: ACCOUNT PROFILE DATABASE [ ${targetAcc} ]</div>
         <div class="inner-grid">
           <div class="stat-subbox"><div class="stat-sublabel">NET EQUITY CAPITAL</div><div class="stat-subvalue glow-cyan">$${fmt(equity,2)}</div></div>
           <div class="stat-subbox"><div class="stat-sublabel">ACCOUNT AGE HISTORY</div><div class="stat-subvalue glow-yellow" style="font-size:7px">${accAgeStr}</div></div>
@@ -887,7 +946,7 @@ function buildStats() {
           <div class="psych-cost-row"><span>FEAR COST:</span><span class="glow-red">-$${fmt(st.fearCost,2)}</span></div>
         </div>
 
-        ${buildCalendarSection(allTrades, p.account)}
+        ${buildCalendarSection(allTrades, targetAcc)}
       </div>
 
       <!-- SYSTEM GRAPHICAL CHARTS FOOTER -->
@@ -946,7 +1005,9 @@ function buildPieChart(st) {
     </div>`;
 }
 
+// 🎛️ SETTINGS VIEW (DYNAMIC MULTI-PORTFOLIO STARTING BALANCES)
 function buildSettings() {
+  const accList = getAccountList();
   return `
     <div class="card">
       <div class="card-title"><span>⚙ CONFIG OPERATIONS</span></div>
@@ -958,10 +1019,30 @@ function buildSettings() {
         <span>เสียง 8-bit ALERTS</span>
         <div class="toggle" id="toggle-sound"><div class="toggle-knob ${state.sound?'on':'off'}"></div></div>
       </div>
-      <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:8px">
-        <span style="color:#FFD54F;font-size:8px">Starting Balance ($)</span>
-        ${state.editBal?`<div style="display:flex;gap:6px;width:100%"><input type="number" id="bal-input" value="${state.tempBal}" style="margin-bottom:0;flex:1"><button class="btn" id="bal-save-btn">OK</button></div>`:`<div style="display:flex;gap:8px;align-items:center"><span class="glow-cyan" style="font-size:11px">$${fmt(state.balance,0)}</span><button class="btn" id="btn-edit-bal" style="margin-top:0;font-size:7px">EDIT CAP</button></div>`}
+      
+      <div class="divider"></div>
+      <div style="color:#FFD54F;font-size:7px;margin-bottom:8px">💰 STARTING BALANCES BY PORTFOLIO ($)</div>
+      <div id="balances-list-container">
+        ${accList.map(a => `
+          <div class="bal-card-item">
+            <span style="color:#33D6FF;">${a}</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <input type="number" class="bal-input-node" data-acc="${a}" value="${state.balances[a] !== undefined ? state.balances[a] : 0}" style="width:90px; margin-bottom:0; font-size:7px;">
+              ${!['Demo','LIFE','RISK','Swingtrade'].includes(a) ? `<button class="del-btn" data-del-acc="${a}">✕</button>` : ''}
+            </div>
+          </div>
+        `).join('')}
       </div>
+      <button class="btn btn-green" id="btn-save-all-bal" style="margin-bottom:8px">💾 SAVE ALL BALANCES</button>
+      
+      <div style="margin-top:10px;">
+        <label>➕ สร้างบัญชีพอร์ตใหม่ (DYNAMIC ACCOUNT)</label>
+        <div style="display:flex; gap:4px;">
+          <input type="text" id="new-acc-name" placeholder="เช่น Scalping, Fund1" style="margin-bottom:0; flex:1;">
+          <button class="btn" id="btn-add-acc" style="margin-top:0; width:70px;">ADD</button>
+        </div>
+      </div>
+
       <div class="divider"></div>
       <div style="color:#FFD54F;font-size:7px;margin-bottom:8px">💾 DATA DISK MANAGEMENT</div>
       <button class="btn btn-green" id="btn-backup" style="margin-bottom:8px">▼ BACKUP CORE DATA</button>
@@ -1015,7 +1096,7 @@ function attachEvents() {
     const cf=state.cf; if(!cf.amount||parseFloat(cf.amount)<=0){ alert('ระบุจำนวนเงินสดเป็นตัวเลขด้วย!'); return; }
     state.cfs.push({id:uid(),date:cf.date,type:cf.type,amount:parseFloat(cf.amount),desc:cf.desc,account:cf.account});
     save(KEY.CFS, state.cfs); syncToCloud(); beep('win');
-    state.cf={date:today(),type:'Deposit',amount:'',desc:'',account:'Demo'}; render();
+    state.cf={date:today(),type:'Deposit',amount:'',desc:'',account:cf.account}; render();
   });
 
   document.querySelectorAll('[data-del-trade]').forEach(el=>{ el.addEventListener('click',()=>{ if(!confirm('ยืนยันลบประวัติไม้เทรดนี้ถาวร?')) return; state.trades=state.trades.filter(t=>t.id!==el.dataset.delTrade); save(KEY.TRADES, state.trades); syncToCloud(); render(); }); });
@@ -1024,18 +1105,59 @@ function attachEvents() {
   const tog=document.getElementById('toggle-sound'); if(tog) tog.addEventListener('click',()=>{ state.sound=!state.sound; save(KEY.SOUND,state.sound); render(); });
   const togCrt=document.getElementById('toggle-crt'); if(togCrt) togCrt.addEventListener('click',()=>{ state.crt=!state.crt; save(KEY.CRT, state.crt); render(); });
 
-  const btnEditBal=document.getElementById('btn-edit-bal'); if(btnEditBal) btnEditBal.addEventListener('click',()=>{ state.editBal=true; state.tempBal=state.balance; render(); });
-  
-  const btnSaveBal=document.getElementById('bal-save-btn');
-  if(btnSaveBal) btnSaveBal.addEventListener('click',()=>{
-    const v=parseFloat(state.tempBal); if(!isNaN(v)&&v>=0){ state.balance=v; save(KEY.BALANCE,v); syncToCloud(); } state.editBal=false; render();
+  // 🎛️ DYNAMIC MULTI-BALANCE EVENT HANDLERS
+  const btnSaveAllBal = document.getElementById('btn-save-all-bal');
+  if (btnSaveAllBal) {
+    btnSaveAllBal.addEventListener('click', () => {
+      document.querySelectorAll('.bal-input-node').forEach(input => {
+        const acc = input.dataset.acc;
+        const val = parseFloat(input.value);
+        if (acc && !isNaN(val) && val >= 0) {
+          state.balances[acc] = val;
+        }
+      });
+      save(KEY.BALANCES, state.balances);
+      syncToCloud();
+      beep('win');
+      alert('✅ อัปเดตทุนเริ่มต้นทุกพอร์ตสำเร็จ!');
+      render();
+    });
+  }
+
+  const btnAddAcc = document.getElementById('btn-add-acc');
+  if (btnAddAcc) {
+    btnAddAcc.addEventListener('click', () => {
+      const nameInput = document.getElementById('new-acc-name');
+      const newName = nameInput ? nameInput.value.trim() : '';
+      if (!newName) { alert('กรุณาระบุชื่อพอร์ตใหม่'); return; }
+      if (state.balances[newName] !== undefined) { alert('มีพอร์ตชื่อนี้ในระบบแล้ว'); return; }
+      
+      state.balances[newName] = 0;
+      save(KEY.BALANCES, state.balances);
+      syncToCloud();
+      beep('win');
+      render();
+    });
+  }
+
+  document.querySelectorAll('[data-del-acc]').forEach(el => {
+    el.addEventListener('click', () => {
+      const acc = el.dataset.delAcc;
+      if (!acc) return;
+      if (confirm(`ยืนยันลบพอร์ต ${acc} จากตัวเลือกตั้งค่า?`)) {
+        delete state.balances[acc];
+        save(KEY.BALANCES, state.balances);
+        syncToCloud();
+        render();
+      }
+    });
   });
-  
+
   const btnClear=document.getElementById('btn-clear-trades'); if(btnClear) btnClear.addEventListener('click',()=>{ if(!confirm('⚠️ คำเตือนขั้นเด็ดขาด: ต้องการลบประวัติการเทรดทั้งหมดออกจากระบบจริงหรือไม่?')) return; state.trades=[]; save(KEY.TRADES,[]); syncToCloud(); render(); });
 
   const btnBackup=document.getElementById('btn-backup');
   if(btnBackup) btnBackup.addEventListener('click',()=>{
-    const data={ version:7, exportedAt:new Date().toISOString(), balance:state.balance, trades:state.trades, cfs:state.cfs };
+    const data={ version:8, exportedAt:new Date().toISOString(), balances:state.balances, trades:state.trades, cfs:state.cfs };
     const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob);
     const a=document.createElement('a'); a.href=url; a.download=`rtj-arcade-v3.7-backup-${today()}.json`; a.click(); URL.revokeObjectURL(url); beep('win');
   });
@@ -1051,7 +1173,12 @@ function attachEvents() {
         if (Array.isArray(data)) { importedTrades = data; }
         else if (data && Array.isArray(data.trades)) {
           importedTrades = data.trades; importedCfs = data.cfs || [];
-          if (data.balance) { state.balance = parseFloat(data.balance) || state.balance; save(KEY.BALANCE, state.balance); }
+          if (data.balances) {
+            state.balances = { ...DEFAULT_BALANCES, ...data.balances };
+          } else if (data.balance) {
+            state.balances = { ...DEFAULT_BALANCES, Demo: parseFloat(data.balance) || 10000 };
+          }
+          save(KEY.BALANCES, state.balances);
         } else { alert('โครงสร้างข้อมูลดิสก์ไม่ถูกต้อง!'); return; }
         if(!confirm(`พบฐานข้อมูลเทรด ${importedTrades.length} ไม้\nยืนยันนำเข้าเพื่อเขียนทับระบบปัจจุบันและซิงก์คลาวด์?`)) return;
         state.trades = importedTrades; save(KEY.TRADES, state.trades);

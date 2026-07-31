@@ -1000,6 +1000,452 @@ function buildPieChart(st) {
             <span style="color:#F5F5F5">${l.label}</span>
             <span style="color:#33D6FF">${l.pct} <span style="color:#FFD54F">(${total>0?(l.pct/total*100).toFixed(0):0}%)</span></span>
           </div>`).join('')}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>RETRO TRADER JOURNAL - V.3.7 STATION</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<!-- ฝัง Firebase Compatibility SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+<style>
+/* ─── PREMIUM RETRO 8-BIT RPG TRADING STATION THEME ─────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:#090B15;color:#F5F5F5;
+  font-family:'Press Start 2P',monospace;
+  font-size:9px;line-height:1.6;
+  padding:8px 8px 72px 8px;overflow-x:hidden;
+  width:100%;
+}
+::-webkit-scrollbar{width:6px;background:#090B15}
+::-webkit-scrollbar-thumb{background:#304FFE;border:1px solid #111827}
+
+/* 📺 CRT MONITOR COMPACT LAYER EFFECT */
+.crt{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:linear-gradient(rgba(0,0,0,0)50%,rgba(255,255,255,.015)50%);
+  background-size:100% 4px;
+  pointer-events:none;z-index:9999;
+}
+.crt.disabled { display: none; }
+
+/* 👾 MASTER HEADER LINK TO PIXEL STEWARD (FIXED RESPONSIVE) */
+.master-header {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #111827; border: 3px solid #304FFE; padding: 8px; margin-bottom: 12px;
+  box-shadow: 0 4px 0px rgba(0, 0, 0, 0.3);
+  width: 100%; max-width: 100%; gap: 6px;
+}
+.master-title { color: #33D6FF; font-size: 7px; white-space: nowrap; }
+.pixel-steward-link {
+  text-decoration: none; color: #52FF6B; border: 2px solid #52FF6B;
+  padding: 4px 6px; font-size: 6px; background: #090B15;
+  font-family: inherit; font-weight: bold; white-space: nowrap; flex-shrink: 0;
+}
+.pixel-steward-link:active { transform: translateY(1px); background: #111827; }
+
+/* 🎮 COMPACT RPG HEADER HUB */
+.rpg-hub-header {
+  background: #111827;
+  border: 3px solid #304FFE;
+  padding: 8px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 0px rgba(0, 0, 0, 0.3);
+}
+.rpg-avatar-box {
+  width: 32px; height: 32px;
+  background: #090B15;
+  border: 2px solid #304FFE;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.rpg-hub-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.rpg-hub-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.rpg-hub-label { color: #FFD54F; font-size: 6px; }
+.rpg-hub-value { color: #F5F5F5; font-size: 7px; }
+.rpg-setting-trigger {
+  background: #090B15; border: 2px solid #304FFE;
+  color: #33D6FF; padding: 6px; cursor: pointer;
+  font-family: inherit; font-size: 10px; display: flex; align-items: center; justify-content: center;
+}
+.rpg-setting-trigger:active { transform: translateY(1px); background: #111827; }
+
+/* Authentic Pixel RPG Windows */
+.card{
+  border: 3px solid #304FFE; background: #111827;
+  padding: 12px; margin-bottom: 12px;
+  box-shadow: 0 4px 0px rgba(0, 0, 0, 0.3);
+}
+.card-title{
+  background: #304FFE;
+  color: #F5F5F5; padding: 6px 8px;
+  margin: -12px -12px 12px;
+  font-size: 8px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 3px solid #304FFE;
+}
+
+/* Alert Red Warning Window */
+.alert-banner{
+  border: 3px solid #FF4E63; background: #240F14;
+  padding: 10px; margin-bottom: 12px;
+  text-align: center;
+  box-shadow: 0 4px 0px rgba(0, 0, 0, 0.3);
+}
+.alert-title{
+  color: #FF4E63; font-size: 9px;
+  animation: blink .8s infinite;
+  margin-bottom: 4px;
+}
+.alert-sub{ color: #FF9800; font-size: 7px; line-height: 1.4; }
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* 🕹️ CLASSIC RPG MENU TABS */
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tab{
+  flex:1;padding:8px 4px;text-align:center;
+  border:2px solid #304FFE;background:#090B15;
+  cursor:pointer;font-size:8px;font-family:inherit;
+  color:#33D6FF;
+}
+.tab.active{
+  background:#304FFE;color:#F5F5F5;
+  font-weight:bold;
+}
+label{display:block;color:#FFD54F;font-size:7px;margin-bottom:4px;text-transform:uppercase;}
+input,select{
+  width:100%;padding:8px;margin-bottom:10px;
+  background:#090B15;color:#52FF6B;
+  border:2px solid #304FFE;
+  font-family:'Press Start 2P',monospace;font-size:8px;
+  outline:none;border-radius:0;
+}
+input:focus,select:focus{color:#F5F5F5;border-color:#33D6FF;}
+
+.btn{
+  width:100%;padding:10px;margin-top:4px;
+  border:2px solid #33D6FF;background:#090B15;
+  color:#33D6FF;font-family:inherit;font-size:8px;
+  cursor:pointer;text-align:center;
+}
+.btn:active{transform:translateY(1px);background:#111827;}
+.btn-green{border-color:#52FF6B;background:#090B15;color:#52FF6B}
+.btn-green:active{background:#111827}
+.btn-red{border-color:#FF4E63;background:#090B15;color:#FF4E63}
+.btn-red:active{background:#111827}
+
+.status-row, .psych-row{display:flex;gap:6px;margin-bottom:10px}
+.status-btn, .psych-btn{
+  flex:1;padding:8px 0;text-align:center;
+  border:2px solid #304FFE;background:#090B15;
+  font-family:inherit;font-size:7px;cursor:pointer;color:#F5F5F5;
+}
+.status-btn.tp{border-color:#52FF6B;color:#52FF6B}
+.status-btn.sl{border-color:#FF4E63;color:#FF4E63}
+.status-btn.be{border-color:#FFD54F;color:#FFD54F}
+.status-btn.active-tp{background:#52FF6B;border-color:#52FF6B;color:#090B15;font-weight:bold;}
+.status-btn.active-sl{background:#FF4E63;border-color:#FF4E63;color:#F5F5F5;font-weight:bold;}
+.status-btn.active-be{background:#FFD54F;border-color:#FFD54F;color:#090B15;font-weight:bold;}
+
+.psych-btn{font-size:7px;color:#33D6FF;border-color:#304FFE;}
+.psych-btn.checked{background:#33D6FF;border-color:#33D6FF;color:#090B15;font-weight:bold;}
+
+/* ⚡ PIXEL QUANT STATUS COLOR PALETTE */
+.glow-green { color:#52FF6B; }
+.glow-red { color:#FF4E63; }
+.glow-cyan { color:#33D6FF; }
+.glow-yellow { color:#FFD54F; }
+.txt-white { color:#F5F5F5; }
+
+.trade-item{
+  border:2px solid #304FFE;background:#090B15;
+  padding:8px;margin-bottom:8px;
+}
+.trade-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.trade-symbol{color:#33D6FF;font-size:8px}
+.trade-row{display:flex;justify-content:space-between;margin-bottom:3px;font-size:7px}
+.trade-label{color:#FFD54F}
+.trade-value{color:#F5F5F5}
+.badge{padding:2px 4px;font-size:6px;display:inline-block;border:1px solid;}
+.badge-tp{border-color:#52FF6B;color:#52FF6B;background:rgba(82,255,107,0.1)}
+.badge-sl{border-color:#FF4E63;color:#FF4E63;background:rgba(255,78,99,0.1)}
+.badge-be{border-color:#FFD54F;color:#FFD54F;background:rgba(255,213,79,0.1)}
+
+.divider{border-top:2px dashed #304FFE;margin:12px 0}
+
+/* 🔋 PIXEL LIFE BAR (WIN RATE HP STATUS) */
+.hp-bar-wrap {
+  border: 2px solid #304FFE; background: #090B15;
+  height: 10px; position: relative; margin-top: 4px;
+}
+.hp-bar-fill {
+  background: #52FF6B;
+  height: 100%; transition: width 0.15s;
+}
+
+/* 🏢 4 STRATEGIC SNES WINDOW BLOCKS */
+.stats-block {
+  border: 2px solid #304FFE; background: #090B15;
+  padding: 10px; margin-bottom: 12px;
+}
+.stats-block-title {
+  font-size: 7px; color: #FFD54F; margin-bottom: 8px;
+  border-bottom: 2px solid #304FFE; padding-bottom: 4px;
+}
+.inner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.stat-subbox { border: 1px solid #304FFE; background: #111827; padding: 6px; text-align: center; }
+.stat-sublabel { color: #33D6FF; font-size: 6px; margin-bottom: 4px; }
+.stat-subvalue { font-size: 10px; font-weight: bold; }
+
+/* 📊 BLOCK 3: WEEKDAY GRID MATRIX */
+.weekday-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-top: 4px; text-align: center; }
+.weekday-node { border: 1px solid #304FFE; background: #111827; padding: 4px 1px; min-height: 42px; display: flex; flex-direction: column; justify-content: space-between; }
+.weekday-lbl { font-size: 5px; color: #FFD54F; }
+.weekday-val { font-size: 5px; font-weight: bold; }
+
+/* 📅 TRADING CALENDAR SYSTEM UI */
+.cal-box {
+  border: 1px solid #304FFE; background: #111827; padding: 6px; margin-top: 8px;
+}
+.cal-header-layout { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.cal-grid-mesh { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; }
+.cal-weekday { color: #33D6FF; font-size: 5px; padding-bottom: 3px; border-bottom: 1px solid #304FFE; }
+.cal-day-node {
+  min-height: 38px; padding: 2px; display: flex; flex-direction: column;
+  justify-content: space-between; font-size: 5px; border: 1px solid #090B15;
+}
+.cal-day-idx { text-align: left; color: #FFD54F; font-size: 5px; }
+.cal-day-pnl { font-weight: bold; font-size: 5px; }
+.cal-day-count { color: #33D6FF; font-size: 4px; text-align: right; }
+
+/* Calendar Special State Highlight Marks */
+.skin-cal-today { border: 1px dashed #33D6FF !important; background: #1a233d !important; }
+.skin-cal-today .cal-day-idx { color: #33D6FF !important; font-weight: bold; }
+
+.skin-cal-win { background: rgba(82,255,107,0.1) !important; border: 1px solid #52FF6B !important; color: #52FF6B !important; }
+.skin-cal-win .cal-day-idx, .skin-cal-win .cal-day-count { color: #52FF6B !important; }
+.skin-cal-loss { background: rgba(255,78,99,0.1) !important; border: 1px solid #FF4E63 !important; color: #FF4E63 !important; }
+.skin-cal-loss .cal-day-idx, .skin-cal-loss .cal-day-count { color: #FF4E63 !important; }
+.skin-cal-blank { background: #090B15; color: #111827; opacity: 0.2; }
+.skin-cal-neutral { background: #090B15; border: 1px solid #304FFE; }
+
+/* Block 4: Psychology Warning Panel */
+.psych-cost-box { background: #240F14; border: 2px solid #FF4E63; padding: 8px; }
+.psych-cost-row { display: flex; justify-content: space-between; font-size: 7px; margin-bottom: 4px; color: #FF4E63; }
+
+.cf-item{ border:2px solid #304FFE; background:#090B15; padding:8px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
+.cf-deposit{color:#52FF6B;}
+.cf-withdraw{color:#FF4E63;}
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed #304FFE;}
+
+.toggle{width:36px;height:18px;border:2px solid #304FFE;background:#090B15;cursor:pointer;position:relative;display:flex;align-items:center;}
+.toggle-knob{width:12px;height:12px;background:#FF4E63;position:absolute;transition:left .1s;}
+.toggle-knob.on{left:18px;background:#52FF6B;}
+.toggle-knob.off{left:2px;background:#FF4E63;}
+.empty{color:#304FFE;text-align:center;padding:16px;font-size:7px}
+
+/* 🕹️ AUTHENTIC RPG BOTTOM NAVIGATION BAR */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#111827;border-top:3px solid #304FFE;display:flex;z-index:100;height:48px;}
+.nav-btn{flex:1;padding:6px 2px;text-align:center;border:none;background:transparent;font-family:inherit;font-size:7px;color:#F5F5F5;cursor:pointer;display:flex;flex-direction:column;justify-content:center;align-items:center;}
+.nav-btn.active{color:#33D6FF;background:#090B15;border-top:2px solid #33D6FF;}
+.nav-btn:active { transform: translateY(1px); }
+.nav-icon{font-size:11px;display:block;margin-bottom:2px}
+.page-wrap{padding-bottom:12px}
+.del-btn{background:#090B15;border:1px solid #FF4E63;color:#FF4E63;padding:3px 6px;font-family:inherit;font-size:6px;cursor:pointer;}
+.del-btn:active{background:#240F14;}
+.filter-bar{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+.filter-row{display:flex;gap:4px}
+.filter-row select,.filter-row input{margin-bottom:0;font-size:7px}
+.pie-wrap{display:flex;align-items:center;gap:12px;margin:8px 0}
+.pie-legend{display:flex;flex-direction:column;gap:4px}
+.pie-legend-item{display:flex;align-items:center;gap:6px;font-size:6px}
+.pie-dot{width:8px;height:8px;border:1px solid #090B15;flex-shrink:0}
+
+/* 🎛️ MULTI-PORTFOLIO BALANCES STYLING */
+.bal-card-item {
+  border: 2px solid #304FFE; background: #090B15; padding: 8px; margin-bottom: 8px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+</style>
+</head>
+<body>
+<div id="crt-layer" class="crt"></div>
+
+<!-- 👾 MASTER HEADER LINK TO PIXEL STEWARD -->
+<div class="master-header">
+  <span class="master-title">🕹️ ARCADE STATION V.3.7</span>
+  <a href="https://snoopy1989doo-source.github.io/Pixel-Stewart/" class="pixel-steward-link" target="_blank" rel="noopener noreferrer">► PIXEL STEWARD</a>
+</div>
+<div id="app"></div>
+
+<script>
+// 📡 SYNC CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyD-FLJd2vKaFX-2F8kzE87inrmGEH5pyzY",
+  authDomain: "pixel-steward-db.firebaseapp.com",
+  databaseURL: "https://pixel-steward-db-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "pixel-steward-db",
+  storageBucket: "pixel-steward-db.firebasestorage.app",
+  messagingSenderId: "36576321084",
+  appId: "1:36576321084:web:315c61237093e616e06d39"
+};
+
+let isCloudActive = false;
+try {
+  firebase.initializeApp(firebaseConfig);
+  isCloudActive = true;
+} catch (e) { console.error("Cloud Connection Failed:", e); }
+
+const KEY = {
+  TRADES:   'rtj_trades_v2',
+  CFS:      'rtj_cfs_v2',
+  BALANCES: 'rtj_balances_v3',
+  SOUND:    'rtj_sound_v2',
+  CRT:      'rtj_crt_v2'
+};
+
+const DEFAULT_BALANCES = {
+  Demo: 10000,
+  LIFE: 1000,
+  RISK: 500,
+  Swingtrade: 2000
+};
+
+function load(key, def) { 
+  try { 
+    const v=localStorage.getItem(key); 
+    if (v === null || v === 'undefined') return def;
+    if (key === KEY.BALANCES) {
+      const parsed = JSON.parse(v);
+      if (typeof parsed === 'number') {
+        return { ...DEFAULT_BALANCES, Demo: parsed };
+      }
+      return { ...DEFAULT_BALANCES, ...parsed };
+    }
+    return JSON.parse(v);
+  } catch { return def; } 
+}
+
+function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
+
+function beep(type) {
+  if (!state || !state.sound) return;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    const ctx=new AC(), osc=ctx.createOscillator(), g=ctx.createGain(); osc.connect(g); g.connect(ctx.destination);
+    if (type==='win') {
+      osc.type='square'; osc.frequency.setValueAtTime(523,ctx.currentTime); osc.frequency.setValueAtTime(659,ctx.currentTime+.09);
+      g.gain.setValueAtTime(.07,ctx.currentTime); g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.3);
+      osc.start(); osc.stop(ctx.currentTime+.3);
+    } else if (type==='lose') {
+      osc.type='sawtooth'; osc.frequency.setValueAtTime(220,ctx.currentTime); osc.frequency.linearRampToValueAtTime(100,ctx.currentTime+.5);
+      g.gain.setValueAtTime(.08,ctx.currentTime); g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.5);
+      osc.start(); osc.stop(ctx.currentTime+.5);
+    } else if (type==='alert') {
+      osc.type='sawtooth'; osc.frequency.setValueAtTime(400,ctx.currentTime); osc.frequency.linearRampToValueAtTime(800,ctx.currentTime+.2); osc.frequency.linearRampToValueAtTime(400,ctx.currentTime+.4);
+      g.gain.setValueAtTime(.1,ctx.currentTime); g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.4);
+      osc.start(); osc.stop(ctx.currentTime+.4);
+    } else {
+      osc.type='triangle'; osc.frequency.setValueAtTime(600,ctx.currentTime); g.gain.setValueAtTime(.04,ctx.currentTime); g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.06);
+      osc.start(); osc.stop(ctx.currentTime+.06);
+    }
+  } catch {}
+}
+
+function today() { return new Date().toISOString().split('T')[0]; }
+function fmt(n,d=2) { return Number(n||0).toFixed(d); }
+function fmtDate(s) { if (!s) return ''; const [y,m,d]=s.split('-'); return `${d}/${m}/${y.slice(2)}`; }
+function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+
+function weekStart(dateStr) { const d=new Date(dateStr); const day=d.getDay(); const diff=day===0?-6:1-day; d.setDate(d.getDate()+diff); return d.toISOString().split('T')[0]; }
+function weekEnd(dateStr) { const ws=weekStart(dateStr); const d=new Date(ws); d.setDate(d.getDate()+6); return d.toISOString().split('T')[0]; }
+function monthStart(dateStr) { return dateStr.slice(0,7)+'-01'; }
+function monthEnd(dateStr) { const [y,m]=dateStr.split('-'); const last=new Date(+y, +m, 0); return `${y}-${m}-${String(last.getDate()).padStart(2,'0')}`; }
+
+function filterByPeriod(trades, period) {
+  const safeTrades = Array.isArray(trades) ? trades : [];
+  const safePeriod = period || { mode: 'all' };
+  if (!safePeriod || safePeriod.mode==='all') return safeTrades;
+  const t=today();
+  if (safePeriod.mode==='daily') { return safeTrades.filter(tr=>tr && tr.date===(safePeriod.date||t)); }
+  if (safePeriod.mode==='weekly') { return safeTrades.filter(tr=>tr && tr.date>=weekStart(t)&&tr.date<=weekEnd(t)); }
+  if (safePeriod.mode==='monthly') { return safeTrades.filter(tr=>tr && tr.date>=monthStart(t)&&tr.date<=monthEnd(t)); }
+  if (safePeriod.mode==='custom') { return safeTrades.filter(tr=>tr && tr.date>=(safePeriod.from||'')&&tr.date<=(safePeriod.to||'9999-12-31')); }
+  return safeTrades;
+}
+
+// ─── 📊 ADVANCED STATS CALCULATION ENGINE ──────────────────────────────────
+function computeStats(trades, startBal) {
+  const safeTrades = Array.isArray(trades) ? trades : [];
+  const total=safeTrades.length;
+  const wins=safeTrades.filter(t=>t && t.status==='TP').length;
+  const loses=safeTrades.filter(t=>t && t.status==='SL').length;
+  const bes=safeTrades.filter(t=>t && t.status==='BE').length;
+  const wr=total>0?(wins/total*100).toFixed(1):0;
+  const netPnl=safeTrades.reduce((s,t)=>s+(Number(t.pnl)||0),0);
+
+  function calcRR(t) {
+    if (!t) return null;
+    const entryExitDist = Math.abs((Number(t.entry)||0) - (Number(t.exit)||0)); 
+    const entrySLDist = Math.abs((Number(t.entry)||0) - (Number(t.sl)||0));
+    if (entryExitDist === 0 || entrySLDist === 0 || (Number(t.lot)||0) === 0) return null;
+    const pipVal = Math.abs(Number(t.pnl)||0) / (entryExitDist * Number(t.lot));
+    const riskUSD = entrySLDist * Number(t.lot) * pipVal; 
+    const rewardUSD = Math.abs(Number(t.pnl)||0);
+    return riskUSD > 0 ? rewardUSD / riskUSD : null;
+  }
+
+  const rrs = safeTrades.map(calcRR).filter(r=>r!==null&&r>0);
+  const winRRs = safeTrades.filter(t=>t && t.status==='TP').map(calcRR).filter(r=>r!==null&&r>0);
+  const loseRRs= safeTrades.filter(t=>t && t.status==='SL').map(calcRR).filter(r=>r!==null&&r>0);
+  const avgRR = rrs.length>0 ? (rrs.reduce((a,b)=>a+b,0)/rrs.length).toFixed(2)+'R' : '-';
+  const highWinRR= winRRs.length>0 ? Math.max(...winRRs).toFixed(2)+'R' : '-';
+  const highLoseRR=loseRRs.length>0? Math.max(...loseRRs).toFixed(2)+'R': '-';
+
+  const grossProfit = safeTrades.filter(t=>t && Number(t.pnl) > 0).reduce((s,t)=>s+Number(t.pnl), 0);
+  const grossLoss = Math.abs(safeTrades.filter(t=>t && Number(t.pnl) < 0).reduce((s,t)=>s+Number(t.pnl), 0));
+  const profitFactor = grossLoss > 0 ? (grossProfit / grossLoss).toFixed(2) : (grossProfit > 0 ? '∞' : '0.00');
+  const expectancy = total > 0 ? (netPnl / total).toFixed(2) : '0.00';
+
+  const lossTrades = safeTrades.filter(t=>t && Number(t.pnl) < 0);
+  const greedCost = Math.abs(lossTrades.filter(t=>t.psychology && t.psychology.greed).reduce((s,t)=>s+Number(t.pnl), 0));
+  const fearCost = Math.abs(lossTrades.filter(t=>t.psychology && t.psychology.fear).reduce((s,t)=>s+Number(t.pnl), 0));
+
+  let maxWinStreak = 0, maxLossStreak = 0;
+  let currentWinStreak = 0, currentLossStreak = 0;
+  
+  const streakTrades = safeTrades.filter(t => t && (t.status === 'TP' || t.status === 'SL'));
+  for (let t of streakTrades) {
+    if (t.status === 'TP') {
+      currentWinStreak++; currentLossStreak = 0;
+      if (currentWinStreak > maxWinStreak) maxWinStreak = currentWinStreak;
+    } else if (t.status === 'SL') {
+      currentLossStreak++; currentWinStreak = 0;
+      if (currentLossStreak > maxLossStreak) maxLossStreak = currentLossStreak;
+    }
+  }
+
+  return {total,wins,loses,bes,wr,netPnl,avgRR,highWinRR,highLoseRR,profitFactor,expectancy,greedCost,fearCost,maxWinStreak,maxLossStreak};
+}
+
+// 🕒 AUTOMATIC ACCOUNT AGE CALCULATOR
+function getAccountAge(account) {
+  const allDate
       </div>
     </div>`;
 }
@@ -1102,84 +1548,7 @@ function attachEvents() {
   document.querySelectorAll('[data-del-cf]').forEach(el=>{ el.addEventListener('click',()=>{ if(!confirm('ลบรายการกระแสเงินสดนี้?')) return; state.cfs=state.cfs.filter(c=>c.id!==el.dataset.delCf); save(KEY.CFS, state.cfs); syncToCloud(); render(); }); });
   
   const tog=document.getElementById('toggle-sound'); if(tog) tog.addEventListener('click',()=>{ state.sound=!state.sound; save(KEY.SOUND,state.sound); render(); });
-  const togCrt=document.getElementById('toggle-crt'); if(togCrt) togCrt.addEventListener('click',()=>{ state.crt=!state.crt; save(KEY.CRT, state.crt); render(); });
-
-  // 🎛️ DYNAMIC MULTI-BALANCE EVENT HANDLERS
-  const btnSaveAllBal = document.getElementById('btn-save-all-bal');
-  if (btnSaveAllBal) {
-    btnSaveAllBal.addEventListener('click', () => {
-      document.querySelectorAll('.bal-input-node').forEach(input => {
-        const acc = input.dataset.acc;
-        const val = parseFloat(input.value);
-        if (acc && !isNaN(val) && val >= 0) {
-          state.balances[acc] = val;
-        }
-      });
-      save(KEY.BALANCES, state.balances);
-      syncToCloud();
-      beep('win');
-      alert('✅ อัปเดตทุนเริ่มต้นทุกพอร์ตสำเร็จ!');
-      render();
-    });
-  }
-
-  const btnAddAcc = document.getElementById('btn-add-acc');
-  if (btnAddAcc) {
-    btnAddAcc.addEventListener('click', () => {
-      const nameInput = document.getElementById('new-acc-name');
-      const newName = nameInput ? nameInput.value.trim() : '';
-      if (!newName) { alert('กรุณาระบุชื่อพอร์ตใหม่'); return; }
-      if (state.balances[newName] !== undefined) { alert('มีพอร์ตชื่อนี้ในระบบแล้ว'); return; }
-      
-      state.balances[newName] = 0;
-      save(KEY.BALANCES, state.balances);
-      syncToCloud();
-      beep('win');
-      render();
-    });
-  }
-
-  document.querySelectorAll('[data-del-acc]').forEach(el => {
-    el.addEventListener('click', () => {
-      const acc = el.dataset.delAcc;
-      if (!acc) return;
-      if (confirm(`ยืนยันลบพอร์ต ${acc} จากตัวเลือกตั้งค่า?`)) {
-        delete state.balances[acc];
-        save(KEY.BALANCES, state.balances);
-        syncToCloud();
-        render();
-      }
-    });
-  });
-
-  const btnClear=document.getElementById('btn-clear-trades'); if(btnClear) btnClear.addEventListener('click',()=>{ if(!confirm('⚠️ คำเตือนขั้นเด็ดขาด: ต้องการลบประวัติการเทรดทั้งหมดออกจากระบบจริงหรือไม่?')) return; state.trades=[]; save(KEY.TRADES,[]); syncToCloud(); render(); });
-
-  const btnBackup=document.getElementById('btn-backup');
-  if(btnBackup) btnBackup.addEventListener('click',()=>{
-    const data={ version:8, exportedAt:new Date().toISOString(), balances:state.balances, trades:state.trades, cfs:state.cfs };
-    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob);
-    const a=document.createElement('a'); a.href=url; a.download=`rtj-arcade-v3.7-backup-${today()}.json`; a.click(); URL.revokeObjectURL(url); beep('win');
-  });
-
-  const btnImportTrigger=document.getElementById('btn-import-trigger'); if(btnImportTrigger) btnImportTrigger.addEventListener('click',()=>{ document.getElementById('btn-import')?.click(); });
-
-  const importInput=document.getElementById('btn-import');
-  if(importInput) importInput.addEventListener('change',e=>{
-    const file=e.target.files[0]; if(!file) return; const reader=new FileReader();
-    reader.onload=ev=>{
-      try {
-        const data=JSON.parse(ev.target.result); let importedTrades = []; let importedCfs = [];
-        if (Array.isArray(data)) { importedTrades = data; }
-        else if (data && Array.isArray(data.trades)) {
-          importedTrades = data.trades; importedCfs = data.cfs || [];
-          if (data.balances) {
-            state.balances = { ...DEFAULT_BALANCES, ...data.balances };
-          } else if (data.balance) {
-            state.balances = { ...DEFAULT_BALANCES, Demo: parseFloat(data.balance) || 10000 };
-          }
-          save(KEY.BALANCES, state.balances);
-        } else { alert('โครงสร้างข้อมูลดิสก์ไม่ถูกต้อง!'); return; }
-        if(!confirm(`พบฐานข้อมูลเทรด ${importedTrades.length} ไม้\nยืนยันนำเข้าเพื่อเขียนทับระบบปัจจุบันและซิงก์คลาวด์?`)) return;
+นำเข้าเพื่อเขียนทับระบบปัจจุบันและซิงก์คลาวด์?`)) return;
         state.trades = importedTrades; save(KEY.TRADES, state.trades);
         state.cfs = importedCfs; save(KEY.CFS, state.cfs);
         syncToCloud(); beep('win'); render();

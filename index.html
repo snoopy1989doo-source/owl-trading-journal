@@ -2,8 +2,8 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>RETRO TRADER JOURNAL - V.3.7 STATION</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>RETRO TRADER JOURNAL - V.3.8 STATION</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <!-- ฝัง Firebase Compatibility SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -30,7 +30,7 @@ body{
 }
 .crt.disabled { display: none; }
 
-/* 👾 MASTER HEADER LINK TO PIXEL STEWARD (FIXED RESPONSIVE) */
+/* 👾 MASTER HEADER LINK TO PIXEL STEWARD */
 .master-header {
   display: flex; justify-content: space-between; align-items: center;
   background: #111827; border: 3px solid #304FFE; padding: 8px; margin-bottom: 12px;
@@ -40,8 +40,9 @@ body{
 .master-title { color: #33D6FF; font-size: 7px; white-space: nowrap; }
 .pixel-steward-link {
   text-decoration: none; color: #52FF6B; border: 2px solid #52FF6B;
-  padding: 4px 6px; font-size: 6px; background: #090B15;
+  padding: 6px 10px; font-size: 6.5px; background: #090B15;
   font-family: inherit; font-weight: bold; white-space: nowrap; flex-shrink: 0;
+  min-height: 36px; display: flex; align-items: center; justify-content: center;
 }
 .pixel-steward-link:active { transform: translateY(1px); background: #111827; }
 
@@ -57,11 +58,11 @@ body{
   box-shadow: 0 4px 0px rgba(0, 0, 0, 0.3);
 }
 .rpg-avatar-box {
-  width: 32px; height: 32px;
+  width: 36px; height: 36px;
   background: #090B15;
   border: 2px solid #304FFE;
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px; flex-shrink: 0;
+  font-size: 18px; flex-shrink: 0; cursor: pointer;
 }
 .rpg-hub-info {
   flex: 1;
@@ -78,8 +79,8 @@ body{
 .rpg-hub-value { color: #F5F5F5; font-size: 7px; }
 .rpg-setting-trigger {
   background: #090B15; border: 2px solid #304FFE;
-  color: #33D6FF; padding: 6px; cursor: pointer;
-  font-family: inherit; font-size: 10px; display: flex; align-items: center; justify-content: center;
+  color: #33D6FF; min-width: 44px; min-height: 44px; padding: 6px; cursor: pointer;
+  font-family: inherit; font-size: 12px; display: flex; align-items: center; justify-content: center;
 }
 .rpg-setting-trigger:active { transform: translateY(1px); background: #111827; }
 
@@ -116,10 +117,10 @@ body{
 /* 🕹️ CLASSIC RPG MENU TABS */
 .tabs{display:flex;gap:6px;margin-bottom:12px}
 .tab{
-  flex:1;padding:8px 4px;text-align:center;
+  flex:1;padding:10px 4px;text-align:center;
   border:2px solid #304FFE;background:#090B15;
   cursor:pointer;font-size:8px;font-family:inherit;
-  color:#33D6FF;
+  color:#33D6FF;min-height:40px;display:flex;align-items:center;justify-content:center;
 }
 .tab.active{
   background:#304FFE;color:#F5F5F5;
@@ -127,19 +128,19 @@ body{
 }
 label{display:block;color:#FFD54F;font-size:7px;margin-bottom:4px;text-transform:uppercase;}
 input,select{
-  width:100%;padding:8px;margin-bottom:10px;
+  width:100%;padding:10px;margin-bottom:10px;
   background:#090B15;color:#52FF6B;
   border:2px solid #304FFE;
   font-family:'Press Start 2P',monospace;font-size:8px;
-  outline:none;border-radius:0;
+  outline:none;border-radius:0;min-height:40px;
 }
 input:focus,select:focus{color:#F5F5F5;border-color:#33D6FF;}
 
 .btn{
-  width:100%;padding:10px;margin-top:4px;
+  width:100%;padding:12px;margin-top:4px;
   border:2px solid #33D6FF;background:#090B15;
   color:#33D6FF;font-family:inherit;font-size:8px;
-  cursor:pointer;text-align:center;
+  cursor:pointer;text-align:center;min-height:44px;display:flex;align-items:center;justify-content:center;
 }
 .btn:active{transform:translateY(1px);background:#111827;}
 .btn-green{border-color:#52FF6B;background:#090B15;color:#52FF6B}
@@ -149,9 +150,9 @@ input:focus,select:focus{color:#F5F5F5;border-color:#33D6FF;}
 
 .status-row, .psych-row{display:flex;gap:6px;margin-bottom:10px}
 .status-btn, .psych-btn{
-  flex:1;padding:8px 0;text-align:center;
+  flex:1;padding:10px 0;text-align:center;
   border:2px solid #304FFE;background:#090B15;
-  font-family:inherit;font-size:7px;cursor:pointer;color:#F5F5F5;
+  font-family:inherit;font-size:7px;cursor:pointer;color:#F5F5F5;min-height:44px;
 }
 .status-btn.tp{border-color:#52FF6B;color:#52FF6B}
 .status-btn.sl{border-color:#FF4E63;color:#FF4E63}
@@ -172,7 +173,7 @@ input:focus,select:focus{color:#F5F5F5;border-color:#33D6FF;}
 
 .trade-item{
   border:2px solid #304FFE;background:#090B15;
-  padding:8px;margin-bottom:8px;
+  padding:10px;margin-bottom:8px;
 }
 .trade-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
 .trade-symbol{color:#33D6FF;font-size:8px}
@@ -189,7 +190,7 @@ input:focus,select:focus{color:#F5F5F5;border-color:#33D6FF;}
 /* 🔋 PIXEL LIFE BAR (WIN RATE HP STATUS) */
 .hp-bar-wrap {
   border: 2px solid #304FFE; background: #090B15;
-  height: 10px; position: relative; margin-top: 4px;
+  height: 12px; position: relative; margin-top: 4px;
 }
 .hp-bar-fill {
   background: #52FF6B;
@@ -246,26 +247,33 @@ input:focus,select:focus{color:#F5F5F5;border-color:#33D6FF;}
 .psych-cost-box { background: #240F14; border: 2px solid #FF4E63; padding: 8px; }
 .psych-cost-row { display: flex; justify-content: space-between; font-size: 7px; margin-bottom: 4px; color: #FF4E63; }
 
-.cf-item{ border:2px solid #304FFE; background:#090B15; padding:8px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
+.cf-item{ border:2px solid #304FFE; background:#090B15; padding:10px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
 .cf-deposit{color:#52FF6B;}
 .cf-withdraw{color:#FF4E63;}
-.setting-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed #304FFE;}
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed #304FFE;}
 
-.toggle{width:36px;height:18px;border:2px solid #304FFE;background:#090B15;cursor:pointer;position:relative;display:flex;align-items:center;}
-.toggle-knob{width:12px;height:12px;background:#FF4E63;position:absolute;transition:left .1s;}
-.toggle-knob.on{left:18px;background:#52FF6B;}
+.toggle{width:44px;height:22px;border:2px solid #304FFE;background:#090B15;cursor:pointer;position:relative;display:flex;align-items:center;}
+.toggle-knob{width:14px;height:14px;background:#FF4E63;position:absolute;transition:left .1s;}
+.toggle-knob.on{left:22px;background:#52FF6B;}
 .toggle-knob.off{left:2px;background:#FF4E63;}
 .empty{color:#304FFE;text-align:center;padding:16px;font-size:7px}
 
 /* 🕹️ AUTHENTIC RPG BOTTOM NAVIGATION BAR */
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#111827;border-top:3px solid #304FFE;display:flex;z-index:100;height:48px;}
-.nav-btn{flex:1;padding:6px 2px;text-align:center;border:none;background:transparent;font-family:inherit;font-size:7px;color:#F5F5F5;cursor:pointer;display:flex;flex-direction:column;justify-content:center;align-items:center;}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#111827;border-top:3px solid #304FFE;display:flex;z-index:100;height:52px;}
+.nav-btn{flex:1;padding:6px 2px;text-align:center;border:none;background:transparent;font-family:inherit;font-size:7px;color:#F5F5F5;cursor:pointer;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:48px;}
 .nav-btn.active{color:#33D6FF;background:#090B15;border-top:2px solid #33D6FF;}
 .nav-btn:active { transform: translateY(1px); }
-.nav-icon{font-size:11px;display:block;margin-bottom:2px}
+.nav-icon{font-size:12px;display:block;margin-bottom:2px}
 .page-wrap{padding-bottom:12px}
-.del-btn{background:#090B15;border:1px solid #FF4E63;color:#FF4E63;padding:3px 6px;font-family:inherit;font-size:6px;cursor:pointer;}
+
+/* 🛠️ FIX: TOUCH TARGET ACCESSIBILITY & INLINE EDITING BUTTONS */
+.del-btn{
+  background:#090B15;border:1px solid #FF4E63;color:#FF4E63;
+  padding:8px 12px;font-family:inherit;font-size:7px;cursor:pointer;
+  min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;
+}
 .del-btn:active{background:#240F14;}
+
 .filter-bar{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
 .filter-row{display:flex;gap:4px}
 .filter-row select,.filter-row input{margin-bottom:0;font-size:7px}
@@ -276,7 +284,7 @@ input:focus,select:focus{color:#F5F5F5;border-color:#33D6FF;}
 
 /* 🎛️ MULTI-PORTFOLIO BALANCES STYLING */
 .bal-card-item {
-  border: 2px solid #304FFE; background: #090B15; padding: 8px; margin-bottom: 8px;
+  border: 2px solid #304FFE; background: #090B15; padding: 10px; margin-bottom: 8px;
   display: flex; justify-content: space-between; align-items: center;
 }
 </style>
@@ -286,11 +294,10 @@ input:focus,select:focus{color:#F5F5F5;border-color:#33D6FF;}
 
 <!-- 👾 MASTER HEADER LINK TO PIXEL STEWARD -->
 <div class="master-header">
-  <span class="master-title">🕹️ ARCADE STATION V.3.7</span>
+  <span class="master-title">🕹️ ARCADE STATION V.3.8</span>
   <a href="https://snoopy1989doo-source.github.io/Pixel-Stewart/" class="pixel-steward-link" target="_blank" rel="noopener noreferrer">► PIXEL STEWARD</a>
 </div>
 <div id="app"></div>
-
 <script>
 // 📡 SYNC CONFIG
 const firebaseConfig = {
@@ -310,11 +317,12 @@ try {
 } catch (e) { console.error("Cloud Connection Failed:", e); }
 
 const KEY = {
-  TRADES:   'rtj_trades_v2',
-  CFS:      'rtj_cfs_v2',
-  BALANCES: 'rtj_balances_v3', // 💡 Updated to Multi-Balance Key
-  SOUND:    'rtj_sound_v2',
-  CRT:      'rtj_crt_v2'
+  TRADES:       'rtj_trades_v2',
+  CFS:          'rtj_cfs_v2',
+  BALANCES:     'rtj_balances_v3',
+  SOUND:        'rtj_sound_v2',
+  CRT:          'rtj_crt_v2',
+  LAST_ACCOUNT: 'rtj_last_account_v1' /* 🛠️ FIX: Persistent Account Storage Key */
 };
 
 const DEFAULT_BALANCES = {
@@ -327,8 +335,7 @@ const DEFAULT_BALANCES = {
 function load(key, def) { 
   try { 
     const v=localStorage.getItem(key); 
-    if (v === null) return def;
-    // Backward compatibility check for single balance
+    if (v === null || v === 'undefined') return def;
     if (key === KEY.BALANCES) {
       const parsed = JSON.parse(v);
       if (typeof parsed === 'number') {
@@ -343,7 +350,7 @@ function load(key, def) {
 function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
 
 function beep(type) {
-  if (!state.sound) return;
+  if (!state || !state.sound) return;
   try {
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
     const ctx=new AC(), osc=ctx.createOscillator(), g=ctx.createGain(); osc.connect(g); g.connect(ctx.destination);
@@ -367,7 +374,7 @@ function beep(type) {
 }
 
 function today() { return new Date().toISOString().split('T')[0]; }
-function fmt(n,d=2) { return Number(n).toFixed(d); }
+function fmt(n,d=2) { return Number(n||0).toFixed(d); }
 function fmtDate(s) { if (!s) return ''; const [y,m,d]=s.split('-'); return `${d}/${m}/${y.slice(2)}`; }
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
 
@@ -377,52 +384,56 @@ function monthStart(dateStr) { return dateStr.slice(0,7)+'-01'; }
 function monthEnd(dateStr) { const [y,m]=dateStr.split('-'); const last=new Date(+y, +m, 0); return `${y}-${m}-${String(last.getDate()).padStart(2,'0')}`; }
 
 function filterByPeriod(trades, period) {
-  if (!period || period.mode==='all') return trades;
+  const safeTrades = Array.isArray(trades) ? trades : [];
+  const safePeriod = period || { mode: 'all' };
+  if (!safePeriod || safePeriod.mode==='all') return safeTrades;
   const t=today();
-  if (period.mode==='daily') { return trades.filter(tr=>tr.date===(period.date||t)); }
-  if (period.mode==='weekly') { return trades.filter(tr=>tr.date>=weekStart(t)&&tr.date<=weekEnd(t)); }
-  if (period.mode==='monthly') { return trades.filter(tr=>tr.date>=monthStart(t)&&tr.date<=monthEnd(t)); }
-  if (period.mode==='custom') { return trades.filter(tr=>tr.date>=(period.from||'')&&tr.date<=(period.to||'9999-12-31')); }
-  return trades;
+  if (safePeriod.mode==='daily') { return safeTrades.filter(tr=>tr && tr.date===(safePeriod.date||t)); }
+  if (safePeriod.mode==='weekly') { return safeTrades.filter(tr=>tr && tr.date>=weekStart(t)&&tr.date<=weekEnd(t)); }
+  if (safePeriod.mode==='monthly') { return safeTrades.filter(tr=>tr && tr.date>=monthStart(t)&&tr.date<=monthEnd(t)); }
+  if (safePeriod.mode==='custom') { return safeTrades.filter(tr=>tr && tr.date>=(safePeriod.from||'')&&tr.date<=(safePeriod.to||'9999-12-31')); }
+  return safeTrades;
 }
 
-// ─── 📊 ADVANCED STATS CALCULATION ENGINE ──────────────────────────────────
+/* ─── 📊 ADVANCED STATS CALCULATION ENGINE ────────────────────────────────── */
 function computeStats(trades, startBal) {
-  const total=trades.length;
-  const wins=trades.filter(t=>t.status==='TP').length;
-  const loses=trades.filter(t=>t.status==='SL').length;
-  const bes=trades.filter(t=>t.status==='BE').length;
+  const safeTrades = Array.isArray(trades) ? trades : [];
+  const total=safeTrades.length;
+  const wins=safeTrades.filter(t=>t && t.status==='TP').length;
+  const loses=safeTrades.filter(t=>t && t.status==='SL').length;
+  const bes=safeTrades.filter(t=>t && t.status==='BE').length;
   const wr=total>0?(wins/total*100).toFixed(1):0;
-  const netPnl=trades.reduce((s,t)=>s+t.pnl,0);
+  const netPnl=safeTrades.reduce((s,t)=>s+(Number(t.pnl)||0),0);
 
   function calcRR(t) {
-    const entryExitDist = Math.abs(t.entry - t.exit); const entrySLDist = Math.abs(t.entry - t.sl);
-    if (entryExitDist === 0 || entrySLDist === 0 || t.lot === 0) return null;
-    const pipVal = Math.abs(t.pnl) / (entryExitDist * t.lot);
-    const riskUSD = entrySLDist * t.lot * pipVal; const rewardUSD = Math.abs(t.pnl);
+    if (!t) return null;
+    const entryExitDist = Math.abs((Number(t.entry)||0) - (Number(t.exit)||0)); 
+    const entrySLDist = Math.abs((Number(t.entry)||0) - (Number(t.sl)||0));
+    if (entryExitDist === 0 || entrySLDist === 0 || (Number(t.lot)||0) === 0) return null;
+    const pipVal = Math.abs(Number(t.pnl)||0) / (entryExitDist * Number(t.lot));
+    const riskUSD = entrySLDist * Number(t.lot) * pipVal; 
+    const rewardUSD = Math.abs(Number(t.pnl)||0);
     return riskUSD > 0 ? rewardUSD / riskUSD : null;
   }
 
-  const rrs = trades.map(calcRR).filter(r=>r!==null&&r>0);
-  const winRRs = trades.filter(t=>t.status==='TP').map(calcRR).filter(r=>r!==null&&r>0);
-  const loseRRs= trades.filter(t=>t.status==='SL').map(calcRR).filter(r=>r!==null&&r>0);
+  const rrs = safeTrades.map(calcRR).filter(r=>r!==null&&r>0);
+  const winRRs = safeTrades.filter(t=>t && t.status==='TP').map(calcRR).filter(r=>r!==null&&r>0);
+  const loseRRs= safeTrades.filter(t=>t && t.status==='SL').map(calcRR).filter(r=>r!==null&&r>0);
   const avgRR = rrs.length>0 ? (rrs.reduce((a,b)=>a+b,0)/rrs.length).toFixed(2)+'R' : '-';
-  const highWinRR= winRRs.length>0 ? Math.max(...winRRs).toFixed(2)+'R' : '-';
-  const highLoseRR=loseRRs.length>0? Math.max(...loseRRs).toFixed(2)+'R': '-';
 
-  const grossProfit = trades.filter(t=>t.pnl > 0).reduce((s,t)=>s+t.pnl, 0);
-  const grossLoss = Math.abs(trades.filter(t=>t.pnl < 0).reduce((s,t)=>s+t.pnl, 0));
+  const grossProfit = safeTrades.filter(t=>t && Number(t.pnl) > 0).reduce((s,t)=>s+Number(t.pnl), 0);
+  const grossLoss = Math.abs(safeTrades.filter(t=>t && Number(t.pnl) < 0).reduce((s,t)=>s+Number(t.pnl), 0));
   const profitFactor = grossLoss > 0 ? (grossProfit / grossLoss).toFixed(2) : (grossProfit > 0 ? '∞' : '0.00');
   const expectancy = total > 0 ? (netPnl / total).toFixed(2) : '0.00';
 
-  const lossTrades = trades.filter(t=>t.pnl < 0);
-  const greedCost = Math.abs(lossTrades.filter(t=>t.psychology && t.psychology.greed).reduce((s,t)=>s+t.pnl, 0));
-  const fearCost = Math.abs(lossTrades.filter(t=>t.psychology && t.psychology.fear).reduce((s,t)=>s+t.pnl, 0));
+  const lossTrades = safeTrades.filter(t=>t && Number(t.pnl) < 0);
+  const greedCost = Math.abs(lossTrades.filter(t=>t.psychology && t.psychology.greed).reduce((s,t)=>s+Number(t.pnl), 0));
+  const fearCost = Math.abs(lossTrades.filter(t=>t.psychology && t.psychology.fear).reduce((s,t)=>s+Number(t.pnl), 0));
 
   let maxWinStreak = 0, maxLossStreak = 0;
   let currentWinStreak = 0, currentLossStreak = 0;
   
-  const streakTrades = trades.filter(t => t.status === 'TP' || t.status === 'SL');
+  const streakTrades = safeTrades.filter(t => t && (t.status === 'TP' || t.status === 'SL'));
   for (let t of streakTrades) {
     if (t.status === 'TP') {
       currentWinStreak++; currentLossStreak = 0;
@@ -433,14 +444,17 @@ function computeStats(trades, startBal) {
     }
   }
 
-  return {total,wins,loses,bes,wr,netPnl,avgRR,highWinRR,highLoseRR,profitFactor,expectancy,greedCost,fearCost,maxWinStreak,maxLossStreak};
+  return {total,wins,loses,bes,wr,netPnl,avgRR,profitFactor,expectancy,greedCost,fearCost,maxWinStreak,maxLossStreak};
 }
 
-// 🕒 AUTOMATIC ACCOUNT AGE CALCULATOR (AUTOMATED RADAR SEARCH)
 function getAccountAge(account) {
   const allDates = [];
-  state.trades.forEach(t => { if(account === 'ALL' || (t.account||'Demo') === account) allDates.push(new Date(t.date)); });
-  state.cfs.forEach(c => { if(account === 'ALL' || (c.account||'Demo') === account) allDates.push(new Date(c.date)); });
+  if (state && Array.isArray(state.trades)) {
+    state.trades.forEach(t => { if(t && (account === 'ALL' || (t.account||'Demo') === account)) allDates.push(new Date(t.date)); });
+  }
+  if (state && Array.isArray(state.cfs)) {
+    state.cfs.forEach(c => { if(c && (account === 'ALL' || (c.account||'Demo') === account)) allDates.push(new Date(c.date)); });
+  }
   
   if (allDates.length === 0) return "0Y 0M 0D";
   
@@ -463,39 +477,45 @@ function getAccountAge(account) {
   return `${years}Y ${months}M ${days}D`;
 }
 
-// Helper to get dynamically registered account names
 function getAccountList() {
-  const defaultAccs = Object.keys(state.balances);
-  const tradeAccs = state.trades.map(t => t.account || 'Demo');
-  const cfAccs = state.cfs.map(c => c.account || 'Demo');
+  const safeBalances = (state && state.balances) ? state.balances : DEFAULT_BALANCES;
+  const defaultAccs = Object.keys(safeBalances);
+  const tradeAccs = (state && Array.isArray(state.trades)) ? state.trades.map(t => t ? (t.account || 'Demo') : 'Demo') : [];
+  const cfAccs = (state && Array.isArray(state.cfs)) ? state.cfs.map(c => c ? (c.account || 'Demo') : 'Demo') : [];
   return [...new Set([...defaultAccs, ...tradeAccs, ...cfAccs])].filter(Boolean);
 }
 
+/* 🛠️ FIX: INITIALIZE PERSISTENT ACCOUNT ENGINE */
+const savedLastAccount = load(KEY.LAST_ACCOUNT, 'Demo');
+
 const state = {
-  page:     'HOME', inputTab: 'TRADE', logTab:   'TRADE',
-  sound:    load(KEY.SOUND,true), 
+  page:     'HOME', inputTab: 'TRADE', logTab: 'TRADE',
+  sound:    load(KEY.SOUND, true), 
   balances: load(KEY.BALANCES, DEFAULT_BALANCES),
-  trades:   load(KEY.TRADES,[]), cfs:      load(KEY.CFS,[]),
+  trades:   load(KEY.TRADES, []), 
+  cfs:      load(KEY.CFS, []),
   crt:      load(KEY.CRT, true),
   calYear:  new Date().getFullYear(),
   calMonth: new Date().getMonth(),
   f: {
     date:today(), symbol:'GOLD', dir:'Buy', entry:'', exit:'',
     sl:'', lot:'', pnl:'', status:'TP', tf:'1H',
-    conf:false, fear:false, greed:false, account:'Demo'
+    conf:false, fear:false, greed:false, account: savedLastAccount
   },
-  cf: { date:today(), type:'Deposit', amount:'', desc:'', account:'Demo' },
-  filter: { symbol:'ALL', status:'ALL', period:{mode:'all'}, account:'ALL' },
-  statsPeriod: { mode:'all', account:'ALL' }
+  cf: { date:today(), type:'Deposit', amount:'', desc:'', account: savedLastAccount },
+  filter: { symbol:'ALL', status:'ALL', period:{mode:'all'}, account: savedLastAccount },
+  statsPeriod: { mode:'all', account: savedLastAccount }
 };
 
-function getTodayLosses() { return state.trades.filter(tr=>tr.date===today()&&tr.status==='SL').length; }
+function getTodayLosses() { 
+  if (!state || !Array.isArray(state.trades)) return 0;
+  return state.trades.filter(tr=>tr && tr.date===today()&&tr.status==='SL').length; 
+}
 function shouldShowAlert() { return getTodayLosses()>=2; }
 
 function syncToCloud() {
   if (!isCloudActive) return;
-  // Calculate single legacy balance for backward compatibility
-  const legacyBalance = state.balances['Demo'] || 10000;
+  const legacyBalance = (state.balances && state.balances['Demo']) ? state.balances['Demo'] : 10000;
   firebase.database().ref('retro_trading_journal_data').set({
     trades: state.trades, cfs: state.cfs, balance: legacyBalance, balances: state.balances
   });
@@ -506,8 +526,8 @@ function initCloudDatabase() {
   firebase.database().ref('retro_trading_journal_data').once('value', (snapshot) => {
     const data = snapshot.val();
     if (data) {
-      if (data.trades) state.trades = data.trades;
-      if (data.cfs) state.cfs = data.cfs;
+      if (data.trades) state.trades = Array.isArray(data.trades) ? data.trades : Object.values(data.trades);
+      if (data.cfs) state.cfs = Array.isArray(data.cfs) ? data.cfs : Object.values(data.cfs);
       if (data.balances) {
         state.balances = { ...DEFAULT_BALANCES, ...data.balances };
       } else if (data.balance) {
@@ -522,9 +542,20 @@ function initCloudDatabase() {
 function syncCrtView() {
   const crtLayer = document.getElementById('crt-layer');
   if(crtLayer) {
-    if(state.crt) crtLayer.classList.remove('disabled');
+    if(state && state.crt) crtLayer.classList.remove('disabled');
     else crtLayer.classList.add('disabled');
   }
+}
+
+/* 🛠️ FIX: UPDATE PERSISTENT ACCOUNT STATE GLOBALLY */
+function updateActiveAccount(accName) {
+  if (!accName) return;
+  state.f.account = accName;
+  state.cf.account = accName;
+  state.filter.account = accName;
+  state.statsPeriod.account = accName;
+  save(KEY.LAST_ACCOUNT, accName);
+  render();
 }
 
 function render() { syncCrtView(); document.getElementById('app').innerHTML=buildApp(); attachEvents(); }
@@ -543,37 +574,36 @@ function buildApp() {
   `;
 }
 
-// 🕹️ REPLACEMENT OF FAKE GAME CURRENCIES WITH USEFUL TRADING MASTER INFO (STRICTLY ISOLATED)
 function buildHubHeader() {
-  const allTrades = state.trades;
-  const p = state.statsPeriod;
-  const targetAcc = p.account || 'ALL';
+  const allTrades = Array.isArray(state.trades) ? state.trades : [];
+  const targetAcc = state.f.account || 'Demo';
 
-  let filteredTrades = filterByPeriod(allTrades, p);
-  if (targetAcc !== 'ALL') filteredTrades = filteredTrades.filter(t => (t.account || 'Demo') === targetAcc);
+  let filteredTrades = filterByPeriod(allTrades, state.statsPeriod);
+  if (targetAcc !== 'ALL') filteredTrades = filteredTrades.filter(t => t && (t.account || 'Demo') === targetAcc);
 
-  // Compute Account Start Balance
   let accStartBal = 0;
+  const safeBalances = state.balances || DEFAULT_BALANCES;
   if (targetAcc === 'ALL') {
-    accStartBal = Object.values(state.balances).reduce((a, b) => a + (Number(b) || 0), 0);
+    accStartBal = Object.values(safeBalances).reduce((a, b) => a + (Number(b) || 0), 0);
   } else {
-    accStartBal = Number(state.balances[targetAcc]) || 0;
+    accStartBal = Number(safeBalances[targetAcc]) || 0;
   }
 
-  const netDeposit = state.cfs.filter(c => targetAcc === 'ALL' || (c.account || 'Demo') === targetAcc)
-                              .reduce((s, cf) => s + (cf.type === 'Deposit' ? cf.amount : -cf.amount), 0);
-  const equity = accStartBal + netDeposit + filteredTrades.reduce((s, t) => s + t.pnl, 0);
+  const safeCFs = Array.isArray(state.cfs) ? state.cfs : [];
+  const netDeposit = safeCFs.filter(c => c && (targetAcc === 'ALL' || (c.account || 'Demo') === targetAcc))
+                            .reduce((s, cf) => s + (cf.type === 'Deposit' ? Number(cf.amount)||0 : -Number(cf.amount)||0), 0);
+  const equity = accStartBal + netDeposit + filteredTrades.reduce((s, t) => s + (Number(t.pnl)||0), 0);
   
-  const todayTrades = allTrades.filter(tr => tr.date === today() && (targetAcc === 'ALL' || (tr.account || 'Demo') === targetAcc));
-  const todayPnl = todayTrades.reduce((s, tr) => s + tr.pnl, 0);
+  const todayTrades = allTrades.filter(tr => tr && tr.date === today() && (targetAcc === 'ALL' || (tr.account || 'Demo') === targetAcc));
+  const todayPnl = todayTrades.reduce((s, tr) => s + (Number(tr.pnl)||0), 0);
   
   return `
     <div class="rpg-hub-header">
-      <div class="rpg-avatar-box">🧙‍♂️</div>
+      <div class="rpg-avatar-box" id="hub-acc-trigger" title="คลิกสลับพอร์ตอย่างรวดเร็ว">🧙‍♂️</div>
       <div class="rpg-hub-info">
         <div class="rpg-hub-row">
           <span class="rpg-hub-label">ACC:</span>
-          <span class="rpg-hub-value" style="color:#33D6FF;">${targetAcc}</span>
+          <span class="rpg-hub-value" style="color:#33D6FF; text-decoration:underline; cursor:pointer;" id="hub-acc-label">${targetAcc} ▾</span>
         </div>
         <div class="rpg-hub-row">
           <span class="rpg-hub-label">NET EQUITY:</span>
@@ -598,7 +628,6 @@ function buildAlert() {
     </div>`;
 }
 
-// 🕹️ UPDATED BOTTOM NAVIGATION
 function buildNav() {
   const pages=[
     {id:'HOME',icon:'📝',label:'INPUT'},
@@ -629,7 +658,7 @@ function buildTradeForm() {
   const f=state.f; const symbols=['GOLD','XAUUSD','BTCUSD','US30','NAS100','EURUSD','GBPUSD','Other']; const tfs=['1M','5M','15M','30M','1H','4H','D1','W1'];
   const accList = getAccountList();
   return `
-    <label>🎯 พอร์ตบัญชีปลายทาง</label>
+    <label>🎯 พอร์ตบัญชีปลายทาง (LOCKED PERSISTENT)</label>
     <select id="f-account">
       ${accList.map(a => `<option value="${a}" ${f.account===a?'selected':''}>${a}</option>`).join('')}
     </select>
@@ -681,7 +710,8 @@ function buildCFForm() {
 }
 
 function buildLog() {
-  const symbols=['ALL',...new Set(state.trades.map(t=>t.symbol))];
+  const allTrades = Array.isArray(state.trades) ? state.trades : [];
+  const symbols=['ALL',...new Set(allTrades.map(t=>t?t.symbol:''))].filter(Boolean);
   return `
     <div class="card">
       <div class="card-title"><span>📋 DATA LEDGER LOG</span></div>
@@ -694,44 +724,56 @@ function buildLog() {
 }
 
 function buildPeriodFilter(prefix, period) {
+  const safePeriod = period || { mode: 'all' };
   return `
     <div class="filter-bar">
       <div class="filter-row">
         <select id="${prefix}-period-mode" style="flex:1">
-          <option value="all"  ${period.mode==='all'    ?'selected':''}>All Time History</option>
-          <option value="daily"  ${period.mode==='daily'  ?'selected':''}>Daily Summary</option>
-          <option value="weekly" ${period.mode==='weekly' ?'selected':''}>Weekly Range</option>
-          <option value="monthly"${period.mode==='monthly'?'selected':''}>Monthly Range</option>
-          <option value="custom" ${period.mode==='custom' ?'selected':''}>Custom Range Target</option>
+          <option value="all"  ${safePeriod.mode==='all'    ?'selected':''}>All Time History</option>
+          <option value="daily"  ${safePeriod.mode==='daily'  ?'selected':''}>Daily Summary</option>
+          <option value="weekly" ${safePeriod.mode==='weekly' ?'selected':''}>Weekly Range</option>
+          <option value="monthly"${safePeriod.mode==='monthly'?'selected':''}>Monthly Range</option>
+          <option value="custom" ${safePeriod.mode==='custom' ?'selected':''}>Custom Range Target</option>
         </select>
       </div>
-      ${period.mode==='daily'?`<div class="filter-row"><input type="date" id="${prefix}-period-date" value="${period.date||today()}" style="flex:1"></div>`:''}
-      ${period.mode==='custom'?`<div class="filter-row"><input type="date" id="${prefix}-period-from" value="${period.from||''}" style="flex:1"><input type="date" id="${prefix}-period-to" value="${period.to||''}" style="flex:1"></div>`:''}
+      ${safePeriod.mode==='daily'?`<div class="filter-row"><input type="date" id="${prefix}-period-date" value="${safePeriod.date||today()}" style="flex:1"></div>`:''}
+      ${safePeriod.mode==='custom'?`<div class="filter-row"><input type="date" id="${prefix}-period-from" value="${safePeriod.from||''}" style="flex:1"><input type="date" id="${prefix}-period-to" value="${safePeriod.to||''}" style="flex:1"></div>`:''}
     </div>`;
 }
 
 function buildTradeLog(symbols) {
-  const p=state.filter.period; let filtered=[...state.trades].sort((a,b)=>b.date.localeCompare(a.date)); filtered=filterByPeriod(filtered,p);
-  if (state.filter.symbol!=='ALL') filtered=filtered.filter(t=>t.symbol===state.filter.symbol);
-  if (state.filter.status!=='ALL') filtered=filtered.filter(t=>t.status===state.filter.status);
-  if (state.filter.account!=='ALL') filtered=filtered.filter(t=>(t.account||'Demo')===state.filter.account);
+  const safeFilter = state.filter || { period: { mode: 'all' }, symbol: 'ALL', status: 'ALL', account: 'ALL' };
+  const p = safeFilter.period || { mode: 'all' }; 
+  const allTrades = Array.isArray(state.trades) ? state.trades : [];
+  let filtered=[...allTrades].sort((a,b)=>(b&&a&&b.date&&a.date)?b.date.localeCompare(a.date):0); 
+  filtered=filterByPeriod(filtered,p);
+  
+  if (safeFilter.symbol!=='ALL') filtered=filtered.filter(t=>t && t.symbol===safeFilter.symbol);
+  if (safeFilter.status!=='ALL') filtered=filtered.filter(t=>t && t.status===safeFilter.status);
+  if (safeFilter.account!=='ALL') filtered=filtered.filter(t=>t && (t.account||'Demo')===safeFilter.account);
   
   const accList = getAccountList();
   return `
     ${buildPeriodFilter('log',p)}
     <div class="filter-row" style="gap:4px;margin-bottom:10px">
       <select id="flt-account" style="flex:1;font-size:7px">
-        <option value="ALL" ${state.filter.account==='ALL'?'selected':''}>ALL ACCOUNTS</option>
-        ${accList.map(a => `<option value="${a}" ${state.filter.account===a?'selected':''}>${a}</option>`).join('')}
+        <option value="ALL" ${safeFilter.account==='ALL'?'selected':''}>ALL ACCOUNTS</option>
+        ${accList.map(a => `<option value="${a}" ${safeFilter.account===a?'selected':''}>${a}</option>`).join('')}
       </select>
-      <select id="flt-symbol" style="flex:1;font-size:7px">${symbols.map(s=>`<option ${state.filter.symbol===s?'selected':''}>${s}</option>`).join('')}</select>
-      <select id="flt-status" style="flex:1;font-size:7px">${['ALL','TP','SL','BE'].map(s=>`<option ${state.filter.status===s?'selected':''}>${s}</option>`).join('')}</select>
+      <select id="flt-symbol" style="flex:1;font-size:7px">${symbols.map(s=>`<option ${safeFilter.symbol===s?'selected':''}>${s}</option>`).join('')}</select>
+      <select id="flt-status" style="flex:1;font-size:7px">${['ALL','TP','SL','BE'].map(s=>`<option ${safeFilter.status===s?'selected':''}>${s}</option>`).join('')}</select>
     </div>
     ${filtered.length===0?`<div class="empty">ไม่พบประวัติข้อมูลชุดนี้</div>`:filtered.map(t=>buildTradeItem(t)).join('')}`;
 }
 
 function buildTradeItem(t) {
-  const pnlClass=t.pnl>0?'glow-green':t.pnl<0?'glow-red':'glow-yellow'; const pnlSign=t.pnl>0?'+':''; const badgeCls=t.status==='TP'?'badge-tp':t.status==='SL'?'badge-sl':'badge-be'; const em=t.psychology||{}; const emTags=[em.conf&&'🔥',em.fear&&'🙀',em.greed&&'💢'].filter(Boolean).join(' ');
+  if (!t) return '';
+  const pnlVal = Number(t.pnl) || 0;
+  const pnlClass=pnlVal>0?'glow-green':pnlVal<0?'glow-red':'glow-yellow'; 
+  const pnlSign=pnlVal>0?'+':''; 
+  const badgeCls=t.status==='TP'?'badge-tp':t.status==='SL'?'badge-sl':'badge-be'; 
+  const em=t.psychology||{}; 
+  const emTags=[em.conf&&'🔥',em.fear&&'🙀',em.greed&&'💢'].filter(Boolean).join(' ');
   return `
     <div class="trade-item">
       <div class="trade-header">
@@ -744,13 +786,15 @@ function buildTradeItem(t) {
       <div class="trade-row"><span class="trade-label">TIMEFRAME</span><span class="trade-value">${t.tf||'1H'}</span></div>
       <div class="trade-row"><span class="trade-label">NET P&L (USD)</span><span class="${pnlClass}">${pnlSign}$${fmt(t.pnl,2)}</span></div>
       ${emTags?`<div style="margin-top:4px;font-size:10px">${emTags}</div>`:''}
-      <div style="margin-top:6px;text-align:right"><button class="del-btn" data-del-trade="${t.id}">✕ DELETE RECORD</button></div>
+      <div style="margin-top:8px;text-align:right"><button class="del-btn" data-del-trade="${t.id}">✕ DELETE RECORD</button></div>
     </div>`;
 }
 
 function buildCFLog() {
-  let sorted=[...state.cfs].sort((a,b)=>b.date.localeCompare(a.date));
-  if (state.filter.account!=='ALL') sorted=sorted.filter(c=>(c.account||'Demo')===state.filter.account);
+  const safeCFs = Array.isArray(state.cfs) ? state.cfs : [];
+  const safeFilter = state.filter || { account: 'ALL' };
+  let sorted=[...safeCFs].sort((a,b)=>(b&&a&&b.date&&a.date)?b.date.localeCompare(a.date):0);
+  if (safeFilter.account!=='ALL') sorted=sorted.filter(c=>c && (c.account||'Demo')===safeFilter.account);
   if (sorted.length===0) return `<div class="empty">ไม่มีรายการกระแสเงินสด</div>`;
   return sorted.map(cf=>`
     <div class="cf-item">
@@ -765,10 +809,11 @@ function buildCFLog() {
     </div>`).join('');
 }
 
-// ─── 📅 TRADING CALENDAR GENERATOR ENGINE ───────────────────────────────────
 function buildCalendarSection(allTrades, accountFilter) {
+  const safeTrades = Array.isArray(allTrades) ? allTrades : [];
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const year = state.calYear; const month = state.calMonth;
+  const year = state.calYear || new Date().getFullYear(); 
+  const month = state.calMonth !== undefined ? state.calMonth : new Date().getMonth();
   const firstDayIndex = new Date(year, month, 1).getDay();
   const adjustedFirstDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1; 
   const totalDays = new Date(year, month + 1, 0).getDate();
@@ -781,11 +826,11 @@ function buildCalendarSection(allTrades, accountFilter) {
   const tStr = today();
   for (let day = 1; day <= totalDays; day++) {
     const currentStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    let dayTrades = allTrades.filter(t => t.date === currentStr);
-    if (accountFilter !== 'ALL') dayTrades = dayTrades.filter(t => (t.account || 'Demo') === accountFilter);
+    let dayTrades = safeTrades.filter(t => t && t.date === currentStr);
+    if (accountFilter !== 'ALL') dayTrades = dayTrades.filter(t => t && (t.account || 'Demo') === accountFilter);
 
     const tradeCount = dayTrades.length;
-    const totalPnl = dayTrades.reduce((s, t) => s + t.pnl, 0);
+    const totalPnl = dayTrades.reduce((s, t) => s + (Number(t.pnl)||0), 0);
 
     let skinClass = "skin-cal-neutral";
     let pnlDisplay = "$0.00";
@@ -820,8 +865,8 @@ function buildCalendarSection(allTrades, accountFilter) {
     </div>`;
 }
 
-// ─── 📊 BLOCK 3: WEEKDAY BREAKDOWN ENGINE ──────────────────────────────────
 function buildWeekdayBreakdown(filteredTrades) {
+  const safeTrades = Array.isArray(filteredTrades) ? filteredTrades : [];
   const daysConfig = [
     { idx: 1, label: "MON 🌙" },
     { idx: 2, label: "TUE ☄️" },
@@ -833,10 +878,12 @@ function buildWeekdayBreakdown(filteredTrades) {
   ];
 
   const weekdayPnl = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 0: 0 };
-  filteredTrades.forEach(t => {
-    const [y, m, d] = t.date.split('-');
-    const dayOfWeek = new Date(+y, +m - 1, +d).getDay();
-    weekdayPnl[dayOfWeek] += t.pnl;
+  safeTrades.forEach(t => {
+    if (t && t.date) {
+      const [y, m, d] = t.date.split('-');
+      const dayOfWeek = new Date(+y, +m - 1, +d).getDay();
+      weekdayPnl[dayOfWeek] += Number(t.pnl)||0;
+    }
   });
 
   return `
@@ -856,27 +903,29 @@ function buildWeekdayBreakdown(filteredTrades) {
     </div>`;
 }
 
-// ─── 📊 RESTRUCTURED STATS VIEW PORT (ISOLATED MULTI-PORTFOLIO) ───────────────────
 function buildStats() {
-  const p=state.statsPeriod; const targetAcc = p.account || 'ALL'; const allTrades=state.trades; 
-  let filtered=filterByPeriod(allTrades,p);
-  if (targetAcc !== 'ALL') filtered = filtered.filter(t => (t.account || 'Demo') === targetAcc);
+  const p = state.statsPeriod || { mode: 'all', account: 'ALL' }; 
+  const targetAcc = p.account || 'ALL'; 
+  const allTrades = Array.isArray(state.trades) ? state.trades : []; 
+  let filtered = filterByPeriod(allTrades, p);
+  if (targetAcc !== 'ALL') filtered = filtered.filter(t => t && (t.account || 'Demo') === targetAcc);
 
-  // Calculate isolated Starting Balance
   let accStartBal = 0;
+  const safeBalances = state.balances || DEFAULT_BALANCES;
   if (targetAcc === 'ALL') {
-    accStartBal = Object.values(state.balances).reduce((a, b) => a + (Number(b) || 0), 0);
+    accStartBal = Object.values(safeBalances).reduce((a, b) => a + (Number(b) || 0), 0);
   } else {
-    accStartBal = Number(state.balances[targetAcc]) || 0;
+    accStartBal = Number(safeBalances[targetAcc]) || 0;
   }
 
-  const todayTrades=allTrades.filter(tr=>tr.date===today() && (targetAcc === 'ALL' || (tr.account || 'Demo') === targetAcc));
-  const todayPnl=todayTrades.reduce((s,tr)=>s+tr.pnl,0); 
+  const todayTrades=allTrades.filter(tr=>tr && tr.date===today() && (targetAcc === 'ALL' || (tr.account || 'Demo') === targetAcc));
+  const todayPnl=todayTrades.reduce((s,tr)=>s+(Number(tr.pnl)||0),0); 
   const st=computeStats(filtered, accStartBal); 
   
-  const netDeposit=state.cfs.filter(c=>targetAcc==='ALL'||(c.account||'Demo') === targetAcc)
-                            .reduce((s,cf)=>s+(cf.type==='Deposit'?cf.amount:-cf.amount),0); 
-  const equity=accStartBal + netDeposit + filtered.reduce((s,t)=>s+t.pnl,0);
+  const safeCFs = Array.isArray(state.cfs) ? state.cfs : [];
+  const netDeposit=safeCFs.filter(c=>c && (targetAcc==='ALL'||(c.account||'Demo') === targetAcc))
+                         .reduce((s,cf)=>s+(cf.type==='Deposit'?Number(cf.amount)||0:-Number(cf.amount)||0),0); 
+  const equity=accStartBal + netDeposit + filtered.reduce((s,t)=>s+(Number(t.pnl)||0),0);
 
   const pfClass = parseFloat(st.profitFactor) >= 1.5 ? 'glow-green' : (parseFloat(st.profitFactor) < 1.0 ? 'glow-red' : 'txt-white');
   const expClass = parseFloat(st.expectancy) >= 0 ? 'glow-green' : 'glow-red';
@@ -960,8 +1009,12 @@ function buildStats() {
 }
 
 function buildEquityCurve(trades) {
-  if (trades.length < 2) return `<div class="empty" style="margin-top:12px">เพิ่มประวัติการเทรดเพื่อสร้างสายกราฟพอร์ต</div>`;
-  const sorted=[...trades].sort((a,b)=>a.date.localeCompare(b.date)); let cum=0; const points=sorted.map(t=>{ cum+=t.pnl; return cum; }); const maxV=Math.max(...points,0); const minV=Math.min(...points,0); const range=maxV-minV||1; const W=300,H=110,PL=4,PR=4,PT=8,PB=20; const IW=W-PL-PR, IH=H-PT-PB;
+  const safeTrades = Array.isArray(trades) ? trades : [];
+  if (safeTrades.length < 2) return `<div class="empty" style="margin-top:12px">เพิ่มประวัติการเทรดเพื่อสร้างสายกราฟพอร์ต</div>`;
+  const sorted=[...safeTrades].sort((a,b)=>(a&&b&&a.date&&b.date)?a.date.localeCompare(b.date):0); 
+  let cum=0; const points=sorted.map(t=>{ cum+=Number(t.pnl)||0; return cum; }); 
+  const maxV=Math.max(...points,0); const minV=Math.min(...points,0); const range=maxV-minV||1; 
+  const W=300,H=110,PL=4,PR=4,PT=8,PB=20; const IW=W-PL-PR, IH=H-PT-PB;
   const pts=points.map((v,i)=>{ const x=PL+(i/(points.length-1||1))*IW; const y=PT+IH-((v-minV)/range)*IH; return `${x.toFixed(1)},${y.toFixed(1)}`; }).join(' ');
   const zeroY=(PT+IH-((0-minV)/range)*IH).toFixed(1);
   return `
@@ -1004,9 +1057,9 @@ function buildPieChart(st) {
     </div>`;
 }
 
-// 🎛️ SETTINGS VIEW (DYNAMIC MULTI-PORTFOLIO STARTING BALANCES)
 function buildSettings() {
   const accList = getAccountList();
+  const safeBalances = state.balances || DEFAULT_BALANCES;
   return `
     <div class="card">
       <div class="card-title"><span>⚙ CONFIG OPERATIONS</span></div>
@@ -1026,8 +1079,8 @@ function buildSettings() {
           <div class="bal-card-item">
             <span style="color:#33D6FF;">${a}</span>
             <div style="display:flex; gap:6px; align-items:center;">
-              <input type="number" class="bal-input-node" data-acc="${a}" value="${state.balances[a] !== undefined ? state.balances[a] : 0}" style="width:90px; margin-bottom:0; font-size:7px;">
-              ${!['Demo','LIFE','RISK','Swingtrade'].includes(a) ? `<button class="del-btn" data-del-acc="${a}">✕</button>` : ''}
+              <input type="number" class="bal-input-node" data-acc="${a}" value="${safeBalances[a] !== undefined ? safeBalances[a] : 0}" style="width:100px; margin-bottom:0; font-size:8px;">
+              ${!['Demo','LIFE','RISK','Swingtrade'].includes(a) ? `<button class="del-btn" data-del-acc="${a}" style="min-width:44px; min-height:44px;">✕</button>` : ''}
             </div>
           </div>
         `).join('')}
@@ -1036,9 +1089,9 @@ function buildSettings() {
       
       <div style="margin-top:10px;">
         <label>➕ สร้างบัญชีพอร์ตใหม่ (DYNAMIC ACCOUNT)</label>
-        <div style="display:flex; gap:4px;">
+        <div style="display:flex; gap:6px;">
           <input type="text" id="new-acc-name" placeholder="เช่น Scalping, Fund1" style="margin-bottom:0; flex:1;">
-          <button class="btn" id="btn-add-acc" style="margin-top:0; width:70px;">ADD</button>
+          <button class="btn" id="btn-add-acc" style="margin-top:0; width:80px;">ADD</button>
         </div>
       </div>
 
@@ -1061,50 +1114,73 @@ function attachEvents() {
   const hubSetting = document.getElementById('hub-setting-btn');
   if(hubSetting) { hubSetting.addEventListener('click', () => { state.page = 'SETTINGS'; beep('click'); render(); }); }
 
-  const liveF={'f-date':v=>state.f.date=v,'f-symbol':v=>state.f.symbol=v,'f-tf':v=>state.f.tf=v,'f-entry':v=>state.f.entry=v,'f-exit':v=>state.f.exit=v,'f-sl':v=>state.f.sl=v,'f-lot':v=>state.f.lot=v,'f-pnl':v=>state.f.pnl=v,'f-account':v=>state.f.account=v};
+  /* 🛠️ FIX: QUICK PORTFOLIO SWITCHER EVENT BINDING */
+  const hubAccTrigger = document.getElementById('hub-acc-trigger');
+  const hubAccLabel = document.getElementById('hub-acc-label');
+  const triggerSwitch = () => {
+    const accs = getAccountList();
+    const currIndex = accs.indexOf(state.f.account);
+    const nextAcc = accs[(currIndex + 1) % accs.length];
+    updateActiveAccount(nextAcc);
+    beep('click');
+  };
+  if(hubAccTrigger) hubAccTrigger.addEventListener('click', triggerSwitch);
+  if(hubAccLabel) hubAccLabel.addEventListener('click', triggerSwitch);
+
+  const liveF={'f-date':v=>state.f.date=v,'f-symbol':v=>state.f.symbol=v,'f-tf':v=>state.f.tf=v,'f-entry':v=>state.f.entry=v,'f-exit':v=>state.f.exit=v,'f-sl':v=>state.f.sl=v,'f-lot':v=>state.f.lot=v,'f-pnl':v=>state.f.pnl=v};
   Object.entries(liveF).forEach(([id,fn])=>{ const el=document.getElementById(id); if(el) el.addEventListener('input',e=>fn(e.target.value)); });
+
+  /* 🛠️ FIX: BIND ACCOUNT CHANGE TO PERSISTENT STATE */
+  const fAcc = document.getElementById('f-account');
+  if(fAcc) fAcc.addEventListener('change', e => updateActiveAccount(e.target.value));
 
   document.querySelectorAll('[data-dir]').forEach(el=>{ el.addEventListener('click',()=>{ state.f.dir=el.dataset.dir; render(); }); });
   document.querySelectorAll('[data-status]').forEach(el=>{ el.addEventListener('click',()=>{ state.f.status=el.dataset.status; render(); }); });
   document.querySelectorAll('[data-psych]').forEach(el=>{ el.addEventListener('click',()=>{ const k=el.dataset.psych; state.f[k]=!state.f[k]; el.classList.toggle('checked'); beep('click'); }); });
   document.querySelectorAll('[data-cftype]').forEach(el=>{ el.addEventListener('click',()=>{ state.cf.type=el.dataset.cftype; render(); }); });
 
-  const cfAcc=document.getElementById('cf-account'); if(cfAcc) cfAcc.addEventListener('change',e=>state.cf.account=e.target.value);
+  const cfAcc=document.getElementById('cf-account'); if(cfAcc) cfAcc.addEventListener('change',e=>updateActiveAccount(e.target.value));
   ['cf-date','cf-amount','cf-desc'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input',e=>{ if(id==='cf-date') state.cf.date=e.target.value; if(id==='cf-amount') state.cf.amount=e.target.value; if(id==='cf-desc') state.cf.desc=e.target.value; }); });
 
-  const fltAcc=document.getElementById('flt-account'); if(fltAcc) fltAcc.addEventListener('change',e=>{ state.filter.account=e.target.value; render(); });
-  const fltSym=document.getElementById('flt-symbol'); if(fltSym) fltSym.addEventListener('change',e=>{ state.filter.symbol=e.target.value; render(); });
-  const fltSt=document.getElementById('flt-status'); if(fltSt) fltSt.addEventListener('change',e=>{ state.filter.status=e.target.value; render(); });
+  const fltAcc=document.getElementById('flt-account'); if(fltAcc) fltAcc.addEventListener('change',e=>updateActiveAccount(e.target.value));
+  const fltSym=document.getElementById('flt-symbol'); if(fltSym) fltSym.addEventListener('change',e=>{ if(!state.filter) state.filter={account:'ALL',symbol:'ALL',status:'ALL',period:{mode:'all'}}; state.filter.symbol=e.target.value; render(); });
+  const fltSt=document.getElementById('flt-status'); if(fltSt) fltSt.addEventListener('change',e=>{ if(!state.filter) state.filter={account:'ALL',symbol:'ALL',status:'ALL',period:{mode:'all'}}; state.filter.status=e.target.value; render(); });
   
-  const statsAcc=document.getElementById('stats-account'); if(statsAcc) statsAcc.addEventListener('change',e=>{ state.statsPeriod.account=e.target.value; render(); });
+  const statsAcc=document.getElementById('stats-account'); if(statsAcc) statsAcc.addEventListener('change',e=>updateActiveAccount(e.target.value));
 
-  bindPeriodFilter('log', state.filter.period, (p)=>{ state.filter.period=p; render(); });
-  bindPeriodFilter('stats', state.statsPeriod, (p)=>{ state.statsPeriod=p; render(); });
+  bindPeriodFilter('log', state.filter ? state.filter.period : {mode:'all'}, (p)=>{ state.filter.period=p; render(); });
+  bindPeriodFilter('stats', state.statsPeriod || {mode:'all',account:'ALL'}, (p)=>{ state.statsPeriod=p; render(); });
 
   const btnTrade=document.getElementById('btn-add-trade');
   if(btnTrade) btnTrade.addEventListener('click',()=>{
     const f=state.f; if(!f.entry||!f.exit||!f.sl||!f.lot||f.pnl===''){ alert('กรอกตัวเลขราคาและหลอดให้ครบถ้วนก่อนส่งข้อมูล!'); return; }
+    if(!Array.isArray(state.trades)) state.trades = [];
     state.trades.push({id:uid(), date:f.date, symbol:f.symbol, dir:f.dir, entry:parseFloat(f.entry)||0, exit:parseFloat(f.exit)||0, sl:parseFloat(f.sl)||0, lot:parseFloat(f.lot)||0, pnl:parseFloat(f.pnl)||0, status:f.status, tf:f.tf, psychology:{conf:f.conf, fear:f.fear, greed:f.greed}, account:f.account});
     save(KEY.TRADES, state.trades); syncToCloud();
     if(f.status==='TP') beep('win'); else if(f.status==='SL') beep('lose'); else beep('click');
-    state.f={...state.f,entry:'',exit:'',sl:'',lot:'',pnl:'',status:'TP',conf:false,fear:false,greed:false}; render();
+    /* 🛠️ FIX: KEEP PERSISTENT ACCOUNT AFTER RESET */
+    const currentAccount = state.f.account;
+    state.f={...state.f,entry:'',exit:'',sl:'',lot:'',pnl:'',status:'TP',conf:false,fear:false,greed:false, account: currentAccount}; 
+    render();
   });
 
   const btnCF=document.getElementById('btn-add-cf');
   if(btnCF) btnCF.addEventListener('click',()=>{
     const cf=state.cf; if(!cf.amount||parseFloat(cf.amount)<=0){ alert('ระบุจำนวนเงินสดเป็นตัวเลขด้วย!'); return; }
+    if(!Array.isArray(state.cfs)) state.cfs = [];
     state.cfs.push({id:uid(),date:cf.date,type:cf.type,amount:parseFloat(cf.amount),desc:cf.desc,account:cf.account});
     save(KEY.CFS, state.cfs); syncToCloud(); beep('win');
-    state.cf={date:today(),type:'Deposit',amount:'',desc:'',account:cf.account}; render();
+    const currentAccount = state.cf.account;
+    state.cf={date:today(),type:'Deposit',amount:'',desc:'',account:currentAccount}; 
+    render();
   });
 
-  document.querySelectorAll('[data-del-trade]').forEach(el=>{ el.addEventListener('click',()=>{ if(!confirm('ยืนยันลบประวัติไม้เทรดนี้ถาวร?')) return; state.trades=state.trades.filter(t=>t.id!==el.dataset.delTrade); save(KEY.TRADES, state.trades); syncToCloud(); render(); }); });
-  document.querySelectorAll('[data-del-cf]').forEach(el=>{ el.addEventListener('click',()=>{ if(!confirm('ลบรายการกระแสเงินสดนี้?')) return; state.cfs=state.cfs.filter(c=>c.id!==el.dataset.delCf); save(KEY.CFS, state.cfs); syncToCloud(); render(); }); });
+  document.querySelectorAll('[data-del-trade]').forEach(el=>{ el.addEventListener('click',()=>{ if(!confirm('ยืนยันลบประวัติไม้เทรดนี้ถาวร?')) return; state.trades=state.trades.filter(t=>t && t.id!==el.dataset.delTrade); save(KEY.TRADES, state.trades); syncToCloud(); render(); }); });
+  document.querySelectorAll('[data-del-cf]').forEach(el=>{ el.addEventListener('click',()=>{ if(!confirm('ลบรายการกระแสเงินสดนี้?')) return; state.cfs=state.cfs.filter(c=>c && c.id!==el.dataset.delCf); save(KEY.CFS, state.cfs); syncToCloud(); render(); }); });
   
   const tog=document.getElementById('toggle-sound'); if(tog) tog.addEventListener('click',()=>{ state.sound=!state.sound; save(KEY.SOUND,state.sound); render(); });
   const togCrt=document.getElementById('toggle-crt'); if(togCrt) togCrt.addEventListener('click',()=>{ state.crt=!state.crt; save(KEY.CRT, state.crt); render(); });
 
-  // 🎛️ DYNAMIC MULTI-BALANCE EVENT HANDLERS
   const btnSaveAllBal = document.getElementById('btn-save-all-bal');
   if (btnSaveAllBal) {
     btnSaveAllBal.addEventListener('click', () => {
@@ -1112,6 +1188,7 @@ function attachEvents() {
         const acc = input.dataset.acc;
         const val = parseFloat(input.value);
         if (acc && !isNaN(val) && val >= 0) {
+          if (!state.balances) state.balances = { ...DEFAULT_BALANCES };
           state.balances[acc] = val;
         }
       });
@@ -1129,11 +1206,13 @@ function attachEvents() {
       const nameInput = document.getElementById('new-acc-name');
       const newName = nameInput ? nameInput.value.trim() : '';
       if (!newName) { alert('กรุณาระบุชื่อพอร์ตใหม่'); return; }
+      if (!state.balances) state.balances = { ...DEFAULT_BALANCES };
       if (state.balances[newName] !== undefined) { alert('มีพอร์ตชื่อนี้ในระบบแล้ว'); return; }
       
       state.balances[newName] = 0;
       save(KEY.BALANCES, state.balances);
       syncToCloud();
+      updateActiveAccount(newName);
       beep('win');
       render();
     });
@@ -1147,7 +1226,8 @@ function attachEvents() {
         delete state.balances[acc];
         save(KEY.BALANCES, state.balances);
         syncToCloud();
-        render();
+        if(state.f.account === acc) updateActiveAccount('Demo');
+        else render();
       }
     });
   });
@@ -1158,7 +1238,7 @@ function attachEvents() {
   if(btnBackup) btnBackup.addEventListener('click',()=>{
     const data={ version:8, exportedAt:new Date().toISOString(), balances:state.balances, trades:state.trades, cfs:state.cfs };
     const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob);
-    const a=document.createElement('a'); a.href=url; a.download=`rtj-arcade-v3.7-backup-${today()}.json`; a.click(); URL.revokeObjectURL(url); beep('win');
+    const a=document.createElement('a'); a.href=url; a.download=`rtj-arcade-v3.8-backup-${today()}.json`; a.click(); URL.revokeObjectURL(url); beep('win');
   });
 
   const btnImportTrigger=document.getElementById('btn-import-trigger'); if(btnImportTrigger) btnImportTrigger.addEventListener('click',()=>{ document.getElementById('btn-import')?.click(); });
@@ -1203,14 +1283,16 @@ function attachEvents() {
 
 function bindPeriodFilter(prefix, period, onChange) {
   const modeEl=document.getElementById(`${prefix}-period-mode`); if(!modeEl) return;
-  modeEl.addEventListener('change',e=>{ const newP={mode:e.target.value, account: period.account}; if(e.target.value==='daily') newP.date=today(); onChange(newP); });
-  const dateEl=document.getElementById(`${prefix}-period-date`); if(dateEl) dateEl.addEventListener('change',e=>{ onChange({...period, date:e.target.value}); });
-  const fromEl=document.getElementById(`${prefix}-period-from`); if(fromEl) fromEl.addEventListener('change',e=>{ onChange({...period, from:e.target.value}); });
-  const toEl=document.getElementById(`${prefix}-period-to`); if(toEl) toEl.addEventListener('change',e=>{ onChange({...period, to:e.target.value}); });
+  const safePeriod = period || { mode: 'all', account: 'ALL' };
+  modeEl.addEventListener('change',e=>{ const newP={mode:e.target.value, account: safePeriod.account}; if(e.target.value==='daily') newP.date=today(); onChange(newP); });
+  const dateEl=document.getElementById(`${prefix}-period-date`); if(dateEl) dateEl.addEventListener('change',e=>{ onChange({...safePeriod, date:e.target.value}); });
+  const fromEl=document.getElementById(`${prefix}-period-from`); if(fromEl) fromEl.addEventListener('change',e=>{ onChange({...safePeriod, from:e.target.value}); });
+  const toEl=document.getElementById(`${prefix}-period-to`); if(toEl) toEl.addEventListener('change',e=>{ onChange({...safePeriod, to:e.target.value}); });
 }
 
 // 📡 BOOT ENGINE RUNTIME
 initCloudDatabase();
+render();
 </script>
 </body>
 </html>

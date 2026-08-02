@@ -1290,7 +1290,7 @@ function bindPeriodFilter(prefix, period, onChange) {
   const toEl=document.getElementById(`${prefix}-period-to`); if(toEl) toEl.addEventListener('change',e=>{ onChange({...safePeriod, to:e.target.value}); });
 }
 
-// 📡 BOOT ENGINE RUNTIME
+// 📡 BOOT ENGINE RUNTIME//
 initCloudDatabase();
 render();
 </script>

@@ -1,0 +1,22 @@
+{
+  "name": "Retro Trading Journal",
+  "short_name": "Retro Trader",
+  "description": "8-Bit Retro Arcade Trading Journal & Risk Manager",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#090B15",
+  "theme_color": "#304FFE",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./assets/icons/icon-trophy.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./assets/icons/icon-trophy.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,27 +1,27 @@
-# RETRO TRADER JOURNAL 📊
+# RETRO TRADER JOURNAL 📊 (V.3.9 STATION)
 
-PS1-style trading journal for forex/crypto traders
+PS1 / 8-Bit Retro RPG trading station & journal for forex/crypto traders.
 
-🎮 **Features:**
-- Retro PS1 UI style
-- Mobile-first design
-- Auto-save to browser
-- Alert: Stop trading after 2 losses/day
-- Equity curve & statistics
+🎮 **Core Features:**
+- **Retro 8-Bit RPG Station Theme**: Authentic pixel art UI, CRT monitor scanline filter, and sound effects.
+- **🛡️ % Daily Drawdown (DD) Risk Engine**: Calculate daily drawdown based on Starting Balance of the day (e.g. 5% Max DD limit).
+- **❤️ Retro Daily Risk HP Bar**: Dynamic HP life gauge tracking remaining daily loss tolerance (Green > 50%, Yellow 1%-50%, Red 0% Game Over).
+- **⚠️ 2-Level Alert System**:
+  - *Level 1 (70% DD used)*: Caution warning to reduce lot size.
+  - *Level 2 (100% DD reached)*: Hard Stop alarm & discipline prompt to prevent revenge trading.
+- **📡 Real-Time Cloud Sync (Zero Data Loss)**: Live cross-device synchronization between Mobile and PC via Firebase Realtime Database with Smart Merge.
+- **Multi-Account Support**: Manage multiple accounts (Demo, LIFE, RISK, Swingtrade, Custom accounts).
+- **Equity Curve & Deep Analytics**: Profit factor, expectancy, weekday matrix, calendar diary, and action ratio pie charts.
+- **Offline First**: Full offline support with LocalStorage and auto-sync when online.
 
-📱 **Live Demo:**
-https://YOUR_USERNAME.github.io/retro-trader-journal/
+📱 **Repository:**
+https://github.com/snoopy1989doo-source/retro-trading-journal
 
-## How to Use
-1. Open index.html in browser
-2. Start logging trades
-3. Data saves automatically
-4. Add to home screen on mobile
-
-## Tech
-- Vanilla HTML/CSS/JS
-- Local Storage (no server needed)
-- Web Audio API for 8-bit sounds
+## Tech Stack
+- Vanilla HTML5, CSS3, Modern JavaScript
+- Firebase Realtime Database (Real-time listener & isolated node)
+- Web Audio API (Retro 8-bit sound synthesizers)
+- LocalStorage caching engine
 
 ## License
 MIT

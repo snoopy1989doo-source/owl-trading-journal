@@ -627,10 +627,10 @@ function getConsecutiveLossLock(account) {
   const todaySLTrades = todayTrades.filter(t => t && t.status === 'SL');
 
   const lockKey = `${targetAcc}_${tDate}`;
-  let lockUntil = (state.lossLocks && state.lossLocks[lockKey]) ? Number(state.lossLocks[lockKey]) : 0;
+  let lockUntil = state.lossLocks ? state.lossLocks[lockKey] : undefined;
 
-  // Auto initialize lock timestamp if 2 or more SLs exist today
-  if (todaySLTrades.length >= 2 && (!lockUntil || isNaN(lockUntil))) {
+  // Auto initialize lock timestamp ONLY if undefined (not recorded yet and not explicitly cleared with 0)
+  if (todaySLTrades.length >= 2 && (lockUntil === undefined || lockUntil === null)) {
     const latestSL = todaySLTrades[todaySLTrades.length - 1];
     const baseTime = (latestSL && latestSL.createdAt) ? new Date(latestSL.createdAt).getTime() : Date.now();
     lockUntil = baseTime + (2 * 60 * 60 * 1000);
@@ -640,7 +640,8 @@ function getConsecutiveLossLock(account) {
   }
 
   const now = Date.now();
-  const remainingMs = lockUntil ? Math.max(0, lockUntil - now) : 0;
+  const numericLockUntil = Number(lockUntil) || 0;
+  const remainingMs = numericLockUntil > 0 ? Math.max(0, numericLockUntil - now) : 0;
   const isLocked = todaySLTrades.length >= 2 && remainingMs > 0;
   const remainingSec = Math.ceil(remainingMs / 1000);
 
@@ -648,7 +649,7 @@ function getConsecutiveLossLock(account) {
     isLocked,
     remainingMs,
     remainingSec,
-    lockUntil,
+    lockUntil: numericLockUntil,
     lockKey,
     todaySLCount: todaySLTrades.length
   };
@@ -1812,8 +1813,14 @@ function attachEvents() {
   if (btnResetLossLock) {
     btnResetLossLock.addEventListener('click', () => {
       if (!confirm('ยืนยันปลดล็อก Brain Cooldown ทั้งหมดทันที? (ใช้เฉพาะกรณีฉุกเฉินหรือทดสอบระบบ)')) return;
-      state.lossLocks = {};
-      save(KEY.LOSS_LOCK, {});
+      const tDate = today();
+      const accList = getAccountList();
+      if (!state.lossLocks) state.lossLocks = {};
+      accList.forEach(acc => {
+        state.lossLocks[`${acc}_${tDate}`] = 0;
+      });
+      state.lossLocks[`ALL_${tDate}`] = 0;
+      save(KEY.LOSS_LOCK, state.lossLocks);
       syncToCloud();
       beep('win');
       alert('✅ ปลดล็อก Brain Cooldown เรียบร้อยแล้ว!');

@@ -355,7 +355,8 @@ const KEY = {
   SOUND:        'rtj_sound_v2',
   CRT:          'rtj_crt_v2',
   LAST_ACCOUNT: 'rtj_last_account_v1',
-  MAX_DAILY_DD: 'rtj_max_daily_dd_v1' /* 🛡️ Max Daily DD % Key */
+  MAX_DAILY_DD: 'rtj_max_daily_dd_v1', /* 🛡️ Max Daily DD % Key */
+  LOSS_LOCK:    'rtj_loss_lock_v1'     /* 🧠 2 Consecutive Loss Cooldown Key */
 };
 
 const DEFAULT_BALANCES = {
@@ -531,6 +532,7 @@ const state = {
   cfs:          load(KEY.CFS, []),
   crt:          load(KEY.CRT, true),
   maxDailyDD:   parseFloat(load(KEY.MAX_DAILY_DD, 5.0)) || 5.0,
+  lossLocks:    load(KEY.LOSS_LOCK, {}), /* 🧠 2 Consecutive Loss Cooldown Timestamps */
   syncStatus:   'offline',
   calYear:      new Date().getFullYear(),
   calMonth:     new Date().getMonth(),
@@ -543,6 +545,147 @@ const state = {
   filter: { symbol:'ALL', status:'ALL', period:{mode:'all'}, account: savedLastAccount },
   statsPeriod: { mode:'all', account: savedLastAccount }
 };
+
+/* ─── 📊 CSV EXPORT UTILITY FOR AI AGENTS (AGENT_SHARK / AGENT_BEE) ───────── */
+function exportTradesToCSV(trades, filename) {
+  const safeTrades = Array.isArray(trades) ? trades : [];
+  if (safeTrades.length === 0) {
+    alert('ไม่มีข้อมูลไม้เทรดสำหรับ Export!');
+    return;
+  }
+
+  const headers = [
+    'Trade_ID',
+    'Date',
+    'Account',
+    'Symbol',
+    'Direction',
+    'Timeframe',
+    'Entry_Price',
+    'Exit_Price',
+    'Stop_Loss',
+    'Lot_Size',
+    'Net_PnL_USD',
+    'Status',
+    'RR_Multiple',
+    'Psychology_Confidence',
+    'Psychology_Fear',
+    'Psychology_Greed',
+    'Created_At'
+  ];
+
+  function getRR(t) {
+    const entryExitDist = Math.abs((Number(t.entry)||0) - (Number(t.exit)||0)); 
+    const entrySLDist = Math.abs((Number(t.entry)||0) - (Number(t.sl)||0));
+    if (entryExitDist === 0 || entrySLDist === 0 || (Number(t.lot)||0) === 0) return '';
+    const pipVal = Math.abs(Number(t.pnl)||0) / (entryExitDist * Number(t.lot));
+    const riskUSD = entrySLDist * Number(t.lot) * pipVal; 
+    const rewardUSD = Math.abs(Number(t.pnl)||0);
+    return riskUSD > 0 ? (rewardUSD / riskUSD).toFixed(2) + 'R' : '';
+  }
+
+  const rows = safeTrades.map(t => {
+    const psych = t.psychology || {};
+    return [
+      `"${t.id || ''}"`,
+      `"${t.date || ''}"`,
+      `"${t.account || 'Demo'}"`,
+      `"${t.symbol || ''}"`,
+      `"${t.dir || ''}"`,
+      `"${t.tf || '1H'}"`,
+      Number(t.entry) || 0,
+      Number(t.exit) || 0,
+      Number(t.sl) || 0,
+      Number(t.lot) || 0,
+      Number(t.pnl) || 0,
+      `"${t.status || ''}"`,
+      `"${getRR(t)}"`,
+      psych.conf ? 'TRUE' : 'FALSE',
+      psych.fear ? 'TRUE' : 'FALSE',
+      psych.greed ? 'TRUE' : 'FALSE',
+      `"${t.createdAt || t.date || ''}"`
+    ].join(',');
+  });
+
+  const csvContent = "\uFEFF" + [headers.join(','), ...rows].join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename || `retro-trading-journal-${today()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  beep('win');
+}
+
+/* ─── 🧠 2 CONSECUTIVE LOSS COOLDOWN ENGINE (2 HOURS REST LOCK) ─────────── */
+function getConsecutiveLossLock(account) {
+  const targetAcc = account || (state.f ? state.f.account : 'Demo') || 'Demo';
+  const tDate = today();
+  const allTrades = Array.isArray(state.trades) ? state.trades : [];
+  const todayTrades = allTrades.filter(t => t && t.date === tDate && (targetAcc === 'ALL' || (t.account || 'Demo') === targetAcc));
+  const todaySLTrades = todayTrades.filter(t => t && t.status === 'SL');
+
+  const lockKey = `${targetAcc}_${tDate}`;
+  let lockUntil = (state.lossLocks && state.lossLocks[lockKey]) ? Number(state.lossLocks[lockKey]) : 0;
+
+  // Auto initialize lock timestamp if 2 or more SLs exist today
+  if (todaySLTrades.length >= 2 && (!lockUntil || isNaN(lockUntil))) {
+    const latestSL = todaySLTrades[todaySLTrades.length - 1];
+    const baseTime = (latestSL && latestSL.createdAt) ? new Date(latestSL.createdAt).getTime() : Date.now();
+    lockUntil = baseTime + (2 * 60 * 60 * 1000);
+    if (!state.lossLocks) state.lossLocks = {};
+    state.lossLocks[lockKey] = lockUntil;
+    save(KEY.LOSS_LOCK, state.lossLocks);
+  }
+
+  const now = Date.now();
+  const remainingMs = lockUntil ? Math.max(0, lockUntil - now) : 0;
+  const isLocked = todaySLTrades.length >= 2 && remainingMs > 0;
+  const remainingSec = Math.ceil(remainingMs / 1000);
+
+  return {
+    isLocked,
+    remainingMs,
+    remainingSec,
+    lockUntil,
+    lockKey,
+    todaySLCount: todaySLTrades.length
+  };
+}
+
+function formatCooldown(sec) {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  if (h > 0) {
+    return `${h}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
+  }
+  return `${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
+}
+
+let cooldownInterval = null;
+function startCooldownTicker() {
+  if (cooldownInterval) clearInterval(cooldownInterval);
+  cooldownInterval = setInterval(() => {
+    const timerEl = document.getElementById('cooldown-timer');
+    const btnTimerEl = document.getElementById('btn-lock-timer');
+    if (!timerEl && !btnTimerEl) return;
+
+    const currentAcc = (state.f && state.f.account) ? state.f.account : 'Demo';
+    const lockInfo = getConsecutiveLossLock(currentAcc);
+    if (lockInfo.isLocked) {
+      const txt = formatCooldown(lockInfo.remainingSec);
+      if (timerEl) timerEl.textContent = txt;
+      if (btnTimerEl) btnTimerEl.textContent = txt;
+    } else {
+      clearInterval(cooldownInterval);
+      cooldownInterval = null;
+      beep('win');
+      render();
+    }
+  }, 1000);
+}
 
 /* ─── 🛡️ DAILY DRAWDOWN & RISK CALCULATION ENGINE ────────────────────────── */
 function getDailyRiskStats(account) {
@@ -650,6 +793,7 @@ function syncToCloud() {
     balances: state.balances || DEFAULT_BALANCES,
     balance: legacyBalance,
     maxDailyDD: state.maxDailyDD || 5.0,
+    lossLocks: state.lossLocks || {},
     updatedAt: new Date().toISOString()
   };
 
@@ -707,6 +851,12 @@ function initCloudDatabase() {
       if (data.maxDailyDD !== undefined && data.maxDailyDD !== null) {
         state.maxDailyDD = parseFloat(data.maxDailyDD) || 5.0;
         save(KEY.MAX_DAILY_DD, state.maxDailyDD);
+      }
+
+      // Merge Loss Locks
+      if (data.lossLocks) {
+        state.lossLocks = { ...(state.lossLocks || {}), ...data.lossLocks };
+        save(KEY.LOSS_LOCK, state.lossLocks);
       }
 
       save(KEY.TRADES, state.trades);
@@ -876,6 +1026,9 @@ function buildHome() {
 function buildTradeForm() {
   const f=state.f; const symbols=['GOLD','XAUUSD','BTCUSD','US30','NAS100','EURUSD','GBPUSD','Other']; const tfs=['1M','5M','15M','30M','1H','4H','D1','W1'];
   const accList = getAccountList();
+  const currentAcc = f.account || 'Demo';
+  const lockInfo = getConsecutiveLossLock(currentAcc);
+
   return `
     <label>🎯 พอร์ตบัญชีปลายทาง (LOCKED PERSISTENT)</label>
     <select id="f-account">
@@ -906,7 +1059,25 @@ function buildTradeForm() {
       <button class="psych-btn ${f.fear?'checked':''}" data-psych="fear">🙀 Fear</button>
       <button class="psych-btn ${f.greed?'checked':''}" data-psych="greed">💢 Greed</button>
     </div>
-    <button class="btn btn-green" id="btn-add-trade">► ADD TACTICAL TRADE</button>`;
+    
+    ${lockInfo.isLocked ? `
+      <div class="cooldown-box" style="border:2px solid #FF4E63; background:#240F14; padding:10px; margin-top:8px; margin-bottom:10px; text-align:center;">
+        <div style="color:#FF4E63; font-size:7.5px; animation:blink .8s infinite; margin-bottom:4px;">
+          🧠 BRAIN COOLDOWN ACTIVE (2 SLs TODAY) 🧠
+        </div>
+        <div style="color:#FFD54F; font-size:6.5px; line-height:1.4;">
+          คุณบันทึกไม้แพ้ (SL) ครบ 2 ไม้ในวันเดียว ระบบล็อกเพื่อบังคับพักสมอง 2 ชม. ป้องกันอาการหัวร้อน (Revenge Trading)!
+        </div>
+        <div style="color:#33D6FF; font-size:8.5px; font-weight:bold; margin-top:6px;">
+          ⏳ เหลือเวลาพักผ่อน: <span id="cooldown-timer">${formatCooldown(lockInfo.remainingSec)}</span>
+        </div>
+      </div>
+      <button class="btn" id="btn-add-trade-locked" style="border-color:#555; background:#181818; color:#888; cursor:not-allowed;" title="กำลังอยู่ในช่วงพักสมอง 2 ชั่วโมง">
+        🔒 LOCKED: พักสมอง (<span id="btn-lock-timer">${formatCooldown(lockInfo.remainingSec)}</span>)
+      </button>
+    ` : `
+      <button class="btn btn-green" id="btn-add-trade">► ADD TACTICAL TRADE</button>
+    `}`;
 }
 
 function buildCFForm() {
@@ -974,7 +1145,7 @@ function buildTradeLog(symbols) {
   const accList = getAccountList();
   return `
     ${buildPeriodFilter('log',p)}
-    <div class="filter-row" style="gap:4px;margin-bottom:10px">
+    <div class="filter-row" style="gap:4px;margin-bottom:6px">
       <select id="flt-account" style="flex:1;font-size:7px">
         <option value="ALL" ${safeFilter.account==='ALL'?'selected':''}>ALL ACCOUNTS</option>
         ${accList.map(a => `<option value="${a}" ${safeFilter.account===a?'selected':''}>${a}</option>`).join('')}
@@ -982,6 +1153,9 @@ function buildTradeLog(symbols) {
       <select id="flt-symbol" style="flex:1;font-size:7px">${symbols.map(s=>`<option ${safeFilter.symbol===s?'selected':''}>${s}</option>`).join('')}</select>
       <select id="flt-status" style="flex:1;font-size:7px">${['ALL','TP','SL','BE'].map(s=>`<option ${safeFilter.status===s?'selected':''}>${s}</option>`).join('')}</select>
     </div>
+    <button class="btn btn-green" id="btn-export-filtered-csv" style="margin-bottom:10px; font-size:6.5px; padding:8px 4px;">
+      📊 EXPORT CURRENT FILTER (CSV FOR AGENT SHARK / BEE)
+    </button>
     ${filtered.length===0?`<div class="empty">ไม่พบประวัติข้อมูลชุดนี้</div>`:filtered.map(t=>buildTradeItem(t)).join('')}`;
 }
 
@@ -1329,12 +1503,15 @@ function buildSettings() {
       </div>
 
       <div class="divider"></div>
-      <div style="color:#FFD54F;font-size:7px;margin-bottom:8px">💾 DATA DISK MANAGEMENT</div>
-      <button class="btn btn-green" id="btn-backup" style="margin-bottom:8px">▼ BACKUP CORE DATA</button>
+      <div style="color:#FFD54F;font-size:7px;margin-bottom:8px">💾 DATA DISK & AI AGENTS EXPORT</div>
+      <button class="btn btn-green" id="btn-export-all-csv" style="margin-bottom:8px">📊 EXPORT ALL TRADES (CSV FOR AGENT SHARK / BEE)</button>
+      <button class="btn btn-green" id="btn-backup" style="margin-bottom:8px">▼ BACKUP CORE DATA (JSON)</button>
       <button class="btn" id="btn-import-trigger" style="margin-bottom:8px">▲ IMPORT DATA DISK</button>
       <input type="file" id="btn-import" accept=".json" style="display:none">
+      
       <div class="divider"></div>
       <div style="color:#FF4E63;font-size:7px;margin-bottom:8px">⚠ DANGER ZONE DEPOT</div>
+      <button class="btn" id="btn-reset-loss-lock" style="margin-bottom:8px; border-color:#FFD54F; color:#FFD54F;">🔓 ปลดล็อก BRAIN COOLDOWN ทันที (EMERGENCY)</button>
       <button class="btn btn-red" id="btn-clear-trades">✕ ล้างประวัติการเทรดทั้งหมด</button>
     </div>`;
 }
@@ -1392,7 +1569,17 @@ function attachEvents() {
   bindPeriodFilter('log', state.filter ? state.filter.period : { mode: 'all' }, (p) => { state.filter.period = p; render(); });
   bindPeriodFilter('stats', state.statsPeriod || { mode: 'all', account: 'ALL' }, (p) => { state.statsPeriod = p; render(); });
 
-  /* 🛡️ ADD TACTICAL TRADE (WITH DISCIPLINE & DAILY DD CHECK) */
+  /* 🧠 LOCKED BUTTON CLICK WARNING */
+  const btnLocked = document.getElementById('btn-add-trade-locked');
+  if (btnLocked) {
+    btnLocked.addEventListener('click', () => {
+      const lockInfo = getConsecutiveLossLock(state.f.account || 'Demo');
+      beep('alert');
+      alert(`🧠 BRAIN COOLDOWN PROTOCOL\n\nระบบยังล็อกอยู่เพื่อความปลอดภัยของพอร์ตคุณ!\nกรุณาพักผ่อนอีก ${formatCooldown(lockInfo.remainingSec)} ก่อนเปิดกราฟเทรดต่อครับ`);
+    });
+  }
+
+  /* 🛡️ ADD TACTICAL TRADE (WITH DISCIPLINE & DAILY DD & 2-HOUR LOSS LOCK CHECK) */
   const btnTrade = document.getElementById('btn-add-trade');
   if (btnTrade) btnTrade.addEventListener('click', () => {
     const f = state.f;
@@ -1402,6 +1589,13 @@ function attachEvents() {
     }
 
     const currentAcc = f.account || 'Demo';
+    const lockInfo = getConsecutiveLossLock(currentAcc);
+    if (lockInfo.isLocked) {
+      beep('alert');
+      alert(`🧠 BRAIN COOLDOWN PROTOCOL\n\nระบบยังล็อกอยู่เพื่อความปลอดภัยของพอร์ตคุณ!\nกรุณาพักผ่อนอีก ${formatCooldown(lockInfo.remainingSec)} ก่อนเปิดกราฟเทรดต่อครับ`);
+      return;
+    }
+
     const risk = getDailyRiskStats(currentAcc);
 
     // 💀 Discipline Hard Lock Warning when HP is 0
@@ -1417,7 +1611,7 @@ function attachEvents() {
     }
 
     if (!Array.isArray(state.trades)) state.trades = [];
-    state.trades.push({
+    const newTrade = {
       id: uid(),
       date: f.date,
       symbol: f.symbol,
@@ -1432,7 +1626,22 @@ function attachEvents() {
       psychology: { conf: f.conf, fear: f.fear, greed: f.greed },
       account: f.account,
       createdAt: new Date().toISOString()
-    });
+    };
+    state.trades.push(newTrade);
+
+    // 🧠 Check if 2nd SL occurred today -> activate 2 hours Brain Cooldown Lock
+    let triggeredCooldown = false;
+    if (f.status === 'SL') {
+      const todaySLs = state.trades.filter(t => t && t.date === f.date && (t.account || 'Demo') === currentAcc && t.status === 'SL');
+      if (todaySLs.length >= 2) {
+        const lockKey = `${currentAcc}_${f.date}`;
+        const lockUntil = Date.now() + (2 * 60 * 60 * 1000); // 2 hours
+        if (!state.lossLocks) state.lossLocks = {};
+        state.lossLocks[lockKey] = lockUntil;
+        save(KEY.LOSS_LOCK, state.lossLocks);
+        triggeredCooldown = true;
+      }
+    }
 
     save(KEY.TRADES, state.trades);
     syncToCloud();
@@ -1440,6 +1649,10 @@ function attachEvents() {
     if (f.status === 'TP') beep('win');
     else if (f.status === 'SL') beep('lose');
     else beep('click');
+
+    if (triggeredCooldown) {
+      alert(`🧠 BRAIN COOLDOWN PROTOCOL ACTIVATED!\n\nคุณบันทึกไม้แพ้ (SL) ครบ 2 ไม้ในวันนี้แล้ว\nระบบจะล็อกปุ่มบันทึกไม้ใหม่เป็นเวลา 2 ชั่วโมง เพื่อบังคับให้คุณพักผ่อนสมองและหยุดพักการเทรดครับ!`);
+    }
 
     const currentAccount = state.f.account;
     state.f = { ...state.f, entry: '', exit: '', sl: '', lot: '', pnl: '', status: 'TP', conf: false, fear: false, greed: false, account: currentAccount }; 
@@ -1567,6 +1780,47 @@ function attachEvents() {
     });
   });
 
+  /* 📊 CSV EXPORT FOR FILTERED TRADES */
+  const btnExportFiltered = document.getElementById('btn-export-filtered-csv');
+  if (btnExportFiltered) {
+    btnExportFiltered.addEventListener('click', () => {
+      const safeFilter = state.filter || { period: { mode: 'all' }, symbol: 'ALL', status: 'ALL', account: 'ALL' };
+      const p = safeFilter.period || { mode: 'all' }; 
+      const allTrades = Array.isArray(state.trades) ? state.trades : [];
+      let filtered = [...allTrades].sort((a, b) => (b && a && b.date && a.date) ? b.date.localeCompare(a.date) : 0); 
+      filtered = filterByPeriod(filtered, p);
+      if (safeFilter.symbol !== 'ALL') filtered = filtered.filter(t => t && t.symbol === safeFilter.symbol);
+      if (safeFilter.status !== 'ALL') filtered = filtered.filter(t => t && t.status === safeFilter.status);
+      if (safeFilter.account !== 'ALL') filtered = filtered.filter(t => t && (t.account || 'Demo') === safeFilter.account);
+      
+      const accLabel = safeFilter.account || 'ALL';
+      const periodLabel = p.mode || 'filtered';
+      exportTradesToCSV(filtered, `rtj-trades-${accLabel}-${periodLabel}-${today()}.csv`);
+    });
+  }
+
+  /* 📊 CSV EXPORT FOR ALL TRADES */
+  const btnExportAll = document.getElementById('btn-export-all-csv');
+  if (btnExportAll) {
+    btnExportAll.addEventListener('click', () => {
+      exportTradesToCSV(state.trades || [], `rtj-trades-full-database-${today()}.csv`);
+    });
+  }
+
+  /* 🔓 EMERGENCY RESET COOLDOWN LOCK */
+  const btnResetLossLock = document.getElementById('btn-reset-loss-lock');
+  if (btnResetLossLock) {
+    btnResetLossLock.addEventListener('click', () => {
+      if (!confirm('ยืนยันปลดล็อก Brain Cooldown ทั้งหมดทันที? (ใช้เฉพาะกรณีฉุกเฉินหรือทดสอบระบบ)')) return;
+      state.lossLocks = {};
+      save(KEY.LOSS_LOCK, {});
+      syncToCloud();
+      beep('win');
+      alert('✅ ปลดล็อก Brain Cooldown เรียบร้อยแล้ว!');
+      render();
+    });
+  }
+
   const btnClear = document.getElementById('btn-clear-trades');
   if (btnClear) btnClear.addEventListener('click', () => {
     if (!confirm('⚠️ คำเตือนขั้นเด็ดขาด: ต้องการลบประวัติการเทรดทั้งหมดออกจากระบบจริงหรือไม่?')) return;
@@ -1584,7 +1838,8 @@ function attachEvents() {
       balances: state.balances,
       trades: state.trades,
       cfs: state.cfs,
-      maxDailyDD: state.maxDailyDD
+      maxDailyDD: state.maxDailyDD,
+      lossLocks: state.lossLocks
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -1612,6 +1867,10 @@ function attachEvents() {
             state.maxDailyDD = parseFloat(data.maxDailyDD) || 5.0;
             save(KEY.MAX_DAILY_DD, state.maxDailyDD);
           }
+          if (data.lossLocks) {
+            state.lossLocks = { ...data.lossLocks };
+            save(KEY.LOSS_LOCK, state.lossLocks);
+          }
           save(KEY.BALANCES, state.balances);
         } else { alert('โครงสร้างข้อมูลดิสก์ไม่ถูกต้อง!'); return; }
         if (!confirm(`พบฐานข้อมูลเทรด ${importedTrades.length} ไม้\nยืนยันนำเข้าเพื่อเขียนทับระบบปัจจุบันและซิงก์คลาวด์?`)) return;
@@ -1634,6 +1893,9 @@ function attachEvents() {
     state.calMonth++; if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
     beep('click'); render();
   };
+
+  /* 🧠 START LIVE COUNTDOWN TICKER */
+  startCooldownTicker();
 }
 
 function bindPeriodFilter(prefix, period, onChange) {

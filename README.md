@@ -6,6 +6,8 @@ PS1 / 8-Bit Retro RPG trading station & journal for forex/crypto traders.
 - **Retro 8-Bit RPG Station Theme**: Authentic pixel art UI, CRT monitor scanline filter, and sound effects.
 - **🛡️ % Daily Drawdown (DD) Risk Engine**: Calculate daily drawdown based on Starting Balance of the day (e.g. 5% Max DD limit).
 - **❤️ Retro Daily Risk HP Bar**: Dynamic HP life gauge tracking remaining daily loss tolerance (Green > 50%, Yellow 1%-50%, Red 0% Game Over).
+- **🧠 Max Consecutive Loss Lock (2 Hours Cooldown)**: เมื่อแพ้ (SL) ครบ 2 ไม้ในวันเดียว ระบบล็อกปุ่มบันทึกไม้ใหม่ชั่วคราว 2 ชั่วโมง พร้อมตัวนับเวลาถอยหลังแบบเรียลไทม์เพื่อบังคับพักสมองและป้องกัน Revenge Trading.
+- **📊 CSV Export for AI Agents (Agent_Shark / Agent_Bee)**: ปุ่ม Export ข้อมูลสถิติไม้เทรดเป็น CSV พร้อมการคำนวณ R:R, PnL, Psychology, Timeframe รองรับทั้ง Export ตาม Filter (รายเดือน/รายสัปดาห์) และ Export ทั้งหมดใน Settings.
 - **⚠️ 2-Level Alert System**:
   - *Level 1 (70% DD used)*: Caution warning to reduce lot size.
   - *Level 2 (100% DD reached)*: Hard Stop alarm & discipline prompt to prevent revenge trading.

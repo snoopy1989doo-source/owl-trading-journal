@@ -1,9 +1,11 @@
-const CACHE_NAME = 'retro-trading-journal-v100';
+const CACHE_NAME = 'retro-trading-journal-v101';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
-  './assets/icons/icon-trophy.png'
+  './assets/icons/app-logo.png',
+  './assets/icons/icon-192.png',
+  './assets/icons/icon-512.png'
 ];
 
 self.addEventListener('install', (e) => {

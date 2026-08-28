@@ -1,0 +1,8 @@
+{
+  "appId": "com.snoopy.retrotradingjournal",
+  "appName": "Retro Trading Journal",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

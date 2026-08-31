@@ -15,6 +15,25 @@
 
 ---
 
+## 💰 สรุปงบประมาณและค่าใช้จ่าย (Budget & Cost Breakdown)
+
+| รายการ | ค่าใช้จ่าย | รายละเอียดความจำเป็น |
+| :--- | :---: | :--- |
+| **Google Play Console (Android)** | **$25 (ประมาณ 870 บาท)** | **จ่ายครั้งเดียวตลอดชีพ** (จำเป็นสำหรับลง Play Store) |
+| **Apple Developer Program (iOS)** | $99 / ปี (ประมาณ 3,500 บาท) | รายปี (แนะนำให้รอมีกำไรจาก Android ก่อนค่อยขยาย) |
+| **Firebase Cloud Database & Auth** | **ฟรี (Free Spark Plan)** | ฟรีตลอดไป รองรับผู้ใช้งานพร้อมกันได้หลายพันคน |
+
+---
+
+## 🎁 สิทธิพิเศษสำหรับผู้ช่วยทดสอบรุ่นบุกเบิก 12 ท่านแรก (VIP Founder Rewards)
+
+เมื่อผู้ทดสอบช่วยทดสอบผ่าน Closed Testing ครบ 14 วัน จะได้รับรางวัลพิเศษตอบแทนดังนี้:
+1. 💎 **สิทธิ์ Owl Pro Lifetime ฟรีตลอดชีพ**: ปลดล็อกทุกฟีเจอร์โปรโดยไม่ต้องเสียค่าบริการรายเดือน (แจกผ่าน Google Play Promo Code หรือผูก Gmail ใน Firebase)
+2. 👑 **เหรียญตรา "FOUNDER OWL" (นกฮูกรุ่นก่อตั้ง)**: แสดงไอคอนมงกุฎทองคำข้างชื่อบัญชีในหน้า Hub เพื่อแสดงสถานะผู้ร่วมบุกเบิก
+3. 🎨 **ธีมพิเศษ "Founder Golden Retro Theme"**: สกินสีทอง 8-Bit Limited Edition ที่มีเฉพาะผู้ช่วยทดสอบ 12 คนแรกเท่านั้น (ไม่เปิดขายให้คนทั่วไป)
+
+---
+
 ## 🗺️ แผนงาน 5 ขั้นตอนสู่การเปิดตัวบน Store (5-Phase Roadmap)
 
 ```mermaid
@@ -37,7 +56,7 @@ graph TD
     {
       "users": {
         "<UID>": {
-          "profile": { "email": "trader@example.com", "tier": "free" },
+          "profile": { "email": "trader@example.com", "tier": "free", "isFounder": false },
           "balances": { "Demo": 10000, "Real": 1000 },
           "trades": [ ... ],
           "cfs": [ ... ],
@@ -65,13 +84,13 @@ graph TD
 ### 🔹 Phase 3: การขึ้น Google Play Store (Android)
 * **ค่าธรรมเนียม**: $25 (ประมาณ 870 บาท จ่ายครั้งเดียวตลอดชีพ)
 * **สิ่งที่ต้องเตรียม**:
-  - [ ] สมัครบัญชี **Google Play Console**
+  - [ ] สมัครบัญชี **Google Play Console** ($25)
   - [ ] สร้าง **Release Keystore** สำหรับเซ็นชื่อดิจิทัลของแอป
   - [ ] รันคำสั่ง Build เป็นไฟล์ **Android App Bundle (`.aab`)**:
     ```bash
     ./gradlew bundleRelease
     ```
-  - [ ] **Closed Testing (14 วัน)**: นำไฟล์ `.aab` เข้าทดสอบใน Closed Track กับผู้ทดสอบอย่างน้อย 12 คน ติดต่อกัน 14 วัน
+  - [ ] **Closed Testing (14 วัน)**: นำไฟล์ `.aab` เข้าทดสอบใน Closed Track กับผู้ทดสอบ 12-20 คน ติดต่อกัน 14 วัน
   - [ ] **Store Assets**:
     - App Icon: 512x512 PNG (รูปโลโก้นกฮูก)
     - Feature Graphic: 1024x500 PNG
@@ -91,15 +110,16 @@ graph TD
 
 ### 🔹 Phase 5: โมเดลการสร้างรายได้ (Monetization Strategy)
 
-| ฟีเจอร์ / สิทธิ์การใช้งาน | 🟢 Free Tier (ทุกคนใช้ได้) | 👑 Owl Pro Tier (สมาชิก/ซื้อขาด) |
-| :--- | :---: | :---: |
-| **บันทึกการเทรด** | ไม่จำกัด (เก็บบนเครื่อง) | ไม่จำกัด |
-| **Daily Drawdown HP Bar** | ✅ มี | ✅ มี |
-| **2-SL Brain Cooldown Lock** | ✅ มี | ✅ มี |
-| **Cloud Real-Time Sync ข้ามเครื่อง** | ❌ | 🚀 **ซิงก์อัตโนมัติ Mobile ⇄ PC** |
-| **AI Analysis CSV Export** | พื้นฐาน | 🤖 **พร้อมสูตรและจัดฟอร์แมตขั้นสูง** |
-| **แนบภาพกราฟก่อน/หลังเทรด** | ❌ | 📸 **เก็บรูปภาพกราฟบน Cloud Storage** |
-| **Custom 8-Bit Themes** | Retro Blue มาตรฐาน | 🎨 **ปลดล็อก Gameboy, Cyberpunk, Gold** |
+| ฟีเจอร์ / สิทธิ์การใช้งาน | 🟢 Free Tier (ทุกคนใช้ได้) | 👑 Owl Pro Tier (สมาชิก/ซื้อขาด) | 🌟 Founder VIP (12 คนแรก) |
+| :--- | :---: | :---: | :---: |
+| **บันทึกการเทรด** | ไม่จำกัด (เก็บบนเครื่อง) | ไม่จำกัด | ไม่จำกัด |
+| **Daily Drawdown HP Bar** | ✅ มี | ✅ มี | ✅ มี |
+| **2-SL Brain Cooldown Lock** | ✅ มี | ✅ มี | ✅ มี |
+| **Cloud Real-Time Sync ข้ามเครื่อง** | ❌ | 🚀 **ซิงก์อัตโนมัติ Mobile ⇄ PC** | 🚀 **ฟรีตลอดชีพ** |
+| **AI Analysis CSV Export** | พื้นฐาน | 🤖 **พร้อมสูตรและจัดฟอร์แมตขั้นสูง** | 🤖 **ฟรีตลอดชีพ** |
+| **แนบภาพกราฟก่อน/หลังเทรด** | ❌ | 📸 **เก็บรูปภาพกราฟบน Cloud** | 📸 **ฟรีตลอดชีพ** |
+| **Custom 8-Bit Themes** | Retro Blue | 🎨 **Gameboy, Cyberpunk, Gold** | 🎨 **Gold Founder Edition** |
+| **เหรียญตราพิเศษ** | ไม่มี | 👑 PRO | 👑 **FOUNDER OWL** |
 
 ---
 

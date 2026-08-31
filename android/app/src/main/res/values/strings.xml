@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Retro Trading Journal</string>
-    <string name="title_activity_main">Retro Trading Journal</string>
-    <string name="package_name">com.snoopy.retrotradingjournal</string>
-    <string name="custom_url_scheme">com.snoopy.retrotradingjournal</string>
+    <string name="app_name">Owl Trading Journal</string>
+    <string name="title_activity_main">Owl Trading Journal</string>
+    <string name="package_name">com.snoopy.owltradingjournal</string>
+    <string name="custom_url_scheme">com.snoopy.owltradingjournal</string>
 </resources>

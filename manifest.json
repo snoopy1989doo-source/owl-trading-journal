@@ -1,7 +1,7 @@
 {
-  "name": "Retro Trading Journal",
-  "short_name": "Retro Trader",
-  "description": "8-Bit Retro Arcade Trading Journal & Risk Manager",
+  "name": "Owl Trading Journal",
+  "short_name": "Owl Trader",
+  "description": "Gamified Retro Trading Journal & Risk Manager",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#090B15",

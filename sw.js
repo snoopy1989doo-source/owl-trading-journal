@@ -1,4 +1,4 @@
-const CACHE_NAME = 'retro-trading-journal-v101';
+const CACHE_NAME = 'owl-trading-journal-v102';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

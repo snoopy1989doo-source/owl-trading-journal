@@ -10,80 +10,126 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="./assets/icons/app-logo.png">
   <link rel="icon" type="image/png" href="./assets/icons/app-logo.png">
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
 <!-- ฝัง Firebase Compatibility SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 <style>
-/* ─── PREMIUM RETRO 8-BIT RPG TRADING STATION THEME ─────────────────────── */
+/* ─── 🦉 COZY OWL ARCADE THEME (MODERN PIXEL HYBRID) ─────────────────────── */
+:root {
+  --bg-main: #0B1120;
+  --bg-card: #151F32;
+  --bg-card-header: #1C2A44;
+  --bg-input: #0F172A;
+  --border-card: #22314E;
+  --border-input: #334155;
+  --border-focus: #3B82F6;
+  --owl-gold: #F59E0B;
+  --owl-gold-light: #FBBF24;
+  --owl-blue: #3B82F6;
+  --owl-blue-dark: #1D4ED8;
+  --owl-cyan: #38BDF8;
+  --tp-green: #10B981;
+  --tp-green-light: #34D399;
+  --sl-red: #EF4444;
+  --sl-red-light: #F87171;
+  --be-yellow: #EAB308;
+  --text-main: #F8FAFC;
+  --text-sub: #94A3B8;
+  --text-muted: #64748B;
+  --radius-card: 14px;
+  --radius-btn: 8px;
+  --radius-input: 8px;
+}
+
 *{box-sizing:border-box;margin:0;padding:0}
 body{
-  background:#090B15;color:#F5F5F5;
-  font-family:'Press Start 2P',monospace;
-  font-size:9px;line-height:1.6;
-  padding:8px 8px 72px 8px;overflow-x:hidden;
-  width:100%;
+  background: var(--bg-main);
+  color: var(--text-main);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px 10px 80px 10px;
+  overflow-x: hidden;
+  width: 100%;
+  -webkit-font-smoothing: antialiased;
 }
-::-webkit-scrollbar{width:6px;background:#090B15}
-::-webkit-scrollbar-thumb{background:#304FFE;border:1px solid #111827}
+::-webkit-scrollbar{width:6px;background:var(--bg-main)}
+::-webkit-scrollbar-thumb{background:#22314E;border-radius:3px;}
 
-/* 📺 CRT MONITOR COMPACT LAYER EFFECT */
+/* 📺 CRT MONITOR SCANLINE EFFECT (OPTIONAL COZY LAYER) */
 .crt{
   position:fixed;top:0;left:0;width:100%;height:100%;
-  background:linear-gradient(rgba(0,0,0,0)50%,rgba(255,255,255,.015)50%);
+  background:linear-gradient(rgba(0,0,0,0)50%,rgba(0,0,0,0.15)50%);
   background-size:100% 4px;
   pointer-events:none;z-index:9999;
+  opacity: 0.35;
 }
 .crt.disabled { display: none; }
 
-/* 👾 MASTER HEADER LINK TO PIXEL STEWARD & CLOUD REALTIME SYNC */
+/* 👾 MASTER HEADER LINK TO PIXEL STEWARD & CLOUD SYNC */
 .master-header {
   display: flex; justify-content: space-between; align-items: center;
-  background: #111827; border: 3px solid #304FFE; padding: 8px; margin-bottom: 12px;
-  box-shadow: 0 4px 0px rgba(0, 0, 0, 0.3);
-  width: 100%; max-width: 100%; gap: 6px;
+  background: var(--bg-card); border: 1.5px solid var(--border-card);
+  padding: 8px 12px; margin-bottom: 12px; border-radius: var(--radius-card);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  width: 100%; max-width: 100%; gap: 8px;
 }
-.master-title { color: #33D6FF; font-size: 7px; white-space: nowrap; }
+.master-title { 
+  color: var(--owl-gold); 
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px; 
+  white-space: nowrap; 
+  letter-spacing: 0.5px;
+}
 .pixel-steward-link {
-  text-decoration: none; color: #52FF6B; border: 2px solid #52FF6B;
-  padding: 6px 10px; font-size: 6.5px; background: #090B15;
-  font-family: inherit; font-weight: bold; white-space: nowrap; flex-shrink: 0;
-  min-height: 36px; display: flex; align-items: center; justify-content: center;
+  text-decoration: none; color: #10B981; border: 1.5px solid #10B981;
+  padding: 6px 12px; font-size: 8px; background: rgba(16, 185, 129, 0.08);
+  font-family: 'Press Start 2P', monospace; font-weight: bold; white-space: nowrap; flex-shrink: 0;
+  min-height: 32px; display: flex; align-items: center; justify-content: center;
+  border-radius: 6px; transition: all 0.15s ease;
 }
-.pixel-steward-link:active { transform: translateY(1px); background: #111827; }
+.pixel-steward-link:active { transform: translateY(1px); background: rgba(16, 185, 129, 0.2); }
 
 /* 📡 CLOUD SYNC STATUS BADGE */
 .sync-badge {
-  font-size: 5.5px; padding: 4px 6px; border: 1px solid #304FFE; background: #090B15;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px; padding: 4px 8px; border: 1px solid var(--border-card); 
+  background: var(--bg-input); border-radius: 6px;
   display: inline-flex; align-items: center; justify-content: center; letter-spacing: 0.5px;
 }
-.sync-online { border-color: #52FF6B; color: #52FF6B; }
-.sync-pending { border-color: #FFD54F; color: #FFD54F; animation: blink 0.8s infinite; }
-.sync-offline { border-color: #FF4E63; color: #FF4E63; }
+.sync-online { border-color: var(--tp-green); color: var(--tp-green); background: rgba(16, 185, 129, 0.1); }
+.sync-pending { border-color: var(--owl-gold); color: var(--owl-gold); animation: blink 0.8s infinite; background: rgba(245, 158, 11, 0.1); }
+.sync-offline { border-color: var(--sl-red); color: var(--sl-red); background: rgba(239, 68, 68, 0.1); }
 
-/* 🎮 COMPACT RPG HEADER HUB */
+/* 🎮 COZY RPG HEADER HUB */
 .rpg-hub-header {
-  background: #111827;
-  border: 3px solid #304FFE;
-  padding: 8px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-card);
+  border-radius: var(--radius-card);
+  padding: 12px;
   margin-bottom: 12px;
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  box-shadow: 0 4px 0px rgba(0, 0, 0, 0.3);
+  gap: 12px;
+  box-shadow: 0 6px 20px -2px rgba(0, 0, 0, 0.35);
 }
 .rpg-avatar-box {
-  width: 38px; height: 38px;
-  background: #090B15;
-  border: 2px solid #304FFE;
+  width: 46px; height: 46px;
+  background: var(--bg-input);
+  border: 2px solid var(--owl-gold);
+  border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px; flex-shrink: 0; cursor: pointer; margin-top: 2px;
+  flex-shrink: 0; cursor: pointer; margin-top: 2px;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+  transition: transform 0.15s ease;
 }
+.rpg-avatar-box:active { transform: scale(0.95); }
 .rpg-hub-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   min-width: 0;
 }
 .rpg-hub-row {
@@ -91,229 +137,303 @@ body{
   justify-content: space-between;
   align-items: center;
 }
-.rpg-hub-label { color: #FFD54F; font-size: 6px; }
-.rpg-hub-value { color: #F5F5F5; font-size: 7px; }
-.rpg-setting-trigger {
-  background: #090B15; border: 2px solid #304FFE;
-  color: #33D6FF; min-width: 38px; min-height: 38px; padding: 6px; cursor: pointer;
-  font-family: inherit; font-size: 12px; display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
+.rpg-hub-label { 
+  color: var(--text-sub); 
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px; 
+  letter-spacing: 0.5px;
 }
-.rpg-setting-trigger:active { transform: translateY(1px); background: #111827; }
+.rpg-hub-value { 
+  color: var(--text-main); 
+  font-weight: 700;
+  font-size: 11px; 
+}
+.rpg-setting-trigger {
+  background: var(--bg-input); border: 1.5px solid var(--border-card);
+  border-radius: 8px;
+  color: var(--owl-gold); min-width: 36px; min-height: 36px; padding: 6px; cursor: pointer;
+  font-family: inherit; font-size: 14px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.15s ease;
+}
+.rpg-setting-trigger:active { transform: translateY(1px); background: #1E293B; border-color: var(--owl-gold); }
 
-/* Authentic Pixel RPG Windows */
+/* Authentic Modern Pixel Card Containers */
 .card{
-  border: 3px solid #304FFE; background: #111827;
-  padding: 12px; margin-bottom: 12px;
-  box-shadow: 0 4px 0px rgba(0, 0, 0, 0.3);
+  border: 1.5px solid var(--border-card); 
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: 14px; margin-bottom: 12px;
+  box-shadow: 0 6px 20px -2px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
 }
 .card-title{
-  background: #304FFE;
-  color: #F5F5F5; padding: 6px 8px;
-  margin: -12px -12px 12px;
+  background: var(--bg-card-header);
+  color: var(--owl-gold); 
+  padding: 8px 12px;
+  margin: -14px -14px 14px;
+  font-family: 'Press Start 2P', monospace;
   font-size: 8px;
   display: flex; justify-content: space-between; align-items: center;
-  border-bottom: 3px solid #304FFE;
+  border-bottom: 1.5px solid var(--border-card);
+  letter-spacing: 0.5px;
 }
 
 /* ⚠️ 2-LEVEL ALERT WINDOWS */
 .alert-banner{
-  padding: 10px; margin-bottom: 12px;
+  padding: 12px; margin-bottom: 12px;
   text-align: center;
-  box-shadow: 0 4px 0px rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-card);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 .alert-stop {
-  border: 3px solid #FF4E63; background: #240F14;
+  border: 2px solid var(--sl-red); background: rgba(239, 68, 68, 0.12);
 }
 .alert-stop .alert-title {
-  color: #FF4E63; font-size: 8px;
+  color: var(--sl-red-light); 
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
   animation: blink .8s infinite;
   margin-bottom: 4px;
 }
-.alert-stop .alert-sub { color: #FF9800; font-size: 6.5px; line-height: 1.5; }
+.alert-stop .alert-sub { color: #FECACA; font-size: 11px; line-height: 1.5; font-weight: 500; }
 
 .alert-caution {
-  border: 3px solid #FFD54F; background: #262008;
+  border: 2px solid var(--owl-gold); background: rgba(245, 158, 11, 0.12);
 }
 .alert-caution .alert-title {
-  color: #FFD54F; font-size: 8px;
+  color: var(--owl-gold-light); 
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
   margin-bottom: 4px;
 }
-.alert-caution .alert-sub { color: #F5F5F5; font-size: 6.5px; line-height: 1.5; }
+.alert-caution .alert-sub { color: #FEF3C7; font-size: 11px; line-height: 1.5; font-weight: 500; }
 
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.4}}
 
-/* 🕹️ CLASSIC RPG MENU TABS */
-.tabs{display:flex;gap:6px;margin-bottom:12px}
+/* 🕹️ COZY TABS */
+.tabs{display:flex;gap:8px;margin-bottom:14px}
 .tab{
-  flex:1;padding:10px 4px;text-align:center;
-  border:2px solid #304FFE;background:#090B15;
-  cursor:pointer;font-size:8px;font-family:inherit;
-  color:#33D6FF;min-height:40px;display:flex;align-items:center;justify-content:center;
+  flex:1;padding:10px 6px;text-align:center;
+  border:1.5px solid var(--border-card);background:var(--bg-input);
+  cursor:pointer;font-size:9px;font-family:'Press Start 2P',monospace;
+  color:var(--text-sub);min-height:42px;display:flex;align-items:center;justify-content:center;
+  border-radius:var(--radius-btn); transition:all 0.15s ease;
 }
 .tab.active{
-  background:#304FFE;color:#F5F5F5;
+  background:var(--owl-blue);color:#FFFFFF;
+  border-color:var(--owl-blue);
   font-weight:bold;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
 }
-label{display:block;color:#FFD54F;font-size:7px;margin-bottom:4px;text-transform:uppercase;}
+
+label{
+  display:block;
+  color:var(--owl-gold);
+  font-size:11px;
+  font-weight:600;
+  margin-bottom:5px;
+  letter-spacing:0.3px;
+}
 input,select{
-  width:100%;padding:10px;margin-bottom:10px;
-  background:#090B15;color:#52FF6B;
-  border:2px solid #304FFE;
-  font-family:'Press Start 2P',monospace;font-size:8px;
-  outline:none;border-radius:0;min-height:40px;
+  width:100%;padding:10px 12px;margin-bottom:12px;
+  background:var(--bg-input);color:var(--text-main);
+  border:1.5px solid var(--border-input);
+  border-radius:var(--radius-input);
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;
+  outline:none;min-height:42px; transition:border-color 0.15s ease, box-shadow 0.15s ease;
 }
-input:focus,select:focus{color:#F5F5F5;border-color:#33D6FF;}
+input:focus,select:focus{
+  border-color:var(--border-focus);
+  box-shadow:0 0 0 3px rgba(59, 130, 246, 0.2);
+}
 
 .btn{
-  width:100%;padding:12px;margin-top:4px;
-  border:2px solid #33D6FF;background:#090B15;
-  color:#33D6FF;font-family:inherit;font-size:8px;
-  cursor:pointer;text-align:center;min-height:44px;display:flex;align-items:center;justify-content:center;
+  width:100%;padding:12px;margin-top:6px;
+  border:1.5px solid var(--owl-blue);background:var(--owl-blue);
+  color:#FFFFFF;font-family:'Press Start 2P',monospace;font-size:8px;
+  cursor:pointer;text-align:center;min-height:46px;display:flex;align-items:center;justify-content:center;
+  border-radius:var(--radius-btn); transition:all 0.15s ease;
+  box-shadow:0 4px 12px rgba(59, 130, 246, 0.3);
 }
-.btn:active{transform:translateY(1px);background:#111827;}
-.btn-green{border-color:#52FF6B;background:#090B15;color:#52FF6B}
-.btn-green:active{background:#111827}
-.btn-red{border-color:#FF4E63;background:#090B15;color:#FF4E63}
-.btn-red:active{background:#111827}
+.btn:active{transform:translateY(1px);opacity:0.9;}
+.btn-green{
+  border-color:var(--tp-green);background:var(--tp-green);color:#FFFFFF;
+  box-shadow:0 4px 12px rgba(16, 185, 129, 0.3);
+}
+.btn-green:active{background:#059669;}
+.btn-red{
+  border-color:var(--sl-red);background:var(--sl-red);color:#FFFFFF;
+  box-shadow:0 4px 12px rgba(239, 68, 68, 0.3);
+}
+.btn-red:active{background:#DC2626;}
 
-.status-row, .psych-row{display:flex;gap:6px;margin-bottom:10px}
+.status-row, .psych-row{display:flex;gap:8px;margin-bottom:12px}
 .status-btn, .psych-btn{
   flex:1;padding:10px 0;text-align:center;
-  border:2px solid #304FFE;background:#090B15;
-  font-family:inherit;font-size:7px;cursor:pointer;color:#F5F5F5;min-height:44px;
+  border:1.5px solid var(--border-input);background:var(--bg-input);
+  font-family:'Press Start 2P',monospace;font-size:8px;cursor:pointer;color:var(--text-sub);min-height:44px;
+  border-radius:var(--radius-btn); transition:all 0.15s ease;
 }
-.status-btn.tp{border-color:#52FF6B;color:#52FF6B}
-.status-btn.sl{border-color:#FF4E63;color:#FF4E63}
-.status-btn.be{border-color:#FFD54F;color:#FFD54F}
-.status-btn.active-tp{background:#52FF6B;border-color:#52FF6B;color:#090B15;font-weight:bold;}
-.status-btn.active-sl{background:#FF4E63;border-color:#FF4E63;color:#F5F5F5;font-weight:bold;}
-.status-btn.active-be{background:#FFD54F;border-color:#FFD54F;color:#090B15;font-weight:bold;}
+.status-btn.tp{border-color:rgba(16, 185, 129, 0.4);color:var(--tp-green);background:rgba(16, 185, 129, 0.06);}
+.status-btn.sl{border-color:rgba(239, 68, 68, 0.4);color:var(--sl-red);background:rgba(239, 68, 68, 0.06);}
+.status-btn.be{border-color:rgba(234, 179, 8, 0.4);color:var(--be-yellow);background:rgba(234, 179, 8, 0.06);}
 
-.psych-btn{font-size:7px;color:#33D6FF;border-color:#304FFE;}
-.psych-btn.checked{background:#33D6FF;border-color:#33D6FF;color:#090B15;font-weight:bold;}
+.status-btn.active-tp{background:var(--tp-green);border-color:var(--tp-green);color:#FFFFFF;font-weight:bold;box-shadow:0 0 12px rgba(16, 185, 129, 0.35);}
+.status-btn.active-sl{background:var(--sl-red);border-color:var(--sl-red);color:#FFFFFF;font-weight:bold;box-shadow:0 0 12px rgba(239, 68, 68, 0.35);}
+.status-btn.active-be{background:var(--be-yellow);border-color:var(--be-yellow);color:#0B1120;font-weight:bold;box-shadow:0 0 12px rgba(234, 179, 8, 0.35);}
+
+.psych-btn{font-size:8px;color:var(--text-sub);border-color:var(--border-input);}
+.psych-btn.checked{background:rgba(59, 130, 246, 0.15);border-color:var(--owl-blue);color:var(--owl-cyan);font-weight:bold;}
 
 /* ⚡ PIXEL QUANT STATUS COLOR PALETTE */
-.glow-green { color:#52FF6B; }
-.glow-red { color:#FF4E63; }
-.glow-cyan { color:#33D6FF; }
-.glow-yellow { color:#FFD54F; }
-.txt-white { color:#F5F5F5; }
+.glow-green { color: var(--tp-green-light); }
+.glow-red { color: var(--sl-red-light); }
+.glow-cyan { color: var(--owl-cyan); }
+.glow-yellow { color: var(--owl-gold-light); }
+.txt-white { color: var(--text-main); }
 
 .trade-item{
-  border:2px solid #304FFE;background:#090B15;
-  padding:10px;margin-bottom:8px;
+  border:1.5px solid var(--border-card);background:var(--bg-input);
+  border-radius:10px;
+  padding:12px;margin-bottom:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.2);
 }
-.trade-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
-.trade-symbol{color:#33D6FF;font-size:8px}
-.trade-row{display:flex;justify-content:space-between;margin-bottom:3px;font-size:7px}
-.trade-label{color:#FFD54F}
-.trade-value{color:#F5F5F5}
-.badge{padding:2px 4px;font-size:6px;display:inline-block;border:1px solid;}
-.badge-tp{border-color:#52FF6B;color:#52FF6B;background:rgba(82,255,107,0.1)}
-.badge-sl{border-color:#FF4E63;color:#FF4E63;background:rgba(255,78,99,0.1)}
-.badge-be{border-color:#FFD54F;color:#FFD54F;background:rgba(255,213,79,0.1)}
+.trade-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.trade-symbol{color:var(--owl-cyan);font-family:'Press Start 2P',monospace;font-size:8px;}
+.trade-row{display:flex;justify-content:space-between;margin-bottom:4px;font-size:11px;}
+.trade-label{color:var(--text-sub);font-weight:500;}
+.trade-value{color:var(--text-main);font-weight:600;}
+.badge{padding:3px 6px;font-family:'Press Start 2P',monospace;font-size:7px;display:inline-block;border-radius:4px;}
+.badge-tp{border:1px solid var(--tp-green);color:var(--tp-green-light);background:rgba(16,185,129,0.15)}
+.badge-sl{border:1px solid var(--sl-red);color:var(--sl-red-light);background:rgba(239,68,68,0.15)}
+.badge-be{border:1px solid var(--be-yellow);color:var(--owl-gold-light);background:rgba(234,179,8,0.15)}
 
-.divider{border-top:2px dashed #304FFE;margin:12px 0}
+.divider{border-top:1px dashed var(--border-card);margin:14px 0}
 
-/* 🔋 PIXEL LIFE BAR (WIN RATE HP STATUS) */
+/* 🔋 RETRO LIFE BAR (DAILY RISK HP STATUS) */
 .hp-bar-wrap {
-  border: 2px solid #304FFE; background: #090B15;
-  height: 12px; position: relative; margin-top: 4px;
+  border: 1px solid var(--border-card); background: var(--bg-input);
+  border-radius: 8px;
+  height: 14px; position: relative; margin-top: 6px;
+  overflow: hidden;
 }
 .hp-bar-fill {
-  background: #52FF6B;
-  height: 100%; transition: width 0.15s;
+  background: linear-gradient(90deg, #059669, #10B981);
+  height: 100%; transition: width 0.3s ease, background 0.3s ease;
+  border-radius: 6px;
 }
 
-/* 🏢 4 STRATEGIC SNES WINDOW BLOCKS */
+/* 🏢 4 STRATEGIC STATS WINDOW BLOCKS */
 .stats-block {
-  border: 2px solid #304FFE; background: #090B15;
-  padding: 10px; margin-bottom: 12px;
+  border: 1.5px solid var(--border-card); background: var(--bg-input);
+  border-radius: 10px;
+  padding: 12px; margin-bottom: 12px;
 }
 .stats-block-title {
-  font-size: 7px; color: #FFD54F; margin-bottom: 8px;
-  border-bottom: 2px solid #304FFE; padding-bottom: 4px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7.5px; color: var(--owl-gold); margin-bottom: 10px;
+  border-bottom: 1px solid var(--border-card); padding-bottom: 6px;
+  letter-spacing: 0.5px;
 }
-.inner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.stat-subbox { border: 1px solid #304FFE; background: #111827; padding: 6px; text-align: center; }
-.stat-sublabel { color: #33D6FF; font-size: 6px; margin-bottom: 4px; }
-.stat-subvalue { font-size: 10px; font-weight: bold; }
+.inner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.stat-subbox { border: 1px solid var(--border-card); background: var(--bg-card); border-radius: 8px; padding: 8px 6px; text-align: center; }
+.stat-sublabel { color: var(--text-sub); font-size: 10px; margin-bottom: 4px; font-weight: 500; }
+.stat-subvalue { font-size: 13px; font-weight: 700; color: var(--text-main); }
 
 /* 📊 BLOCK 3: WEEKDAY GRID MATRIX */
-.weekday-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-top: 4px; text-align: center; }
-.weekday-node { border: 1px solid #304FFE; background: #111827; padding: 4px 1px; min-height: 42px; display: flex; flex-direction: column; justify-content: space-between; }
-.weekday-lbl { font-size: 5px; color: #FFD54F; }
-.weekday-val { font-size: 5px; font-weight: bold; }
+.weekday-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 6px; text-align: center; }
+.weekday-node { border: 1px solid var(--border-card); background: var(--bg-card); border-radius: 6px; padding: 6px 2px; min-height: 46px; display: flex; flex-direction: column; justify-content: space-between; }
+.weekday-lbl { font-size: 9px; color: var(--owl-gold); font-weight: 600; }
+.weekday-val { font-size: 10px; font-weight: 700; }
 
 /* 📅 TRADING CALENDAR SYSTEM UI */
 .cal-box {
-  border: 1px solid #304FFE; background: #111827; padding: 6px; margin-top: 8px;
+  border: 1.5px solid var(--border-card); background: var(--bg-card); border-radius: 10px; padding: 10px; margin-top: 10px;
 }
-.cal-header-layout { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-.cal-grid-mesh { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; }
-.cal-weekday { color: #33D6FF; font-size: 5px; padding-bottom: 3px; border-bottom: 1px solid #304FFE; }
+.cal-header-layout { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.cal-grid-mesh { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+.cal-weekday { color: var(--text-sub); font-size: 10px; font-weight: 600; padding-bottom: 4px; border-bottom: 1px solid var(--border-card); }
 .cal-day-node {
-  min-height: 38px; padding: 2px; display: flex; flex-direction: column;
-  justify-content: space-between; font-size: 5px; border: 1px solid #090B15;
+  min-height: 42px; padding: 4px 2px; display: flex; flex-direction: column;
+  justify-content: space-between; font-size: 9px; border: 1px solid var(--border-card);
+  border-radius: 6px; background: var(--bg-input);
 }
-.cal-day-idx { text-align: left; color: #FFD54F; font-size: 5px; }
-.cal-day-pnl { font-weight: bold; font-size: 5px; }
-.cal-day-count { color: #33D6FF; font-size: 4px; text-align: right; }
+.cal-day-idx { text-align: left; color: var(--text-sub); font-size: 9px; font-weight: 600; }
+.cal-day-pnl { font-weight: 700; font-size: 10px; }
+.cal-day-count { color: var(--owl-cyan); font-size: 8px; text-align: right; }
 
 /* Calendar Special State Highlight Marks */
-.skin-cal-today { border: 1px dashed #33D6FF !important; background: #1a233d !important; }
-.skin-cal-today .cal-day-idx { color: #33D6FF !important; font-weight: bold; }
+.skin-cal-today { border: 1.5px dashed var(--owl-cyan) !important; background: rgba(56, 189, 248, 0.1) !important; }
+.skin-cal-today .cal-day-idx { color: var(--owl-cyan) !important; font-weight: bold; }
 
-.skin-cal-win { background: rgba(82,255,107,0.1) !important; border: 1px solid #52FF6B !important; color: #52FF6B !important; }
-.skin-cal-win .cal-day-idx, .skin-cal-win .cal-day-count { color: #52FF6B !important; }
-.skin-cal-loss { background: rgba(255,78,99,0.1) !important; border: 1px solid #FF4E63 !important; color: #FF4E63 !important; }
-.skin-cal-loss .cal-day-idx, .skin-cal-loss .cal-day-count { color: #FF4E63 !important; }
-.skin-cal-blank { background: #090B15; color: #111827; opacity: 0.2; }
-.skin-cal-neutral { background: #090B15; border: 1px solid #304FFE; }
+.skin-cal-win { background: rgba(16,185,129,0.12) !important; border: 1px solid var(--tp-green) !important; color: var(--tp-green-light) !important; }
+.skin-cal-win .cal-day-idx, .skin-cal-win .cal-day-count { color: var(--tp-green-light) !important; }
+.skin-cal-loss { background: rgba(239,68,68,0.12) !important; border: 1px solid var(--sl-red) !important; color: var(--sl-red-light) !important; }
+.skin-cal-loss .cal-day-idx, .skin-cal-loss .cal-day-count { color: var(--sl-red-light) !important; }
+.skin-cal-blank { background: transparent; opacity: 0.15; border: none; }
+.skin-cal-neutral { background: var(--bg-input); border: 1px solid var(--border-card); }
 
 /* Block 4: Psychology Warning Panel */
-.psych-cost-box { background: #240F14; border: 2px solid #FF4E63; padding: 8px; }
-.psych-cost-row { display: flex; justify-content: space-between; font-size: 7px; margin-bottom: 4px; color: #FF4E63; }
+.psych-cost-box { background: rgba(239, 68, 68, 0.1); border: 1.5px solid var(--sl-red); border-radius: 10px; padding: 10px; }
+.psych-cost-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: var(--sl-red-light); font-weight: 600; }
 
-.cf-item{ border:2px solid #304FFE; background:#090B15; padding:10px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
-.cf-deposit{color:#52FF6B;}
-.cf-withdraw{color:#FF4E63;}
-.setting-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed #304FFE;}
+.cf-item{ border:1.5px solid var(--border-card); background:var(--bg-input); border-radius:8px; padding:10px 12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
+.cf-deposit{color:var(--tp-green-light); font-weight:700;}
+.cf-withdraw{color:var(--sl-red-light); font-weight:700;}
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px dashed var(--border-card);}
 
-.toggle{width:44px;height:22px;border:2px solid #304FFE;background:#090B15;cursor:pointer;position:relative;display:flex;align-items:center;}
-.toggle-knob{width:14px;height:14px;background:#FF4E63;position:absolute;transition:left .1s;}
-.toggle-knob.on{left:22px;background:#52FF6B;}
-.toggle-knob.off{left:2px;background:#FF4E63;}
-.empty{color:#304FFE;text-align:center;padding:16px;font-size:7px}
+.toggle{width:46px;height:24px;border:1.5px solid var(--border-card);background:var(--bg-input);border-radius:12px;cursor:pointer;position:relative;display:flex;align-items:center;}
+.toggle-knob{width:16px;height:16px;background:var(--sl-red);border-radius:50%;position:absolute;transition:left .2s ease;}
+.toggle-knob.on{left:24px;background:var(--tp-green);}
+.toggle-knob.off{left:3px;background:var(--sl-red);}
+.empty{color:var(--text-sub);text-align:center;padding:20px;font-size:11px;font-weight:500;}
 
-/* 🕹️ AUTHENTIC RPG BOTTOM NAVIGATION BAR */
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#111827;border-top:3px solid #304FFE;display:flex;z-index:100;height:52px;}
-.nav-btn{flex:1;padding:6px 2px;text-align:center;border:none;background:transparent;font-family:inherit;font-size:7px;color:#F5F5F5;cursor:pointer;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:48px;}
-.nav-btn.active{color:#33D6FF;background:#090B15;border-top:2px solid #33D6FF;}
-.nav-btn:active { transform: translateY(1px); }
-.nav-icon{font-size:12px;display:block;margin-bottom:2px}
-.page-wrap{padding-bottom:12px}
-
-/* 🛠️ FIX: TOUCH TARGET ACCESSIBILITY & INLINE EDITING BUTTONS */
-.del-btn{
-  background:#090B15;border:1px solid #FF4E63;color:#FF4E63;
-  padding:8px 12px;font-family:inherit;font-size:7px;cursor:pointer;
-  min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;
+/* 🕹️ COZY BOTTOM NAVIGATION DOCK */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;
+  background:rgba(21, 31, 50, 0.95);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-top:1.5px solid var(--border-card);
+  display:flex;z-index:100;height:56px;
+  box-shadow:0 -4px 16px rgba(0,0,0,0.3);
 }
-.del-btn:active{background:#240F14;}
+.nav-btn{
+  flex:1;padding:6px 2px;text-align:center;border:none;background:transparent;
+  font-family:'Press Start 2P',monospace;font-size:7px;color:var(--text-sub);cursor:pointer;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:50px;
+  transition:all 0.15s ease;
+}
+.nav-btn.active{
+  color:var(--owl-gold);
+  background:rgba(245, 158, 11, 0.08);
+  border-top:2px solid var(--owl-gold);
+}
+.nav-btn:active { transform: translateY(1px); }
+.nav-icon{font-size:14px;display:block;margin-bottom:2px}
+.page-wrap{padding-bottom:14px}
 
-.filter-bar{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
-.filter-row{display:flex;gap:4px}
-.filter-row select,.filter-row input{margin-bottom:0;font-size:7px}
-.pie-wrap{display:flex;align-items:center;gap:12px;margin:8px 0}
-.pie-legend{display:flex;flex-direction:column;gap:4px}
-.pie-legend-item{display:flex;align-items:center;gap:6px;font-size:6px}
-.pie-dot{width:8px;height:8px;border:1px solid #090B15;flex-shrink:0}
+/* 🛠️ TOUCH TARGET & DELETE BUTTON */
+.del-btn{
+  background:rgba(239, 68, 68, 0.1);border:1px solid var(--sl-red);color:var(--sl-red-light);
+  padding:6px 12px;font-family:'Press Start 2P',monospace;font-size:6.5px;cursor:pointer;
+  border-radius:6px;min-height:36px;display:inline-flex;align-items:center;justify-content:center;
+  transition:all 0.15s ease;
+}
+.del-btn:active{background:rgba(239, 68, 68, 0.25);}
+
+.filter-bar{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.filter-row{display:flex;gap:6px}
+.filter-row select,.filter-row input{margin-bottom:0;font-size:12px}
+.pie-wrap{display:flex;align-items:center;gap:14px;margin:10px 0}
+.pie-legend{display:flex;flex-direction:column;gap:6px}
+.pie-legend-item{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:500;}
+.pie-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
 
 /* 🎛️ MULTI-PORTFOLIO BALANCES STYLING */
 .bal-card-item {
-  border: 2px solid #304FFE; background: #090B15; padding: 10px; margin-bottom: 8px;
+  border: 1.5px solid var(--border-card); background: var(--bg-input); border-radius: 8px;
+  padding: 10px 12px; margin-bottom: 8px;
   display: flex; justify-content: space-between; align-items: center;
 }
 </style>
@@ -1015,7 +1135,7 @@ function buildHome() {
   return `
     <div class="card">
       <div class="card-title">
-        <span>▶ RETRO TRADER ARCADE</span>
+        <span>🦉 OWL TRADING STATION</span>
         <span class="glow-cyan" style="font-size:7px;">${today()}</span>
       </div>
       <div class="tabs">

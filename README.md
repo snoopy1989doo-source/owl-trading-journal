@@ -17,8 +17,11 @@ Gamified 8-Bit Retro RPG trading station & psychological risk manager for forex/
 - **Equity Curve & Deep Analytics**: Profit factor, expectancy, weekday matrix, calendar diary, and action ratio pie charts.
 - **Offline First**: Full offline support with LocalStorage and auto-sync when online.
 
-📱 **Repository:**
-https://github.com/snoopy1989doo-source/retro-trading-journal
+📱 **Live Web App:**
+https://snoopy1989doo-source.github.io/owl-trading-journal/
+
+📦 **Repository:**
+https://github.com/snoopy1989doo-source/owl-trading-journal
 
 🗺️ **Commercial & Store Roadmap:**
 See [STORE_LAUNCH_ROADMAP.md](STORE_LAUNCH_ROADMAP.md) for full App Store & Google Play Store release guidelines.

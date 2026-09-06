@@ -6,6 +6,7 @@
 <title>OWL TRADING JOURNAL - RETRO STATION</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#090B15">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="./assets/icons/app-logo.png">
@@ -422,6 +423,39 @@ input:focus,select:focus{
 }
 .del-btn:active{background:rgba(239, 68, 68, 0.25);}
 
+/* TRADE LIFECYCLE + LIVE R MULTIPLE */
+.rr-preview{
+  border:1.5px solid var(--owl-cyan);background:rgba(51,214,255,0.07);
+  border-radius:10px;padding:10px 12px;margin:2px 0 12px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:7px;text-align:center;
+}
+.rr-cell{min-width:0}.rr-label{color:var(--text-sub);font-size:8px;margin-bottom:5px;font-weight:600}
+.rr-value{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--text-main);line-height:1.45}
+.rr-value.good{color:var(--tp-green-light)}.rr-value.bad{color:var(--sl-red-light)}
+.lifecycle-tabs{display:flex;gap:6px;margin-bottom:10px}
+.lifecycle-tab{
+  flex:1;min-height:42px;border:1.5px solid var(--border-input);background:var(--bg-input);
+  color:var(--text-sub);border-radius:7px;font-family:'Press Start 2P',monospace;font-size:6.5px;
+}
+.lifecycle-tab.active{border-color:var(--owl-blue);background:rgba(59,130,246,.18);color:var(--owl-cyan)}
+.trade-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
+.trade-action{
+  min-height:40px;border:1.5px solid var(--owl-blue);background:rgba(59,130,246,.12);
+  color:var(--owl-cyan);border-radius:7px;font-family:'Press Start 2P',monospace;font-size:6.5px;padding:7px;
+}
+.trade-action.primary{border-color:var(--tp-green);background:rgba(16,185,129,.14);color:var(--tp-green-light)}
+.trade-action.warn{border-color:var(--be-yellow);background:rgba(234,179,8,.1);color:var(--owl-gold-light)}
+.manage-box{border-top:1px dashed var(--border-card);margin-top:10px;padding-top:10px}
+.manage-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.manage-grid label{font-size:9px}.manage-grid input,.manage-grid select{margin-bottom:7px}
+.timeline{font-size:10px;color:var(--text-sub);line-height:1.55;margin-top:8px}
+.timeline strong{color:var(--owl-gold-light)}
+.life-badge{padding:3px 6px;border-radius:4px;font-family:'Press Start 2P',monospace;font-size:6px}
+.life-planned{color:var(--owl-gold-light);border:1px solid var(--be-yellow);background:rgba(234,179,8,.12)}
+.life-open{color:var(--owl-cyan);border:1px solid var(--owl-blue);background:rgba(59,130,246,.14)}
+.life-cancelled{color:var(--text-sub);border:1px solid var(--border-input)}
+@media(max-width:360px){.rr-preview{grid-template-columns:1fr}.manage-grid{grid-template-columns:1fr}}
+
 .filter-bar{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
 .filter-row{display:flex;gap:6px}
 .filter-row select,.filter-row input{margin-bottom:0;font-size:12px}
@@ -444,7 +478,7 @@ input:focus,select:focus{
 <!-- 👾 MASTER HEADER LINK TO PIXEL STEWARD & CLOUD REALTIME SYNC -->
 <div class="master-header">
   <div style="display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden;">
-    <span class="master-title">🦉 OWL TRADER V.3.9</span>
+    <span class="master-title">🦉 OWL TRADER V.4.0</span>
     <span id="cloud-sync-badge" class="sync-badge sync-offline">🔴 OFFLINE</span>
   </div>
   <a href="https://snoopy1989doo-source.github.io/Pixel-Stewart/" class="pixel-steward-link" target="_blank" rel="noopener noreferrer">► PIXEL STEWARD</a>
@@ -550,8 +584,61 @@ function filterByPeriod(trades, period) {
 }
 
 /* ─── 📊 ADVANCED STATS CALCULATION ENGINE ────────────────────────────────── */
+function tradeLifecycle(t) {
+  if (!t) return 'CLOSED';
+  return t.lifecycle || 'CLOSED'; // Legacy records were always completed trades.
+}
+
+function isClosedTrade(t) { return !!t && tradeLifecycle(t) === 'CLOSED'; }
+function initialStop(t) { return Number(t && (t.initialSl ?? t.sl)) || 0; }
+function plannedEntry(t) { return Number(t && (t.plannedEntry ?? t.entry)) || 0; }
+function actualEntry(t) { return Number(t && (t.actualEntry ?? t.entry)) || 0; }
+function plannedTarget(t) { return Number(t && (t.plannedTp ?? t.exit)) || 0; }
+function exitEvents(t) { return t && Array.isArray(t.exits) ? t.exits : []; }
+
+function directionMove(t, fromPrice, toPrice) {
+  return t && t.dir === 'Sell' ? Number(fromPrice) - Number(toPrice) : Number(toPrice) - Number(fromPrice);
+}
+
+function plannedRR(t) {
+  const entry = plannedEntry(t), stop = initialStop(t), target = plannedTarget(t);
+  const risk = Math.abs(entry - stop);
+  if (!entry || !stop || !target || !risk) return null;
+  return directionMove(t, entry, target) / risk;
+}
+
+function realizedR(t) {
+  const entry = actualEntry(t), stop = initialStop(t), originalLot = Number(t && t.lot) || 0;
+  const risk = Math.abs(entry - stop);
+  if (!entry || !stop || !risk || !originalLot) return null;
+  const events = exitEvents(t);
+  if (events.length) {
+    return events.reduce((sum, e) => sum + (directionMove(t, entry, Number(e.price) || entry) / risk) * ((Number(e.lot) || 0) / originalLot), 0);
+  }
+  const exit = Number(t && t.exit) || 0;
+  return exit ? directionMove(t, entry, exit) / risk : null;
+}
+
+function remainingLot(t) {
+  const original = Number(t && t.lot) || 0;
+  const events = exitEvents(t);
+  if (tradeLifecycle(t) === 'CLOSED' && events.length === 0) return 0;
+  const exited = events.reduce((sum, e) => sum + (Number(e.lot) || 0), 0);
+  return Math.max(0, original - exited);
+}
+
+function levelR(t, price) {
+  const entry = actualEntry(t), stop = initialStop(t), level = Number(price) || 0;
+  const risk = Math.abs(entry - stop);
+  return entry && level && risk ? directionMove(t, entry, level) / risk : null;
+}
+
+function fmtR(value) {
+  return value === null || !Number.isFinite(value) ? '-' : `${value >= 0 ? '+' : ''}${value.toFixed(2)}R`;
+}
+
 function computeStats(trades, startBal) {
-  const safeTrades = Array.isArray(trades) ? trades : [];
+  const safeTrades = (Array.isArray(trades) ? trades : []).filter(isClosedTrade);
   const total=safeTrades.length;
   const wins=safeTrades.filter(t=>t && t.status==='TP').length;
   const loses=safeTrades.filter(t=>t && t.status==='SL').length;
@@ -559,21 +646,11 @@ function computeStats(trades, startBal) {
   const wr=total>0?(wins/total*100).toFixed(1):0;
   const netPnl=safeTrades.reduce((s,t)=>s+(Number(t.pnl)||0),0);
 
-  function calcRR(t) {
-    if (!t) return null;
-    const entryExitDist = Math.abs((Number(t.entry)||0) - (Number(t.exit)||0)); 
-    const entrySLDist = Math.abs((Number(t.entry)||0) - (Number(t.sl)||0));
-    if (entryExitDist === 0 || entrySLDist === 0 || (Number(t.lot)||0) === 0) return null;
-    const pipVal = Math.abs(Number(t.pnl)||0) / (entryExitDist * Number(t.lot));
-    const riskUSD = entrySLDist * Number(t.lot) * pipVal; 
-    const rewardUSD = Math.abs(Number(t.pnl)||0);
-    return riskUSD > 0 ? rewardUSD / riskUSD : null;
-  }
+  function calcRR(t) { return realizedR(t); }
 
-  const rrs = safeTrades.map(calcRR).filter(r=>r!==null&&r>0);
-  const winRRs = safeTrades.filter(t=>t && t.status==='TP').map(calcRR).filter(r=>r!==null&&r>0);
-  const loseRRs= safeTrades.filter(t=>t && t.status==='SL').map(calcRR).filter(r=>r!==null&&r>0);
-  const avgRR = rrs.length>0 ? (rrs.reduce((a,b)=>a+b,0)/rrs.length).toFixed(2)+'R' : '-';
+  const rrs = safeTrades.map(calcRR).filter(r=>r!==null&&Number.isFinite(r));
+  const winRRs = safeTrades.filter(t=>t && Number(t.pnl)>0).map(calcRR).filter(r=>r!==null&&r>0);
+  const avgRR = winRRs.length>0 ? (winRRs.reduce((a,b)=>a+b,0)/winRRs.length).toFixed(2)+'R' : '-';
 
   const grossProfit = safeTrades.filter(t=>t && Number(t.pnl) > 0).reduce((s,t)=>s+Number(t.pnl), 0);
   const grossLoss = Math.abs(safeTrades.filter(t=>t && Number(t.pnl) < 0).reduce((s,t)=>s+Number(t.pnl), 0));
@@ -646,6 +723,8 @@ const state = {
   page:         'HOME',
   inputTab:     'TRADE',
   logTab:       'TRADE',
+  tradeView:    'ACTIVE',
+  manageTradeId: null,
   sound:        load(KEY.SOUND, true), 
   balances:     load(KEY.BALANCES, DEFAULT_BALANCES),
   trades:       load(KEY.TRADES, []), 
@@ -657,8 +736,8 @@ const state = {
   calYear:      new Date().getFullYear(),
   calMonth:     new Date().getMonth(),
   f: {
-    date:today(), symbol:'GOLD', dir:'Buy', entry:'', exit:'',
-    sl:'', lot:'', pnl:'', status:'TP', tf:'1H',
+    date:today(), symbol:'GOLD', dir:'Buy', entry:'', plannedTp:'',
+    sl:'', lot:'', tf:'1H',
     conf:false, fear:false, greed:false, account: savedLastAccount
   },
   cf: { date:today(), type:'Deposit', amount:'', desc:'', account: savedLastAccount },
@@ -676,53 +755,60 @@ function exportTradesToCSV(trades, filename) {
 
   const headers = [
     'Trade_ID',
+    'Lifecycle',
     'Date',
     'Account',
     'Symbol',
     'Direction',
     'Timeframe',
     'Entry_Price',
+    'Planned_Entry',
     'Exit_Price',
-    'Stop_Loss',
+    'Initial_Stop_Loss',
+    'Current_Stop_Loss',
+    'Planned_Take_Profit',
     'Lot_Size',
+    'Remaining_Lot',
     'Net_PnL_USD',
     'Status',
     'RR_Multiple',
     'Psychology_Confidence',
     'Psychology_Fear',
     'Psychology_Greed',
+    'Exit_Events_JSON',
     'Created_At'
   ];
 
   function getRR(t) {
-    const entryExitDist = Math.abs((Number(t.entry)||0) - (Number(t.exit)||0)); 
-    const entrySLDist = Math.abs((Number(t.entry)||0) - (Number(t.sl)||0));
-    if (entryExitDist === 0 || entrySLDist === 0 || (Number(t.lot)||0) === 0) return '';
-    const pipVal = Math.abs(Number(t.pnl)||0) / (entryExitDist * Number(t.lot));
-    const riskUSD = entrySLDist * Number(t.lot) * pipVal; 
-    const rewardUSD = Math.abs(Number(t.pnl)||0);
-    return riskUSD > 0 ? (rewardUSD / riskUSD).toFixed(2) + 'R' : '';
+    const value = realizedR(t);
+    return value===null ? '' : value.toFixed(2) + 'R';
   }
 
   const rows = safeTrades.map(t => {
     const psych = t.psychology || {};
     return [
       `"${t.id || ''}"`,
+      `"${tradeLifecycle(t)}"`,
       `"${t.date || ''}"`,
       `"${t.account || 'Demo'}"`,
       `"${t.symbol || ''}"`,
       `"${t.dir || ''}"`,
       `"${t.tf || '1H'}"`,
       Number(t.entry) || 0,
+      plannedEntry(t),
       Number(t.exit) || 0,
-      Number(t.sl) || 0,
+      initialStop(t),
+      Number(t.currentSl || initialStop(t)) || 0,
+      plannedTarget(t),
       Number(t.lot) || 0,
+      remainingLot(t),
       Number(t.pnl) || 0,
       `"${t.status || ''}"`,
       `"${getRR(t)}"`,
       psych.conf ? 'TRUE' : 'FALSE',
       psych.fear ? 'TRUE' : 'FALSE',
       psych.greed ? 'TRUE' : 'FALSE',
+      `"${JSON.stringify(exitEvents(t)).replace(/"/g, '""')}"`,
       `"${t.createdAt || t.date || ''}"`
     ].join(',');
   });
@@ -811,7 +897,7 @@ function startCooldownTicker() {
 /* ─── 🛡️ DAILY DRAWDOWN & RISK CALCULATION ENGINE ────────────────────────── */
 function getDailyRiskStats(account) {
   const targetAcc = account || (state.f ? state.f.account : 'Demo') || 'Demo';
-  const allTrades = Array.isArray(state.trades) ? state.trades : [];
+  const allTrades = (Array.isArray(state.trades) ? state.trades : []).filter(t => t && ['OPEN','CLOSED'].includes(tradeLifecycle(t)));
   const safeBalances = state.balances || DEFAULT_BALANCES;
   const safeCFs = Array.isArray(state.cfs) ? state.cfs : [];
   
@@ -1122,8 +1208,8 @@ function buildAlert() {
 
 function buildNav() {
   const pages=[
-    {id:'HOME',icon:'📝',label:'INPUT'},
-    {id:'LOG',icon:'📋',label:'LOG'},
+    {id:'HOME',icon:'📝',label:'PLAN'},
+    {id:'LOG',icon:'📋',label:'TRADES'},
     {id:'STATS',icon:'📊',label:'STATS'}
   ];
   return `<div class="bottom-nav">
@@ -1151,6 +1237,10 @@ function buildTradeForm() {
   const accList = getAccountList();
   const currentAcc = f.account || 'Demo';
   const lockInfo = getConsecutiveLossLock(currentAcc);
+  const previewTrade = { dir:f.dir, plannedEntry:f.entry, initialSl:f.sl, plannedTp:f.plannedTp };
+  const planR = plannedRR(previewTrade);
+  const riskDistance = f.entry && f.sl ? Math.abs(Number(f.entry)-Number(f.sl)) : null;
+  const rewardDistance = f.entry && f.plannedTp ? Math.abs(Number(f.plannedTp)-Number(f.entry)) : null;
 
   return `
     <label>🎯 พอร์ตบัญชีปลายทาง (LOCKED PERSISTENT)</label>
@@ -1165,16 +1255,14 @@ function buildTradeForm() {
       <button class="status-btn ${f.dir==='Sell'?'active-sl':'sl'}" data-dir="Sell">▼ SELL</button>
     </div>
     <label>Timeframe</label><select id="f-tf">${tfs.map(t=>`<option ${f.tf===t?'selected':''}>${t}</option>`).join('')}</select>
-    <label>Entry Price (ราคาเข้า)</label><input type="number" id="f-entry" placeholder="0.00" value="${f.entry}" inputmode="decimal">
-    <label>Exit Price (ราคาออก)</label><input type="number" id="f-exit" placeholder="0.00" value="${f.exit}" inputmode="decimal">
-    <label>Stop Loss Price (จุดยอมแพ้)</label><input type="number" id="f-sl" placeholder="0.00" value="${f.sl}" inputmode="decimal">
+    <label>Planned Entry (ราคาเข้าตามแผน)</label><input type="number" id="f-entry" placeholder="0.00" value="${f.entry}" inputmode="decimal">
+    <label>Initial Stop Loss (SL เริ่มต้น)</label><input type="number" id="f-sl" placeholder="0.00" value="${f.sl}" inputmode="decimal">
+    <label>Planned Take Profit (เป้าหมาย)</label><input type="number" id="f-planned-tp" placeholder="0.00" value="${f.plannedTp||''}" inputmode="decimal">
     <label>Lot Size</label><input type="number" id="f-lot" placeholder="0.01" value="${f.lot}" inputmode="decimal">
-    <label>P&amp;L (USD) สุทธิ</label><input type="number" id="f-pnl" placeholder="+/- ใส่ตามจริง" value="${f.pnl}" inputmode="decimal">
-    <label>ผลลัพธ์ไม้เทรด</label>
-    <div class="status-row">
-      <button class="status-btn tp ${f.status==='TP'?'active-tp':''}" data-status="TP">✓ TP</button>
-      <button class="status-btn sl ${f.status==='SL'?'active-sl':''}" data-status="SL">✗ SL</button>
-      <button class="status-btn be ${f.status==='BE'?'active-be':''}" data-status="BE">= BE</button>
+    <div class="rr-preview" id="plan-rr-preview">
+      <div class="rr-cell"><div class="rr-label">PLAN R:R</div><div class="rr-value ${planR!==null&&planR>=1?'good':planR!==null&&planR<=0?'bad':''}" id="plan-rr-value">${planR===null?'-':`1:${planR.toFixed(2)}`}</div></div>
+      <div class="rr-cell"><div class="rr-label">RISK DIST.</div><div class="rr-value" id="plan-risk-value">${riskDistance===null?'-':fmt(riskDistance,2)}</div></div>
+      <div class="rr-cell"><div class="rr-label">REWARD DIST.</div><div class="rr-value" id="plan-reward-value">${rewardDistance===null?'-':fmt(rewardDistance,2)}</div></div>
     </div>
     <label>สภาวะอารมณ์ตอนเทรด</label>
     <div class="psych-row">
@@ -1189,18 +1277,26 @@ function buildTradeForm() {
           🧠 BRAIN COOLDOWN ACTIVE (2 SLs TODAY) 🧠
         </div>
         <div style="color:#FFD54F; font-size:6.5px; line-height:1.4;">
-          คุณบันทึกไม้แพ้ (SL) ครบ 2 ไม้ในวันเดียว ระบบล็อกเพื่อบังคับพักสมอง 2 ชม. ป้องกันอาการหัวร้อน (Revenge Trading)!
+          คุณยังสร้างแผนได้ แต่ระบบจะไม่อนุญาตให้ยืนยันเปิดไม้ใหม่จนกว่าจะพักครบ
         </div>
         <div style="color:#33D6FF; font-size:8.5px; font-weight:bold; margin-top:6px;">
           ⏳ เหลือเวลาพักผ่อน: <span id="cooldown-timer">${formatCooldown(lockInfo.remainingSec)}</span>
         </div>
       </div>
-      <button class="btn" id="btn-add-trade-locked" style="border-color:#555; background:#181818; color:#888; cursor:not-allowed;" title="กำลังอยู่ในช่วงพักสมอง 2 ชั่วโมง">
-        🔒 LOCKED: พักสมอง (<span id="btn-lock-timer">${formatCooldown(lockInfo.remainingSec)}</span>)
-      </button>
-    ` : `
-      <button class="btn btn-green" id="btn-add-trade">► ADD TACTICAL TRADE</button>
-    `}`;
+    ` : ''}
+    <button class="btn btn-green" id="btn-add-trade">► SAVE TRADE PLAN</button>`;
+}
+
+function updatePlanPreview() {
+  const f = state.f;
+  const preview = { dir:f.dir, plannedEntry:f.entry, initialSl:f.sl, plannedTp:f.plannedTp };
+  const rr = plannedRR(preview);
+  const risk = f.entry && f.sl ? Math.abs(Number(f.entry)-Number(f.sl)) : null;
+  const reward = f.entry && f.plannedTp ? Math.abs(Number(f.plannedTp)-Number(f.entry)) : null;
+  const rrEl=document.getElementById('plan-rr-value'), riskEl=document.getElementById('plan-risk-value'), rewardEl=document.getElementById('plan-reward-value');
+  if (rrEl) { rrEl.textContent=rr===null?'-':`1:${rr.toFixed(2)}`; rrEl.className=`rr-value ${rr!==null&&rr>=1?'good':rr!==null&&rr<=0?'bad':''}`; }
+  if (riskEl) riskEl.textContent=risk===null?'-':fmt(risk,2);
+  if (rewardEl) rewardEl.textContent=reward===null?'-':fmt(reward,2);
 }
 
 function buildCFForm() {
@@ -1260,13 +1356,22 @@ function buildTradeLog(symbols) {
   const allTrades = Array.isArray(state.trades) ? state.trades : [];
   let filtered=[...allTrades].sort((a,b)=>(b&&a&&b.date&&a.date)?b.date.localeCompare(a.date):0); 
   filtered=filterByPeriod(filtered,p);
+  const tradeView = state.tradeView || 'ACTIVE';
+  if (tradeView === 'ACTIVE') filtered=filtered.filter(t=>t && ['PLANNED','OPEN'].includes(tradeLifecycle(t)));
+  if (tradeView === 'CLOSED') filtered=filtered.filter(isClosedTrade);
+  if (tradeView === 'CANCELLED') filtered=filtered.filter(t=>t && tradeLifecycle(t)==='CANCELLED');
   
   if (safeFilter.symbol!=='ALL') filtered=filtered.filter(t=>t && t.symbol===safeFilter.symbol);
-  if (safeFilter.status!=='ALL') filtered=filtered.filter(t=>t && t.status===safeFilter.status);
+  if (tradeView === 'CLOSED' && safeFilter.status!=='ALL') filtered=filtered.filter(t=>t && t.status===safeFilter.status);
   if (safeFilter.account!=='ALL') filtered=filtered.filter(t=>t && (t.account||'Demo')===safeFilter.account);
   
   const accList = getAccountList();
   return `
+    <div class="lifecycle-tabs">
+      <button class="lifecycle-tab ${tradeView==='ACTIVE'?'active':''}" data-trade-view="ACTIVE">ACTIVE</button>
+      <button class="lifecycle-tab ${tradeView==='CLOSED'?'active':''}" data-trade-view="CLOSED">CLOSED</button>
+      <button class="lifecycle-tab ${tradeView==='CANCELLED'?'active':''}" data-trade-view="CANCELLED">CANCEL</button>
+    </div>
     ${buildPeriodFilter('log',p)}
     <div class="filter-row" style="gap:4px;margin-bottom:6px">
       <select id="flt-account" style="flex:1;font-size:7px">
@@ -1274,16 +1379,18 @@ function buildTradeLog(symbols) {
         ${accList.map(a => `<option value="${a}" ${safeFilter.account===a?'selected':''}>${a}</option>`).join('')}
       </select>
       <select id="flt-symbol" style="flex:1;font-size:7px">${symbols.map(s=>`<option ${safeFilter.symbol===s?'selected':''}>${s}</option>`).join('')}</select>
-      <select id="flt-status" style="flex:1;font-size:7px">${['ALL','TP','SL','BE'].map(s=>`<option ${safeFilter.status===s?'selected':''}>${s}</option>`).join('')}</select>
+      ${tradeView==='CLOSED'?`<select id="flt-status" style="flex:1;font-size:7px">${['ALL','TP','SL','BE'].map(s=>`<option ${safeFilter.status===s?'selected':''}>${s}</option>`).join('')}</select>`:''}
     </div>
-    <button class="btn btn-green" id="btn-export-filtered-csv" style="margin-bottom:10px; font-size:6.5px; padding:8px 4px;">
+    ${tradeView==='CLOSED'?`<button class="btn btn-green" id="btn-export-filtered-csv" style="margin-bottom:10px; font-size:6.5px; padding:8px 4px;">
       📊 EXPORT CURRENT FILTER (CSV FOR AGENT SHARK / BEE)
-    </button>
-    ${filtered.length===0?`<div class="empty">ไม่พบประวัติข้อมูลชุดนี้</div>`:filtered.map(t=>buildTradeItem(t)).join('')}`;
+    </button>`:''}
+    ${filtered.length===0?`<div class="empty">${tradeView==='ACTIVE'?'ยังไม่มีแผนหรือไม้ที่กำลังถือ':'ไม่พบประวัติข้อมูลชุดนี้'}</div>`:filtered.map(t=>buildTradeItem(t)).join('')}`;
 }
 
 function buildTradeItem(t) {
   if (!t) return '';
+  const lifecycle = tradeLifecycle(t);
+  if (lifecycle !== 'CLOSED') return buildActiveTradeItem(t);
   const pnlVal = Number(t.pnl) || 0;
   const pnlClass=pnlVal>0?'glow-green':pnlVal<0?'glow-red':'glow-yellow'; 
   const pnlSign=pnlVal>0?'+':''; 
@@ -1298,11 +1405,83 @@ function buildTradeItem(t) {
       </div>
       <div class="trade-row"><span class="trade-label">EXECUTION DATE</span><span class="trade-value">${fmtDate(t.date)}</span></div>
       <div class="trade-row"><span class="trade-label">ENTRY / EXIT</span><span class="trade-value">${fmt(t.entry,2)} → ${fmt(t.exit,2)}</span></div>
-      <div class="trade-row"><span class="trade-label">SL / LOT SIZE</span><span class="trade-value">${fmt(t.sl,2)} / ${t.lot}</span></div>
+      <div class="trade-row"><span class="trade-label">INITIAL SL / LOT</span><span class="trade-value">${fmt(initialStop(t),2)} / ${t.lot}</span></div>
       <div class="trade-row"><span class="trade-label">TIMEFRAME</span><span class="trade-value">${t.tf||'1H'}</span></div>
       <div class="trade-row"><span class="trade-label">NET P&L (USD)</span><span class="${pnlClass}">${pnlSign}$${fmt(t.pnl,2)}</span></div>
+      <div class="trade-row"><span class="trade-label">PLAN / RESULT</span><span class="trade-value">${plannedRR(t)===null?'-':`1:${plannedRR(t).toFixed(2)}`} / ${fmtR(realizedR(t))}</span></div>
+      ${t.exitReason?`<div class="trade-row"><span class="trade-label">EXIT REASON</span><span class="trade-value">${t.exitReason}</span></div>`:''}
       ${emTags?`<div style="margin-top:4px;font-size:10px">${emTags}</div>`:''}
       <div style="margin-top:8px;text-align:right"><button class="del-btn" data-del-trade="${t.id}">✕ DELETE RECORD</button></div>
+    </div>`;
+}
+
+function buildActiveTradeItem(t) {
+  const lifecycle = tradeLifecycle(t);
+  const isOpen = lifecycle === 'OPEN';
+  const isManaging = state.manageTradeId === t.id;
+  const plan = plannedRR(t);
+  const currentR = levelR(t, t.currentPrice);
+  const protectedR = levelR(t, t.currentSl || initialStop(t));
+  const realized = realizedR(t);
+  const remaining = remainingLot(t);
+  const moves = Array.isArray(t.slHistory) ? t.slHistory : [];
+  const exits = exitEvents(t);
+  return `
+    <div class="trade-item">
+      <div class="trade-header">
+        <span class="trade-symbol">${t.symbol} [${t.account||'Demo'}] <span class="${t.dir==='Buy'?'glow-green':'glow-red'}">${t.dir==='Buy'?'▲ BUY':'▼ SELL'}</span></span>
+        <span class="life-badge ${isOpen?'life-open':lifecycle==='CANCELLED'?'life-cancelled':'life-planned'}">${lifecycle}</span>
+      </div>
+      <div class="trade-row"><span class="trade-label">PLAN ENTRY / TP</span><span class="trade-value">${fmt(plannedEntry(t),2)} → ${fmt(plannedTarget(t),2)}</span></div>
+      <div class="trade-row"><span class="trade-label">INITIAL / CURRENT SL</span><span class="trade-value">${fmt(initialStop(t),2)} / ${fmt(t.currentSl||initialStop(t),2)}</span></div>
+      <div class="trade-row"><span class="trade-label">LOT REMAINING</span><span class="trade-value">${fmt(remaining,2)} / ${fmt(t.lot,2)}</span></div>
+      <div class="rr-preview">
+        <div class="rr-cell"><div class="rr-label">PLAN</div><div class="rr-value">${plan===null?'-':`1:${plan.toFixed(2)}`}</div></div>
+        <div class="rr-cell"><div class="rr-label">FLOAT</div><div class="rr-value ${currentR!==null&&currentR>=0?'good':'bad'}">${isOpen?fmtR(currentR):'-'}</div></div>
+        <div class="rr-cell"><div class="rr-label">PROTECTED / DONE</div><div class="rr-value ${((realized||0)+(protectedR||0))>=0?'good':'bad'}">${isOpen?fmtR(protectedR):fmtR(realized)}</div></div>
+      </div>
+      ${moves.length?`<div class="timeline"><strong>SL:</strong> ${moves.map(m=>fmt(m.price,2)).join(' → ')}</div>`:''}
+      ${exits.length?`<div class="timeline"><strong>EXITS:</strong> ${exits.map(e=>`${fmt(e.price,2)} (${fmt(e.lot,2)} lot / ${Number(e.pnl)>=0?'+':''}$${fmt(e.pnl,2)})`).join(' · ')}</div>`:''}
+      ${lifecycle!=='CANCELLED'?`<div class="trade-actions">
+        <button class="trade-action primary" data-manage-trade="${t.id}">${isManaging?'CLOSE PANEL':isOpen?'UPDATE / CLOSE':'CONFIRM ENTRY'}</button>
+        ${lifecycle==='PLANNED'?`<button class="trade-action warn" data-cancel-trade="${t.id}">CANCEL PLAN</button>`:''}
+      </div>`:`<div class="trade-actions"><button class="trade-action primary" data-restore-trade="${t.id}">RESTORE PLAN</button></div>`}
+      ${isManaging?buildManageTradePanel(t):''}
+      <div style="margin-top:8px;text-align:right"><button class="del-btn" data-del-trade="${t.id}">✕ DELETE RECORD</button></div>
+    </div>`;
+}
+
+function buildManageTradePanel(t) {
+  const lifecycle = tradeLifecycle(t);
+  if (lifecycle === 'PLANNED') return `
+    <div class="manage-box">
+      <div class="manage-grid">
+        <div><label>Planned Entry</label><input type="number" id="manage-plan-entry" value="${plannedEntry(t)}" inputmode="decimal"></div>
+        <div><label>Initial SL</label><input type="number" id="manage-plan-sl" value="${initialStop(t)}" inputmode="decimal"></div>
+        <div><label>Planned TP</label><input type="number" id="manage-plan-tp" value="${plannedTarget(t)}" inputmode="decimal"></div>
+        <div><label>Lot Size</label><input type="number" id="manage-plan-lot" value="${t.lot}" inputmode="decimal"></div>
+      </div>
+      <button class="trade-action" style="width:100%;margin-bottom:10px" data-update-plan="${t.id}">SAVE PLAN CHANGES</button>
+      <label>Actual Entry (ราคาที่เข้าได้จริง)</label>
+      <input type="number" id="manage-actual-entry" value="${plannedEntry(t)}" inputmode="decimal">
+      <button class="btn btn-green" data-confirm-open="${t.id}">► OPEN POSITION</button>
+    </div>`;
+  const remaining = remainingLot(t);
+  return `
+    <div class="manage-box">
+      <div class="manage-grid">
+        <div><label>Current Price</label><input type="number" id="manage-current-price" value="${t.currentPrice||''}" placeholder="กรอกเอง" inputmode="decimal"></div>
+        <div><label>Current SL</label><input type="number" id="manage-current-sl" value="${t.currentSl||initialStop(t)}" inputmode="decimal"></div>
+      </div>
+      <button class="trade-action primary" style="width:100%;margin-bottom:10px" data-update-live="${t.id}">SAVE LIVE UPDATE</button>
+      <div class="divider"></div>
+      <div class="manage-grid">
+        <div><label>Exit Price</label><input type="number" id="manage-exit-price" placeholder="ราคาที่ปิด" inputmode="decimal"></div>
+        <div><label>Exit Lot</label><input type="number" id="manage-exit-lot" value="${remaining}" max="${remaining}" inputmode="decimal"></div>
+        <div><label>Net P&amp;L (USD)</label><input type="number" id="manage-exit-pnl" placeholder="+/- สุทธิ" inputmode="decimal"></div>
+        <div><label>Exit Reason</label><select id="manage-exit-reason"><option>TP Hit</option><option>SL Hit</option><option>Trailing SL</option><option>Manual Close</option><option>Break Even</option></select></div>
+      </div>
+      <button class="btn btn-green" data-record-exit="${t.id}">► RECORD PARTIAL / CLOSE</button>
     </div>`;
 }
 
@@ -1422,7 +1601,7 @@ function buildWeekdayBreakdown(filteredTrades) {
 function buildStats() {
   const p = state.statsPeriod || { mode: 'all', account: 'ALL' }; 
   const targetAcc = p.account || 'ALL'; 
-  const allTrades = Array.isArray(state.trades) ? state.trades : []; 
+  const allTrades = (Array.isArray(state.trades) ? state.trades : []).filter(isClosedTrade);
   let filtered = filterByPeriod(allTrades, p);
   if (targetAcc !== 'ALL') filtered = filtered.filter(t => t && (t.account || 'Demo') === targetAcc);
 
@@ -1665,19 +1844,18 @@ function attachEvents() {
     'f-symbol': v => state.f.symbol = v,
     'f-tf': v => state.f.tf = v,
     'f-entry': v => state.f.entry = v,
-    'f-exit': v => state.f.exit = v,
     'f-sl': v => state.f.sl = v,
-    'f-lot': v => state.f.lot = v,
-    'f-pnl': v => state.f.pnl = v
+    'f-planned-tp': v => state.f.plannedTp = v,
+    'f-lot': v => state.f.lot = v
   };
-  Object.entries(liveF).forEach(([id, fn]) => { const el = document.getElementById(id); if (el) el.addEventListener('input', e => fn(e.target.value)); });
+  Object.entries(liveF).forEach(([id, fn]) => { const el = document.getElementById(id); if (el) el.addEventListener('input', e => { fn(e.target.value); updatePlanPreview(); }); });
 
   const fAcc = document.getElementById('f-account');
   if (fAcc) fAcc.addEventListener('change', e => updateActiveAccount(e.target.value));
 
   document.querySelectorAll('[data-dir]').forEach(el => { el.addEventListener('click', () => { state.f.dir = el.dataset.dir; render(); }); });
-  document.querySelectorAll('[data-status]').forEach(el => { el.addEventListener('click', () => { state.f.status = el.dataset.status; render(); }); });
   document.querySelectorAll('[data-psych]').forEach(el => { el.addEventListener('click', () => { const k = el.dataset.psych; state.f[k] = !state.f[k]; el.classList.toggle('checked'); beep('click'); }); });
+  document.querySelectorAll('[data-trade-view]').forEach(el => { el.addEventListener('click', () => { state.tradeView = el.dataset.tradeView; state.manageTradeId = null; render(); }); });
   document.querySelectorAll('[data-cftype]').forEach(el => { el.addEventListener('click', () => { state.cf.type = el.dataset.cftype; render(); }); });
 
   const cfAcc = document.getElementById('cf-account'); if (cfAcc) cfAcc.addEventListener('change', e => updateActiveAccount(e.target.value));
@@ -1692,45 +1870,19 @@ function attachEvents() {
   bindPeriodFilter('log', state.filter ? state.filter.period : { mode: 'all' }, (p) => { state.filter.period = p; render(); });
   bindPeriodFilter('stats', state.statsPeriod || { mode: 'all', account: 'ALL' }, (p) => { state.statsPeriod = p; render(); });
 
-  /* 🧠 LOCKED BUTTON CLICK WARNING */
-  const btnLocked = document.getElementById('btn-add-trade-locked');
-  if (btnLocked) {
-    btnLocked.addEventListener('click', () => {
-      const lockInfo = getConsecutiveLossLock(state.f.account || 'Demo');
-      beep('alert');
-      alert(`🧠 BRAIN COOLDOWN PROTOCOL\n\nระบบยังล็อกอยู่เพื่อความปลอดภัยของพอร์ตคุณ!\nกรุณาพักผ่อนอีก ${formatCooldown(lockInfo.remainingSec)} ก่อนเปิดกราฟเทรดต่อครับ`);
-    });
-  }
-
-  /* 🛡️ ADD TACTICAL TRADE (WITH DISCIPLINE & DAILY DD & 2-HOUR LOSS LOCK CHECK) */
+  /* 🛡️ SAVE PRE-TRADE PLAN */
   const btnTrade = document.getElementById('btn-add-trade');
   if (btnTrade) btnTrade.addEventListener('click', () => {
     const f = state.f;
-    if (!f.entry || !f.exit || !f.sl || !f.lot || f.pnl === '') {
-      alert('กรอกตัวเลขราคาและหลอดให้ครบถ้วนก่อนส่งข้อมูล!');
+    const entry=Number(f.entry), stop=Number(f.sl), target=Number(f.plannedTp), lot=Number(f.lot);
+    if (!entry || !stop || !target || !lot || lot <= 0) {
+      alert('กรอก Planned Entry, Initial SL, Planned TP และ Lot ให้ครบถ้วน');
       return;
     }
-
-    const currentAcc = f.account || 'Demo';
-    const lockInfo = getConsecutiveLossLock(currentAcc);
-    if (lockInfo.isLocked) {
-      beep('alert');
-      alert(`🧠 BRAIN COOLDOWN PROTOCOL\n\nระบบยังล็อกอยู่เพื่อความปลอดภัยของพอร์ตคุณ!\nกรุณาพักผ่อนอีก ${formatCooldown(lockInfo.remainingSec)} ก่อนเปิดกราฟเทรดต่อครับ`);
+    const directionValid = f.dir === 'Sell' ? stop > entry && target < entry : stop < entry && target > entry;
+    if (!directionValid) {
+      alert(f.dir === 'Sell' ? 'แผน SELL ต้องมี SL สูงกว่า Entry และ TP ต่ำกว่า Entry' : 'แผน BUY ต้องมี SL ต่ำกว่า Entry และ TP สูงกว่า Entry');
       return;
-    }
-
-    const risk = getDailyRiskStats(currentAcc);
-
-    // 💀 Discipline Hard Lock Warning when HP is 0
-    if (risk.level === 'STOP') {
-      beep('alert');
-      const override = confirm(
-        `💀 คำเตือนจิตวิทยา (DISCIPLINE HARD LOCK) 💀\n\n` +
-        `วันนี้พอร์ต ${currentAcc} สูญเสียแตะ Max Daily Drawdown (-${fmt(risk.todayDDPct, 2)}% / ลิมิต -${fmt(risk.maxDDPct, 1)}%) แล้ว!\n\n` +
-        `การเทรดต่อคือการฝ่าฝืนวินัยการเทรด ซึ่งมีโอกาสสูงมากที่จะเกิด Overtrading / Revenge Trading จนพอร์ตพัง\n\n` +
-        `คุณแน่ใจจริงหรือไม่ที่จะฝ่าฝืนวินัยและบันทึกไม้เทรดนี้?`
-      );
-      if (!override) return;
     }
 
     if (!Array.isArray(state.trades)) state.trades = [];
@@ -1739,46 +1891,32 @@ function attachEvents() {
       date: f.date,
       symbol: f.symbol,
       dir: f.dir,
-      entry: parseFloat(f.entry) || 0,
-      exit: parseFloat(f.exit) || 0,
-      sl: parseFloat(f.sl) || 0,
-      lot: parseFloat(f.lot) || 0,
-      pnl: parseFloat(f.pnl) || 0,
-      status: f.status,
+      lifecycle: 'PLANNED',
+      plannedEntry: entry,
+      entry: entry,
+      actualEntry: null,
+      initialSl: stop,
+      currentSl: stop,
+      sl: stop,
+      plannedTp: target,
+      exit: 0,
+      exits: [],
+      slHistory: [{ price:stop, at:new Date().toISOString(), note:'Initial SL' }],
+      lot,
+      pnl: 0,
+      status: 'PLANNED',
       tf: f.tf,
       psychology: { conf: f.conf, fear: f.fear, greed: f.greed },
       account: f.account,
       createdAt: new Date().toISOString()
     };
     state.trades.push(newTrade);
-
-    // 🧠 Check if 2nd SL occurred today -> activate 2 hours Brain Cooldown Lock
-    let triggeredCooldown = false;
-    if (f.status === 'SL') {
-      const todaySLs = state.trades.filter(t => t && t.date === f.date && (t.account || 'Demo') === currentAcc && t.status === 'SL');
-      if (todaySLs.length >= 2) {
-        const lockKey = `${currentAcc}_${f.date}`;
-        const lockUntil = Date.now() + (2 * 60 * 60 * 1000); // 2 hours
-        if (!state.lossLocks) state.lossLocks = {};
-        state.lossLocks[lockKey] = lockUntil;
-        save(KEY.LOSS_LOCK, state.lossLocks);
-        triggeredCooldown = true;
-      }
-    }
-
     save(KEY.TRADES, state.trades);
     syncToCloud();
-
-    if (f.status === 'TP') beep('win');
-    else if (f.status === 'SL') beep('lose');
-    else beep('click');
-
-    if (triggeredCooldown) {
-      alert(`🧠 BRAIN COOLDOWN PROTOCOL ACTIVATED!\n\nคุณบันทึกไม้แพ้ (SL) ครบ 2 ไม้ในวันนี้แล้ว\nระบบจะล็อกปุ่มบันทึกไม้ใหม่เป็นเวลา 2 ชั่วโมง เพื่อบังคับให้คุณพักผ่อนสมองและหยุดพักการเทรดครับ!`);
-    }
-
+    beep('win');
     const currentAccount = state.f.account;
-    state.f = { ...state.f, entry: '', exit: '', sl: '', lot: '', pnl: '', status: 'TP', conf: false, fear: false, greed: false, account: currentAccount }; 
+    state.f = { ...state.f, entry: '', plannedTp: '', sl: '', lot: '', conf: false, fear: false, greed: false, account: currentAccount };
+    state.page = 'LOG'; state.tradeView = 'ACTIVE'; state.manageTradeId = newTrade.id;
     render();
   });
 
@@ -1805,6 +1943,129 @@ function attachEvents() {
     const currentAccount = state.cf.account;
     state.cf = { date: today(), type: 'Deposit', amount: '', desc: '', account: currentAccount }; 
     render();
+  });
+
+  document.querySelectorAll('[data-manage-trade]').forEach(el => {
+    el.addEventListener('click', () => {
+      state.manageTradeId = state.manageTradeId === el.dataset.manageTrade ? null : el.dataset.manageTrade;
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-cancel-trade]').forEach(el => {
+    el.addEventListener('click', () => {
+      const t = state.trades.find(x => x && x.id === el.dataset.cancelTrade);
+      if (!t) return;
+      t.lifecycle = 'CANCELLED'; t.status = 'CANCELLED'; t.cancelledAt = new Date().toISOString();
+      state.manageTradeId = null; save(KEY.TRADES, state.trades); syncToCloud(); beep('click'); render();
+    });
+  });
+
+  document.querySelectorAll('[data-restore-trade]').forEach(el => {
+    el.addEventListener('click', () => {
+      const t = state.trades.find(x => x && x.id === el.dataset.restoreTrade);
+      if (!t) return;
+      t.lifecycle = 'PLANNED'; t.status = 'PLANNED'; delete t.cancelledAt;
+      state.tradeView = 'ACTIVE'; state.manageTradeId = t.id; save(KEY.TRADES, state.trades); syncToCloud(); beep('click'); render();
+    });
+  });
+
+  document.querySelectorAll('[data-update-plan]').forEach(el => {
+    el.addEventListener('click', () => {
+      const t = state.trades.find(x => x && x.id === el.dataset.updatePlan);
+      if (!t || tradeLifecycle(t) !== 'PLANNED') return;
+      const entry=Number(document.getElementById('manage-plan-entry')?.value);
+      const stop=Number(document.getElementById('manage-plan-sl')?.value);
+      const target=Number(document.getElementById('manage-plan-tp')?.value);
+      const lot=Number(document.getElementById('manage-plan-lot')?.value);
+      const valid=t.dir==='Sell'?stop>entry&&target<entry:stop<entry&&target>entry;
+      if (!entry || !stop || !target || !lot || lot<=0 || !valid) { alert('ตรวจสอบ Entry, Initial SL, Planned TP และ Lot ให้ตรงกับทิศทาง'); return; }
+      t.plannedEntry=entry; t.entry=entry; t.initialSl=stop; t.sl=stop; t.currentSl=stop; t.plannedTp=target; t.lot=lot;
+      t.slHistory=[{price:stop,at:new Date().toISOString(),note:'Initial SL'}]; t.updatedAt=new Date().toISOString();
+      save(KEY.TRADES, state.trades); syncToCloud(); beep('click'); render();
+    });
+  });
+
+  document.querySelectorAll('[data-confirm-open]').forEach(el => {
+    el.addEventListener('click', () => {
+      const t = state.trades.find(x => x && x.id === el.dataset.confirmOpen);
+      const entry = Number(document.getElementById('manage-actual-entry')?.value);
+      if (!t || !entry) { alert('กรอกราคาที่เข้าได้จริง'); return; }
+      const lockInfo = getConsecutiveLossLock(t.account || 'Demo');
+      if (lockInfo.isLocked) {
+        beep('alert'); alert(`🧠 BRAIN COOLDOWN ACTIVE\n\nยังเปิดไม้ใหม่ไม่ได้ กรุณาพักอีก ${formatCooldown(lockInfo.remainingSec)}`); return;
+      }
+      const dailyRisk = getDailyRiskStats(t.account || 'Demo');
+      if (dailyRisk.level === 'STOP') {
+        beep('alert');
+        const override = confirm(`💀 DAILY DRAWDOWN LIMIT REACHED\n\nพอร์ต ${t.account||'Demo'} ใช้ขีดจำกัดรายวันแล้ว คุณยังต้องการยืนยันเปิดไม้ตามแผนนี้หรือไม่?`);
+        if (!override) return;
+      }
+      const risk = Math.abs(entry - initialStop(t));
+      if (!risk) { alert('Actual Entry ต้องไม่เท่ากับ Initial SL'); return; }
+      if ((t.dir === 'Buy' && initialStop(t) >= entry) || (t.dir === 'Sell' && initialStop(t) <= entry)) {
+        alert(t.dir === 'Buy' ? 'ไม้ BUY ต้องมี Initial SL ต่ำกว่า Actual Entry' : 'ไม้ SELL ต้องมี Initial SL สูงกว่า Actual Entry'); return;
+      }
+      t.actualEntry = entry; t.entry = entry; t.lifecycle = 'OPEN'; t.status = 'OPEN'; t.openedAt = new Date().toISOString();
+      save(KEY.TRADES, state.trades); syncToCloud(); beep('win'); render();
+    });
+  });
+
+  document.querySelectorAll('[data-update-live]').forEach(el => {
+    el.addEventListener('click', () => {
+      const t = state.trades.find(x => x && x.id === el.dataset.updateLive);
+      if (!t) return;
+      const priceInput = document.getElementById('manage-current-price');
+      const slInput = document.getElementById('manage-current-sl');
+      const currentPrice = Number(priceInput?.value);
+      const currentSl = Number(slInput?.value);
+      if (!currentPrice || !currentSl) { alert('กรอก Current Price และ Current SL ให้ครบ'); return; }
+      if ((t.dir === 'Buy' && currentSl >= currentPrice) || (t.dir === 'Sell' && currentSl <= currentPrice)) {
+        alert(t.dir === 'Buy' ? 'Current SL ของ BUY ต้องต่ำกว่า Current Price' : 'Current SL ของ SELL ต้องสูงกว่า Current Price'); return;
+      }
+      if (Number(t.currentSl || initialStop(t)) !== currentSl) {
+        if (!Array.isArray(t.slHistory)) t.slHistory = [{ price:initialStop(t), at:t.createdAt, note:'Initial SL' }];
+        t.slHistory.push({ price:currentSl, at:new Date().toISOString(), note:'SL update' });
+      }
+      t.currentPrice = currentPrice; t.currentSl = currentSl; t.updatedAt = new Date().toISOString();
+      save(KEY.TRADES, state.trades); syncToCloud(); beep('click'); render();
+    });
+  });
+
+  document.querySelectorAll('[data-record-exit]').forEach(el => {
+    el.addEventListener('click', () => {
+      const t = state.trades.find(x => x && x.id === el.dataset.recordExit);
+      if (!t) return;
+      const price = Number(document.getElementById('manage-exit-price')?.value);
+      const lot = Number(document.getElementById('manage-exit-lot')?.value);
+      const pnlRaw = document.getElementById('manage-exit-pnl')?.value;
+      const pnl = Number(pnlRaw);
+      const reason = document.getElementById('manage-exit-reason')?.value || 'Manual Close';
+      const remaining = remainingLot(t);
+      if (!price || !lot || lot <= 0 || pnlRaw === '' || !Number.isFinite(pnl)) { alert('กรอก Exit Price, Exit Lot และ Net P&L ให้ครบ'); return; }
+      if (lot > remaining + 0.0000001) { alert(`Exit Lot ต้องไม่เกิน ${fmt(remaining,2)} lot ที่เหลือ`); return; }
+      if (!Array.isArray(t.exits)) t.exits = [];
+      t.exits.push({ price, lot, pnl, reason, at:new Date().toISOString() });
+      t.pnl = t.exits.reduce((sum, e) => sum + (Number(e.pnl) || 0), 0);
+      t.currentPrice = price; t.updatedAt = new Date().toISOString();
+      if (remainingLot(t) <= 0.0000001) {
+        const totalLot = t.exits.reduce((sum,e)=>sum+(Number(e.lot)||0),0) || 1;
+        t.exit = t.exits.reduce((sum,e)=>sum+(Number(e.price)||0)*(Number(e.lot)||0),0) / totalLot;
+        t.exitReason = reason; t.lifecycle = 'CLOSED'; t.closedAt = new Date().toISOString();
+        t.status = Number(t.pnl) > 0 ? 'TP' : Number(t.pnl) < 0 ? 'SL' : 'BE';
+        if (t.status === 'SL') {
+          const losses = state.trades.filter(x => x && isClosedTrade(x) && x.date === t.date && (x.account||'Demo') === (t.account||'Demo') && Number(x.pnl) < 0);
+          if (losses.length >= 2) {
+            const lockKey = `${t.account||'Demo'}_${t.date}`;
+            if (!state.lossLocks) state.lossLocks = {};
+            state.lossLocks[lockKey] = Date.now() + (2 * 60 * 60 * 1000);
+            save(KEY.LOSS_LOCK, state.lossLocks);
+          }
+        }
+        state.manageTradeId = null; state.tradeView = 'CLOSED';
+      }
+      save(KEY.TRADES, state.trades); syncToCloud(); beep(Number(t.pnl)>=0?'win':'lose'); render();
+    });
   });
 
   document.querySelectorAll('[data-del-trade]').forEach(el => {
@@ -1909,7 +2170,7 @@ function attachEvents() {
     btnExportFiltered.addEventListener('click', () => {
       const safeFilter = state.filter || { period: { mode: 'all' }, symbol: 'ALL', status: 'ALL', account: 'ALL' };
       const p = safeFilter.period || { mode: 'all' }; 
-      const allTrades = Array.isArray(state.trades) ? state.trades : [];
+      const allTrades = (Array.isArray(state.trades) ? state.trades : []).filter(isClosedTrade);
       let filtered = [...allTrades].sort((a, b) => (b && a && b.date && a.date) ? b.date.localeCompare(a.date) : 0); 
       filtered = filterByPeriod(filtered, p);
       if (safeFilter.symbol !== 'ALL') filtered = filtered.filter(t => t && t.symbol === safeFilter.symbol);
@@ -1962,7 +2223,7 @@ function attachEvents() {
   const btnBackup = document.getElementById('btn-backup');
   if (btnBackup) btnBackup.addEventListener('click', () => {
     const data = {
-      version: 9,
+      version: 10,
       exportedAt: new Date().toISOString(),
       balances: state.balances,
       trades: state.trades,
@@ -1972,7 +2233,7 @@ function attachEvents() {
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `rtj-arcade-v3.9-backup-${today()}.json`; a.click(); URL.revokeObjectURL(url); beep('win');
+    const a = document.createElement('a'); a.href = url; a.download = `owl-trader-v4.0-backup-${today()}.json`; a.click(); URL.revokeObjectURL(url); beep('win');
   });
 
   const btnImportTrigger = document.getElementById('btn-import-trigger');

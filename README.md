@@ -1,4 +1,4 @@
-# 🦉 OWL TRADING JOURNAL (V.3.9 STATION) 📊
+# 🦉 OWL TRADING JOURNAL (V.4.0 STATION) 📊
 
 Gamified 8-Bit Retro RPG trading station & psychological risk manager for forex/crypto traders.
 
@@ -7,6 +7,8 @@ Gamified 8-Bit Retro RPG trading station & psychological risk manager for forex/
 - **🛡️ % Daily Drawdown (DD) Risk Engine**: Calculate daily drawdown based on Starting Balance of the day (e.g. 5% Max DD limit).
 - **❤️ Retro Daily Risk HP Bar**: Dynamic HP life gauge tracking remaining daily loss tolerance (Green > 50%, Yellow 1%-50%, Red 0% Game Over).
 - **🧠 Max Consecutive Loss Lock (2 Hours Cooldown)**: เมื่อแพ้ (SL) ครบ 2 ไม้ในวันเดียว ระบบล็อกปุ่มบันทึกไม้ใหม่ชั่วคราว 2 ชั่วโมง พร้อมตัวนับเวลาถอยหลังแบบเรียลไทม์เพื่อบังคับพักสมองและป้องกัน Revenge Trading.
+- **🎯 Plan → Open → Close Workflow**: วางแผน Entry, Initial SL และ Planned TP ก่อนเข้าเทรด จากนั้นอัปเดตราคาปัจจุบันและเลื่อน SL ระหว่างถือไม้ได้.
+- **📐 Live R-Multiple & Partial Exits**: แสดง Planned R:R, Floating R, Protected R และ Realized R พร้อมรองรับการแบ่งปิดหลายครั้งโดยคง Initial SL เป็นฐาน 1R.
 - **📊 CSV Export for AI Agents (Agent_Shark / Agent_Bee)**: ปุ่ม Export ข้อมูลสถิติไม้เทรดเป็น CSV พร้อมการคำนวณ R:R, PnL, Psychology, Timeframe รองรับทั้ง Export ตาม Filter (รายเดือน/รายสัปดาห์) และ Export ทั้งหมดใน Settings.
 - **⚠️ 2-Level Alert System**:
   - *Level 1 (70% DD used)*: Caution warning to reduce lot size.

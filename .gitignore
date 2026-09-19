@@ -3,6 +3,7 @@ node_modules/
 Thumbs.db
 *.log
 .gradle/
+.gradle-user/
 android/app/build/
 android/capacitor-android/build/
 android/build/

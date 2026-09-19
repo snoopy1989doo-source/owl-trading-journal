@@ -69,7 +69,7 @@ body{
 }
 .crt.disabled { display: none; }
 
-/* 👾 MASTER HEADER LINK TO PIXEL STEWARD & CLOUD SYNC */
+/* 👾 MASTER HEADER & CLOUD SYNC */
 .master-header {
   display: flex; justify-content: space-between; align-items: center;
   background: var(--bg-card); border: 1.5px solid var(--border-card);
@@ -84,15 +84,6 @@ body{
   white-space: nowrap; 
   letter-spacing: 0.5px;
 }
-.pixel-steward-link {
-  text-decoration: none; color: #10B981; border: 1.5px solid #10B981;
-  padding: 6px 12px; font-size: 8px; background: rgba(16, 185, 129, 0.08);
-  font-family: 'Press Start 2P', monospace; font-weight: bold; white-space: nowrap; flex-shrink: 0;
-  min-height: 32px; display: flex; align-items: center; justify-content: center;
-  border-radius: 6px; transition: all 0.15s ease;
-}
-.pixel-steward-link:active { transform: translateY(1px); background: rgba(16, 185, 129, 0.2); }
-
 /* 📡 CLOUD SYNC STATUS BADGE */
 .sync-badge {
   font-family: 'Press Start 2P', monospace;
@@ -503,13 +494,12 @@ input:focus,select:focus{
 <body>
 <div id="crt-layer" class="crt"></div>
 
-<!-- 👾 MASTER HEADER LINK TO PIXEL STEWARD & CLOUD REALTIME SYNC -->
+<!-- 👾 MASTER HEADER & CLOUD REALTIME SYNC -->
 <div class="master-header">
   <div style="display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden;">
     <span class="master-title">🦉 OWL TRADER V.4.0</span>
     <span id="cloud-sync-badge" class="sync-badge sync-offline">🔴 OFFLINE</span>
   </div>
-  <a href="https://snoopy1989doo-source.github.io/Pixel-Stewart/" class="pixel-steward-link" target="_blank" rel="noopener noreferrer">► PIXEL STEWARD</a>
 </div>
 <div id="app"></div>
 <script>
@@ -762,6 +752,7 @@ const state = {
   logTab:       'TRADE',
   tradeView:    'ACTIVE',
   manageTradeId: null,
+  editTradeId:  null,
   sound:        load(KEY.SOUND, true), 
   balances:     load(KEY.BALANCES, DEFAULT_BALANCES),
   trades:       load(KEY.TRADES, []), 
@@ -1314,7 +1305,7 @@ function buildAlert() {
 
 function buildNav() {
   const pages=[
-    {id:'HOME',icon:'📝',label:'PLAN'},
+    {id:'HOME',icon:'📝',label:'TRADE'},
     {id:'LOG',icon:'📋',label:'TRADES'},
     {id:'STATS',icon:'📊',label:'STATS'}
   ];
@@ -1361,12 +1352,12 @@ function buildTradeForm() {
       <button class="status-btn ${f.dir==='Sell'?'active-sl':'sl'}" data-dir="Sell">▼ SELL</button>
     </div>
     <label>Timeframe</label><select id="f-tf">${tfs.map(t=>`<option ${f.tf===t?'selected':''}>${t}</option>`).join('')}</select>
-    <label>Planned Entry (ราคาเข้าตามแผน)</label><input type="number" id="f-entry" placeholder="0.00" value="${f.entry}" inputmode="decimal">
+    <label>Entry Price (ราคาที่เข้าแล้ว)</label><input type="number" id="f-entry" placeholder="0.00" value="${f.entry}" inputmode="decimal">
     <label>Initial Stop Loss (SL เริ่มต้น)</label><input type="number" id="f-sl" placeholder="0.00" value="${f.sl}" inputmode="decimal">
-    <label>Planned Take Profit (เป้าหมาย)</label><input type="number" id="f-planned-tp" placeholder="0.00" value="${f.plannedTp||''}" inputmode="decimal">
+    <label>Take Profit (เป้าหมาย)</label><input type="number" id="f-planned-tp" placeholder="0.00" value="${f.plannedTp||''}" inputmode="decimal">
     <label>Lot Size</label><input type="number" id="f-lot" placeholder="0.01" value="${f.lot}" inputmode="decimal">
     <div class="rr-preview" id="plan-rr-preview">
-      <div class="rr-cell"><div class="rr-label">PLAN R:R</div><div class="rr-value ${planR!==null&&planR>=1?'good':planR!==null&&planR<=0?'bad':''}" id="plan-rr-value">${planR===null?'-':`1:${planR.toFixed(2)}`}</div></div>
+      <div class="rr-cell"><div class="rr-label">R:R</div><div class="rr-value ${planR!==null&&planR>=1?'good':planR!==null&&planR<=0?'bad':''}" id="plan-rr-value">${planR===null?'-':`1:${planR.toFixed(2)}`}</div></div>
       <div class="rr-cell"><div class="rr-label">RISK DIST.</div><div class="rr-value" id="plan-risk-value">${riskDistance===null?'-':fmt(riskDistance,2)}</div></div>
       <div class="rr-cell"><div class="rr-label">REWARD DIST.</div><div class="rr-value" id="plan-reward-value">${rewardDistance===null?'-':fmt(rewardDistance,2)}</div></div>
     </div>
@@ -1383,14 +1374,14 @@ function buildTradeForm() {
           🧠 BRAIN COOLDOWN ACTIVE (2 SLs TODAY) 🧠
         </div>
         <div style="color:#FFD54F; font-size:6.5px; line-height:1.4;">
-          คุณยังสร้างแผนได้ แต่ระบบจะไม่อนุญาตให้ยืนยันเปิดไม้ใหม่จนกว่าจะพักครบ
+           ระบบจะไม่อนุญาตให้เปิดไม้ใหม่จนกว่าจะพักครบ
         </div>
         <div style="color:#33D6FF; font-size:8.5px; font-weight:bold; margin-top:6px;">
           ⏳ เหลือเวลาพักผ่อน: <span id="cooldown-timer">${formatCooldown(lockInfo.remainingSec)}</span>
         </div>
       </div>
     ` : ''}
-    <button class="btn btn-green" id="btn-add-trade">► SAVE TRADE PLAN</button>`;
+    <button class="btn btn-green" id="btn-add-trade">► SAVE OPEN TRADE</button>`;
 }
 
 function updatePlanPreview() {
@@ -1493,6 +1484,32 @@ function buildTradeLog(symbols) {
     ${filtered.length===0?`<div class="empty">${tradeView==='ACTIVE'?'ยังไม่มีแผนหรือไม้ที่กำลังถือ':'ไม่พบประวัติข้อมูลชุดนี้'}</div>`:filtered.map(t=>buildTradeItem(t)).join('')}`;
 }
 
+function buildTradeEditPanel(t) {
+  const symbols=['GOLD','XAUUSD','BTCUSD','US30','NAS100','EURUSD','GBPUSD','Other'];
+  const accounts=getAccountList();
+  const isClosed=tradeLifecycle(t)==='CLOSED';
+  return `
+    <div class="manage-box edit-box">
+      <div style="color:#FFD54F;font-size:9px;margin-bottom:8px">✎ EDIT ${isClosed?'TRADE RECORD':'OPEN TRADE'}</div>
+      <div class="manage-grid">
+        <div><label>Date</label><input type="date" id="edit-date" value="${escapeHtml(t.date||today())}"></div>
+        <div><label>Account</label><select id="edit-account">${accounts.map(a=>`<option value="${escapeHtml(a)}" ${a===(t.account||'Demo')?'selected':''}>${escapeHtml(a)}</option>`).join('')}</select></div>
+        <div><label>Symbol</label><select id="edit-symbol">${symbols.map(s=>`<option value="${s}" ${s===t.symbol?'selected':''}>${s}</option>`).join('')}</select></div>
+        <div><label>Direction</label><select id="edit-dir"><option value="Buy" ${t.dir==='Buy'?'selected':''}>BUY</option><option value="Sell" ${t.dir==='Sell'?'selected':''}>SELL</option></select></div>
+        <div><label>Entry</label><input type="number" id="edit-entry" value="${actualEntry(t)||plannedEntry(t)}" inputmode="decimal"></div>
+        <div><label>Initial SL</label><input type="number" id="edit-initial-sl" value="${initialStop(t)}" inputmode="decimal"></div>
+        <div><label>Current SL</label><input type="number" id="edit-current-sl" value="${t.currentSl||initialStop(t)}" inputmode="decimal"></div>
+        <div><label>Take Profit</label><input type="number" id="edit-tp" value="${plannedTarget(t)}" inputmode="decimal"></div>
+        <div><label>Lot Size</label><input type="number" id="edit-lot" value="${t.lot||''}" inputmode="decimal"></div>
+        <div><label>Current Price</label><input type="number" id="edit-current-price" value="${t.currentPrice||''}" inputmode="decimal"></div>
+        <div><label>Exit Price</label><input type="number" id="edit-exit" value="${t.exit||''}" inputmode="decimal"></div>
+        <div><label>Net P&amp;L (USD)</label><input type="number" id="edit-pnl" value="${Number(t.pnl)||0}" inputmode="decimal"></div>
+      </div>
+      ${isClosed?`<div class="manage-grid"><div><label>Status</label><select id="edit-status"><option value="TP" ${t.status==='TP'?'selected':''}>TP</option><option value="SL" ${t.status==='SL'?'selected':''}>SL</option><option value="BE" ${t.status==='BE'?'selected':''}>BE</option></select></div><div><label>Exit Reason</label><select id="edit-exit-reason"><option ${t.exitReason==='TP Hit'?'selected':''}>TP Hit</option><option ${t.exitReason==='SL Hit'?'selected':''}>SL Hit</option><option ${t.exitReason==='Manual Close'?'selected':''}>Manual Close</option></select></div></div>`:''}
+      <div style="display:flex;gap:6px;margin-top:8px"><button class="btn btn-green" data-save-edit-trade="${t.id}" style="flex:1">SAVE EDIT</button><button class="btn" data-cancel-edit-trade="${t.id}" style="flex:1">CANCEL</button></div>
+    </div>`;
+}
+
 function buildTradeItem(t) {
   if (!t) return '';
   const lifecycle = tradeLifecycle(t);
@@ -1516,9 +1533,11 @@ function buildTradeItem(t) {
       <div class="trade-row"><span class="trade-label">NET P&L (USD)</span><span class="${pnlClass}">${pnlSign}$${fmt(t.pnl,2)}</span></div>
       <div class="trade-row"><span class="trade-label">PLAN / RESULT</span><span class="trade-value">${plannedRR(t)===null?'-':`1:${plannedRR(t).toFixed(2)}`} / ${fmtR(realizedR(t))}</span></div>
       ${t.exitReason?`<div class="trade-row"><span class="trade-label">EXIT REASON</span><span class="trade-value">${t.exitReason}</span></div>`:''}
-      ${emTags?`<div style="margin-top:4px;font-size:10px">${emTags}</div>`:''}
-      <div style="margin-top:8px;text-align:right"><button class="del-btn" data-del-trade="${t.id}">✕ DELETE RECORD</button></div>
-    </div>`;
+       ${emTags?`<div style="margin-top:4px;font-size:10px">${emTags}</div>`:''}
+       <div class="trade-actions"><button class="trade-action primary" data-edit-trade="${t.id}">${state.editTradeId===t.id?'CLOSE EDIT':'EDIT RECORD'}</button></div>
+       ${state.editTradeId===t.id?buildTradeEditPanel(t):''}
+       <div style="margin-top:8px;text-align:right"><button class="del-btn" data-del-trade="${t.id}">✕ DELETE RECORD</button></div>
+     </div>`;
 }
 
 function buildActiveTradeItem(t) {
@@ -1538,7 +1557,7 @@ function buildActiveTradeItem(t) {
         <span class="trade-symbol">${t.symbol} [${t.account||'Demo'}] <span class="${t.dir==='Buy'?'glow-green':'glow-red'}">${t.dir==='Buy'?'▲ BUY':'▼ SELL'}</span></span>
         <span class="life-badge ${isOpen?'life-open':lifecycle==='CANCELLED'?'life-cancelled':'life-planned'}">${lifecycle}</span>
       </div>
-      <div class="trade-row"><span class="trade-label">PLAN ENTRY / TP</span><span class="trade-value">${fmt(plannedEntry(t),2)} → ${fmt(plannedTarget(t),2)}</span></div>
+      <div class="trade-row"><span class="trade-label">${lifecycle==='PLANNED'?'PLAN ENTRY / TP':'ENTRY / TP'}</span><span class="trade-value">${fmt(plannedEntry(t),2)} → ${fmt(plannedTarget(t),2)}</span></div>
       <div class="trade-row"><span class="trade-label">INITIAL / CURRENT SL</span><span class="trade-value">${fmt(initialStop(t),2)} / ${fmt(t.currentSl||initialStop(t),2)}</span></div>
       <div class="trade-row"><span class="trade-label">LOT REMAINING</span><span class="trade-value">${fmt(remaining,2)} / ${fmt(t.lot,2)}</span></div>
       <div class="rr-preview">
@@ -1550,9 +1569,11 @@ function buildActiveTradeItem(t) {
       ${exits.length?`<div class="timeline"><strong>EXITS:</strong> ${exits.map(e=>`${fmt(e.price,2)} (${fmt(e.lot,2)} lot / ${Number(e.pnl)>=0?'+':''}$${fmt(e.pnl,2)})`).join(' · ')}</div>`:''}
       ${lifecycle!=='CANCELLED'?`<div class="trade-actions">
         <button class="trade-action primary" data-manage-trade="${t.id}">${isManaging?'CLOSE PANEL':isOpen?'UPDATE / CLOSE':'CONFIRM ENTRY'}</button>
+        <button class="trade-action" data-edit-trade="${t.id}">${state.editTradeId===t.id?'CLOSE EDIT':'EDIT RECORD'}</button>
         ${lifecycle==='PLANNED'?`<button class="trade-action warn" data-cancel-trade="${t.id}">CANCEL PLAN</button>`:''}
       </div>`:`<div class="trade-actions"><button class="trade-action primary" data-restore-trade="${t.id}">RESTORE PLAN</button></div>`}
       ${isManaging?buildManageTradePanel(t):''}
+      ${state.editTradeId===t.id?buildTradeEditPanel(t):''}
       <div style="margin-top:8px;text-align:right"><button class="del-btn" data-del-trade="${t.id}">✕ DELETE RECORD</button></div>
     </div>`;
 }
@@ -2052,7 +2073,7 @@ function attachEvents() {
   bindPeriodFilter('log', state.filter ? state.filter.period : { mode: 'all' }, (p) => { state.filter.period = p; render(); });
   bindPeriodFilter('stats', state.statsPeriod || { mode: 'all', account: 'ALL' }, (p) => { state.statsPeriod = p; render(); });
 
-  /* 🛡️ SAVE PRE-TRADE PLAN */
+  /* 🛡️ SAVE OPEN TRADE FROM THE MAIN ENTRY FORM */
   const btnTrade = document.getElementById('btn-add-trade');
   if (btnTrade) btnTrade.addEventListener('click', () => {
     const f = state.f;
@@ -2067,16 +2088,30 @@ function attachEvents() {
       return;
     }
 
+    const lockInfo = getConsecutiveLossLock(f.account || 'Demo');
+    if (lockInfo.isLocked) {
+      beep('alert');
+      alert(`🧠 BRAIN COOLDOWN ACTIVE\n\nยังเปิดไม้ใหม่ไม่ได้ กรุณาพักอีก ${formatCooldown(lockInfo.remainingSec)}`);
+      return;
+    }
+    const dailyRisk = getDailyRiskStats(f.account || 'Demo');
+    if (dailyRisk.level === 'STOP') {
+      beep('alert');
+      const override = confirm(`💀 DAILY DRAWDOWN LIMIT REACHED\n\nพอร์ต ${f.account || 'Demo'} ใช้ขีดจำกัดรายวันแล้ว คุณยังต้องการบันทึกไม้ที่เปิดอยู่หรือไม่?`);
+      if (!override) return;
+    }
+
     if (!Array.isArray(state.trades)) state.trades = [];
+    const openedAt = new Date().toISOString();
     const newTrade = {
       id: uid(),
       date: f.date,
       symbol: f.symbol,
       dir: f.dir,
-      lifecycle: 'PLANNED',
+      lifecycle: 'OPEN',
       plannedEntry: entry,
       entry: entry,
-      actualEntry: null,
+      actualEntry: entry,
       initialSl: stop,
       currentSl: stop,
       sl: stop,
@@ -2086,11 +2121,13 @@ function attachEvents() {
       slHistory: [{ price:stop, at:new Date().toISOString(), note:'Initial SL' }],
       lot,
       pnl: 0,
-      status: 'PLANNED',
+      status: 'OPEN',
       tf: f.tf,
       psychology: { conf: f.conf, fear: f.fear, greed: f.greed },
       account: f.account,
-      createdAt: new Date().toISOString()
+      currentPrice: entry,
+      openedAt,
+      createdAt: openedAt
     };
     state.trades.push(newTrade);
     save(KEY.TRADES, state.trades);
@@ -2130,7 +2167,51 @@ function attachEvents() {
   document.querySelectorAll('[data-manage-trade]').forEach(el => {
     el.addEventListener('click', () => {
       state.manageTradeId = state.manageTradeId === el.dataset.manageTrade ? null : el.dataset.manageTrade;
+      if (state.manageTradeId) state.editTradeId = null;
       render();
+    });
+  });
+
+  document.querySelectorAll('[data-edit-trade]').forEach(el => {
+    el.addEventListener('click', () => {
+      state.editTradeId = state.editTradeId === el.dataset.editTrade ? null : el.dataset.editTrade;
+      if (state.editTradeId) state.manageTradeId = null;
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-cancel-edit-trade]').forEach(el => {
+    el.addEventListener('click', () => { state.editTradeId = null; render(); });
+  });
+
+  document.querySelectorAll('[data-save-edit-trade]').forEach(el => {
+    el.addEventListener('click', () => {
+      const t = state.trades.find(x => x && x.id === el.dataset.saveEditTrade);
+      if (!t) return;
+      const entry = Number(document.getElementById('edit-entry')?.value);
+      const initialSl = Number(document.getElementById('edit-initial-sl')?.value);
+      const currentSl = Number(document.getElementById('edit-current-sl')?.value);
+      const tp = Number(document.getElementById('edit-tp')?.value);
+      const lot = Number(document.getElementById('edit-lot')?.value);
+      const dir = document.getElementById('edit-dir')?.value || t.dir;
+      const valid = entry && initialSl && tp && lot > 0 && (dir === 'Sell' ? initialSl > entry && tp < entry : initialSl < entry && tp > entry);
+      if (!valid) { alert('ตรวจสอบ Entry, Initial SL, Take Profit, Lot และทิศทางให้ถูกต้อง'); return; }
+      t.date = document.getElementById('edit-date')?.value || t.date;
+      t.account = document.getElementById('edit-account')?.value || t.account || 'Demo';
+      t.symbol = document.getElementById('edit-symbol')?.value || t.symbol;
+      t.dir = dir;
+      t.plannedEntry = entry; t.actualEntry = entry; t.entry = entry;
+      t.initialSl = initialSl; t.sl = initialSl; t.currentSl = currentSl || initialSl;
+      t.plannedTp = tp; t.lot = lot;
+      t.currentPrice = Number(document.getElementById('edit-current-price')?.value) || t.currentPrice || entry;
+      t.exit = Number(document.getElementById('edit-exit')?.value) || t.exit || 0;
+      t.pnl = Number(document.getElementById('edit-pnl')?.value) || 0;
+      if (tradeLifecycle(t) === 'CLOSED') {
+        t.status = document.getElementById('edit-status')?.value || t.status;
+        t.exitReason = document.getElementById('edit-exit-reason')?.value || t.exitReason || 'Manual Close';
+      }
+      t.updatedAt = new Date().toISOString();
+      save(KEY.TRADES, state.trades); syncToCloud(); beep('click'); state.editTradeId = null; render();
     });
   });
 

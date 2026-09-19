@@ -103,12 +103,33 @@ body{
 .sync-online { border-color: var(--tp-green); color: var(--tp-green); background: rgba(16, 185, 129, 0.1); }
 .sync-pending { border-color: var(--owl-gold); color: var(--owl-gold); animation: blink 0.8s infinite; background: rgba(245, 158, 11, 0.1); }
 .sync-offline { border-color: var(--sl-red); color: var(--sl-red); background: rgba(239, 68, 68, 0.1); }
-.auth-card { max-width: 420px; margin: 12vh auto 0; text-align: center; }
-.auth-card h1 { color: var(--owl-gold); font-family: 'Press Start 2P', monospace; font-size: 14px; line-height: 1.7; margin: 0 0 12px; }
-.auth-card p { color: var(--text-sub); font-size: 12px; line-height: 1.6; margin: 8px 0 16px; }
+.auth-shell { min-height: calc(100vh - 88px); display: flex; align-items: center; justify-content: center; padding: 24px 0 48px; }
+.auth-layout { width: min(920px, 100%); min-height: 540px; display: grid; grid-template-columns: minmax(270px, .9fr) minmax(320px, 1.1fr); overflow: hidden; border: 1.5px solid #30415f; border-radius: 18px; background: linear-gradient(135deg, rgba(21,31,50,.96), rgba(9,11,21,.98)); box-shadow: 0 24px 80px rgba(0,0,0,.45), 0 0 40px rgba(59,130,246,.08); }
+.auth-hero { position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; padding: 30px; background: linear-gradient(155deg, rgba(8,17,43,.3), rgba(5,8,18,.94)), url('./assets/icons/app-logo.png') center/cover no-repeat; }
+.auth-hero::after { content:''; position:absolute; inset:0; background: radial-gradient(circle at 50% 20%, rgba(245,158,11,.22), transparent 42%), linear-gradient(0deg, rgba(9,11,21,.86), transparent 58%); pointer-events:none; }
+.auth-hero > * { position:relative; z-index:1; }
+.auth-kicker { color: var(--owl-gold-light); font-family: 'Press Start 2P', monospace; font-size: 8px; letter-spacing: 1px; }
+.auth-hero h2 { color:#fff; font-family:'Press Start 2P',monospace; font-size:18px; line-height:1.7; margin:10px 0 8px; text-shadow:0 3px 0 #111827; }
+.auth-hero p { color:#dbeafe; font-size:12px; line-height:1.7; margin:0; max-width:290px; }
+.auth-card { max-width: 430px; width:100%; margin:0 auto; padding: 30px 34px; text-align: center; align-self:center; background:rgba(21,31,50,.7); border:0; box-shadow:none; }
+.auth-card h1 { color: var(--owl-gold); font-family: 'Press Start 2P', monospace; font-size: 14px; line-height: 1.7; margin: 0 0 10px; }
+.auth-card p { color: var(--text-sub); font-size: 12px; line-height: 1.6; margin: 8px 0 18px; }
 .auth-card input { margin-bottom: 10px; }
+.auth-divider { display:flex; align-items:center; gap:10px; margin:14px 0; color:#64748b; font-size:10px; }
+.auth-divider::before,.auth-divider::after { content:''; height:1px; flex:1; background:#334155; }
+.auth-google { width:100%; background:#f8fafc; color:#0f172a; border:1px solid #cbd5e1; }
+.auth-google:hover { background:#fff; }
+.auth-link { display:inline-block; margin-top:14px; color:#7dd3fc; cursor:pointer; font-size:10px; text-decoration:underline; }
+.auth-footnote { margin-top:18px !important; font-size:9px !important; color:#64748b !important; }
 .auth-error { color: var(--sl-red); font-size: 10px; line-height: 1.5; margin: 8px 0; min-height: 15px; }
 .auth-user { color: var(--text-sub); font-size: 7px; max-width: 145px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 680px) {
+  .auth-shell { min-height: calc(100vh - 70px); padding: 12px 0 36px; }
+  .auth-layout { display:block; min-height:0; border-radius:14px; }
+  .auth-hero { min-height:220px; padding:22px; background-position:center 28%; }
+  .auth-hero h2 { font-size:14px; }
+  .auth-card { padding:24px 20px 28px; }
+}
 
 /* 🎮 COZY RPG HEADER HUB */
 .rpg-hub-header {
@@ -1181,14 +1202,27 @@ function buildApp() {
 function buildAuthScreen() {
   const isSignup = state.authMode === 'signup';
   return `
-    <div class="card auth-card">
-      <h1>🦉 OWL TRADER</h1>
-      <p>${isSignup ? 'สร้างบัญชีเพื่อเก็บข้อมูล Trade แยกเฉพาะของคุณ' : 'เข้าสู่ระบบเพื่อซิงก์ข้อมูล Trade ของคุณอย่างปลอดภัย'}</p>
-      <input type="email" id="auth-email" placeholder="Email" autocomplete="email">
-      <input type="password" id="auth-password" placeholder="Password อย่างน้อย 6 ตัวอักษร" autocomplete="current-password">
-      <div class="auth-error">${escapeHtml(state.authError || '')}</div>
-      <button class="btn btn-green" id="btn-auth-submit">${isSignup ? '► CREATE ACCOUNT' : '► SIGN IN'}</button>
-      <button class="btn" id="btn-auth-toggle" style="width:100%;margin-top:8px">${isSignup ? 'มีบัญชีแล้ว → เข้าสู่ระบบ' : 'ยังไม่มีบัญชี → สมัครสมาชิก'}</button>
+    <div class="auth-shell">
+      <div class="auth-layout">
+        <section class="auth-hero">
+          <div class="auth-kicker">🦉 OWL TRADER JOURNAL</div>
+          <h2>${isSignup ? 'BUILD YOUR EDGE' : 'WELCOME BACK'}</h2>
+          <p>${isSignup ? 'สร้างพื้นที่ส่วนตัวสำหรับวางแผน บันทึก และทบทวนทุกจังหวะการเทรด' : 'กลับเข้าสู่ห้องบันทึกการเทรดของคุณ แล้วดูแผนที่กำลังถืออยู่ได้ทันที'}</p>
+        </section>
+        <section class="card auth-card">
+          <h1>${isSignup ? 'CREATE ACCOUNT' : 'SIGN IN'}</h1>
+          <p>${isSignup ? 'สมัครสมาชิกเพื่อเก็บข้อมูลแยกเฉพาะของคุณ' : 'เข้าสู่ระบบเพื่อซิงก์ข้อมูล Trade อย่างปลอดภัย'}</p>
+          <input type="email" id="auth-email" placeholder="Email" autocomplete="email">
+          <input type="password" id="auth-password" placeholder="Password อย่างน้อย 6 ตัวอักษร" autocomplete="${isSignup ? 'new-password' : 'current-password'}">
+          ${isSignup ? '<input type="password" id="auth-confirm" placeholder="ยืนยัน Password" autocomplete="new-password">' : '<span class="auth-link" id="btn-auth-forgot">ลืมรหัสผ่าน?</span>'}
+          <div class="auth-error">${escapeHtml(state.authError || '')}</div>
+          <button class="btn btn-green" id="btn-auth-submit">${isSignup ? '► CREATE ACCOUNT' : '► SIGN IN'}</button>
+          <div class="auth-divider">หรือ</div>
+          <button class="btn auth-google" id="btn-auth-google">G&nbsp;&nbsp; CONTINUE WITH GOOGLE</button>
+          <span class="auth-link" id="btn-auth-toggle">${isSignup ? 'มีบัญชีแล้ว? เข้าสู่ระบบ' : 'ยังไม่มีบัญชี? สร้างบัญชีใหม่'}</span>
+          <p class="auth-footnote">ข้อมูลของคุณแยกตามบัญชี Login และซิงก์ข้ามอุปกรณ์</p>
+        </section>
+      </div>
     </div>`;
 }
 
@@ -1903,8 +1937,10 @@ function attachEvents() {
     if (!firebaseAuth) return;
     const email = String(document.getElementById('auth-email')?.value || '').trim();
     const password = String(document.getElementById('auth-password')?.value || '');
+    const confirmPassword = String(document.getElementById('auth-confirm')?.value || '');
     if (!email || !password) { state.authError = 'กรอก Email และ Password ให้ครบ'; render(); return; }
     if (password.length < 6) { state.authError = 'Password ต้องมีอย่างน้อย 6 ตัวอักษร'; render(); return; }
+    if (state.authMode === 'signup' && password !== confirmPassword) { state.authError = 'Password และการยืนยัน Password ไม่ตรงกัน'; render(); return; }
     state.authError = '';
     authSubmit.disabled = true;
     authSubmit.textContent = 'กำลังเชื่อมต่อ...';
@@ -1918,9 +1954,44 @@ function attachEvents() {
         'auth/user-not-found': 'ไม่พบบัญชีนี้',
         'auth/wrong-password': 'รหัสผ่านไม่ถูกต้อง',
         'auth/invalid-credential': 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
-        'auth/too-many-requests': 'ลองหลายครั้งเกินไป กรุณารอสักครู่'
+        'auth/too-many-requests': 'ลองหลายครั้งเกินไป กรุณารอสักครู่',
+        'auth/operation-not-allowed': 'ยังไม่ได้เปิด Email/Password ใน Firebase Console',
+        'auth/weak-password': 'Password ควรมีอย่างน้อย 6 ตัวอักษร'
       };
       state.authError = map[err.code] || `เข้าสู่ระบบไม่สำเร็จ (${err.code || 'unknown'})`;
+      render();
+    }
+  });
+
+  const authGoogle = document.getElementById('btn-auth-google');
+  if (authGoogle) authGoogle.addEventListener('click', async () => {
+    if (!firebaseAuth) return;
+    state.authError = '';
+    authGoogle.disabled = true;
+    authGoogle.textContent = 'กำลังเชื่อมต่อ Google...';
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await firebaseAuth.signInWithPopup(provider);
+    } catch (err) {
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+        try { await firebaseAuth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()); return; } catch (redirectErr) { err = redirectErr; }
+      }
+      state.authError = err.code === 'auth/unauthorized-domain' ? 'โดเมนนี้ยังไม่ได้เพิ่มใน Firebase Authorized domains' : `Google Login ไม่สำเร็จ (${err.code || 'unknown'})`;
+      render();
+    }
+  });
+
+  const authForgot = document.getElementById('btn-auth-forgot');
+  if (authForgot) authForgot.addEventListener('click', async () => {
+    if (!firebaseAuth) return;
+    const email = String(document.getElementById('auth-email')?.value || '').trim();
+    if (!email) { state.authError = 'กรอก Email ก่อนกดลืมรหัสผ่าน'; render(); return; }
+    try {
+      await firebaseAuth.sendPasswordResetEmail(email);
+      state.authError = 'ส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่ Email แล้ว';
+      render();
+    } catch (err) {
+      state.authError = err.code === 'auth/user-not-found' ? 'ไม่พบบัญชีจาก Email นี้' : `ส่งลิงก์ไม่สำเร็จ (${err.code || 'unknown'})`;
       render();
     }
   });

@@ -14,6 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
 <!-- ฝัง Firebase Compatibility SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 <style>
 /* ─── 🦉 COZY OWL ARCADE THEME (MODERN PIXEL HYBRID) ─────────────────────── */
@@ -102,6 +103,12 @@ body{
 .sync-online { border-color: var(--tp-green); color: var(--tp-green); background: rgba(16, 185, 129, 0.1); }
 .sync-pending { border-color: var(--owl-gold); color: var(--owl-gold); animation: blink 0.8s infinite; background: rgba(245, 158, 11, 0.1); }
 .sync-offline { border-color: var(--sl-red); color: var(--sl-red); background: rgba(239, 68, 68, 0.1); }
+.auth-card { max-width: 420px; margin: 12vh auto 0; text-align: center; }
+.auth-card h1 { color: var(--owl-gold); font-family: 'Press Start 2P', monospace; font-size: 14px; line-height: 1.7; margin: 0 0 12px; }
+.auth-card p { color: var(--text-sub); font-size: 12px; line-height: 1.6; margin: 8px 0 16px; }
+.auth-card input { margin-bottom: 10px; }
+.auth-error { color: var(--sl-red); font-size: 10px; line-height: 1.5; margin: 8px 0; min-height: 15px; }
+.auth-user { color: var(--text-sub); font-size: 7px; max-width: 145px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* 🎮 COZY RPG HEADER HUB */
 .rpg-hub-header {
@@ -485,20 +492,28 @@ input:focus,select:focus{
 </div>
 <div id="app"></div>
 <script>
-// 📡 SYNC CONFIG (ISOLATED TO 'retro_trading_journal_data' ROOT NODE)
+// 📡 OWL TRADER FIREBASE CONFIG (USER-SCOPED DATA)
 const firebaseConfig = {
-  apiKey: "AIzaSyD-FLJd2vKaFX-2F8kzE87inrmGEH5pyzY",
-  authDomain: "pixel-steward-db.firebaseapp.com",
-  databaseURL: "https://pixel-steward-db-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "pixel-steward-db",
-  storageBucket: "pixel-steward-db.firebasestorage.app",
-  messagingSenderId: "36576321084",
-  appId: "1:36576321084:web:315c61237093e616e06d39"
+  apiKey: "AIzaSyCSLCRxGZsbhsqmT1mpGzinVRDAUIJZpQ4",
+  authDomain: "owl-trader-journal.firebaseapp.com",
+  databaseURL: "https://owl-trader-journal-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "owl-trader-journal",
+  storageBucket: "owl-trader-journal.firebasestorage.app",
+  messagingSenderId: "322271047727",
+  appId: "1:322271047727:web:134e9384c3e424c4b256da",
+  measurementId: "G-ZZ7SHP5GR8"
 };
 
 let isCloudActive = false;
+let firebaseAuth = null;
+let firebaseDb = null;
+let currentUser = null;
+let cloudDataRef = null;
+let authReady = false;
 try {
   firebase.initializeApp(firebaseConfig);
+  firebaseAuth = firebase.auth();
+  firebaseDb = firebase.database();
   isCloudActive = true;
 } catch (e) { console.error("Cloud Connection Failed:", e); }
 
@@ -565,6 +580,7 @@ function today() { return new Date().toISOString().split('T')[0]; }
 function fmt(n,d=2) { return Number(n||0).toFixed(d); }
 function fmtDate(s) { if (!s) return ''; const [y,m,d]=s.split('-'); return `${d}/${m}/${y.slice(2)}`; }
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+function escapeHtml(value) { return String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[ch])); }
 
 function weekStart(dateStr) { const d=new Date(dateStr); const day=d.getDay(); const diff=day===0?-6:1-day; d.setDate(d.getDate()+diff); return d.toISOString().split('T')[0]; }
 function weekEnd(dateStr) { const ws=weekStart(dateStr); const d=new Date(ws); d.setDate(d.getDate()+6); return d.toISOString().split('T')[0]; }
@@ -733,6 +749,8 @@ const state = {
   maxDailyDD:   parseFloat(load(KEY.MAX_DAILY_DD, 5.0)) || 5.0,
   lossLocks:    load(KEY.LOSS_LOCK, {}), /* 🧠 2 Consecutive Loss Cooldown Timestamps */
   syncStatus:   'offline',
+  authMode:     'signin',
+  authError:    '',
   calYear:      new Date().getFullYear(),
   calMonth:     new Date().getMonth(),
   f: {
@@ -971,6 +989,8 @@ function getDailyRiskStats(account) {
 
 /* ─── 📡 REALTIME CLOUD SYNCHRONIZATION ENGINE ───────────────────────────── */
 function getSyncBadgeText() {
+  if (!authReady) return '🟡 CONNECTING';
+  if (!currentUser) return '🔐 LOGIN REQUIRED';
   if (state.syncStatus === 'synced') return '🟢 SYNCED';
   if (state.syncStatus === 'syncing') return '🟡 SYNCING...';
   return '🔴 OFFLINE';
@@ -979,13 +999,23 @@ function getSyncBadgeText() {
 function updateSyncBadge() {
   const badge = document.getElementById('cloud-sync-badge');
   if (badge) {
-    badge.className = `sync-badge ${state.syncStatus === 'synced' ? 'sync-online' : state.syncStatus === 'syncing' ? 'sync-pending' : 'sync-offline'}`;
+    const cls = !authReady || state.syncStatus === 'syncing' ? 'sync-pending' : state.syncStatus === 'synced' ? 'sync-online' : 'sync-offline';
+    badge.className = `sync-badge ${cls}`;
     badge.textContent = getSyncBadgeText();
   }
 }
 
+function getCloudUserRef() {
+  return (firebaseDb && currentUser) ? firebaseDb.ref(`users/${currentUser.uid}`) : null;
+}
+
+function hasLocalUserData() {
+  return (Array.isArray(state.trades) && state.trades.length > 0) ||
+    (Array.isArray(state.cfs) && state.cfs.length > 0);
+}
+
 function syncToCloud() {
-  if (!isCloudActive) {
+  if (!isCloudActive || !authReady || !currentUser || !cloudDataRef) {
     state.syncStatus = 'offline';
     updateSyncBadge();
     return;
@@ -995,6 +1025,8 @@ function syncToCloud() {
 
   const legacyBalance = (state.balances && state.balances['Demo']) ? state.balances['Demo'] : 10000;
   const payload = {
+    schemaVersion: 1,
+    ownerUid: currentUser.uid,
     trades: state.trades || [],
     cfs: state.cfs || [],
     balances: state.balances || DEFAULT_BALANCES,
@@ -1004,7 +1036,7 @@ function syncToCloud() {
     updatedAt: new Date().toISOString()
   };
 
-  firebase.database().ref('retro_trading_journal_data').set(payload, (err) => {
+  cloudDataRef.set(payload, (err) => {
     if (err) {
       console.error("Firebase Sync Error:", err);
       state.syncStatus = 'offline';
@@ -1015,72 +1047,90 @@ function syncToCloud() {
   });
 }
 
+function applyCloudData(data) {
+  if (!data) return;
+  const remoteTrades = Array.isArray(data.trades) ? data.trades : (data.trades ? Object.values(data.trades) : []);
+  const localTrades = Array.isArray(state.trades) ? state.trades : [];
+  const tradeMap = new Map();
+  remoteTrades.forEach(t => { if (t && t.id) tradeMap.set(t.id, t); });
+  localTrades.forEach(t => { if (t && t.id && !tradeMap.has(t.id)) tradeMap.set(t.id, t); });
+  state.trades = Array.from(tradeMap.values());
+
+  const remoteCFs = Array.isArray(data.cfs) ? data.cfs : (data.cfs ? Object.values(data.cfs) : []);
+  const localCFs = Array.isArray(state.cfs) ? state.cfs : [];
+  const cfMap = new Map();
+  remoteCFs.forEach(c => { if (c && c.id) cfMap.set(c.id, c); });
+  localCFs.forEach(c => { if (c && c.id && !cfMap.has(c.id)) cfMap.set(c.id, c); });
+  state.cfs = Array.from(cfMap.values());
+
+  if (data.balances) {
+    state.balances = { ...DEFAULT_BALANCES, ...state.balances, ...data.balances };
+  } else if (data.balance) {
+    state.balances = { ...DEFAULT_BALANCES, ...state.balances, Demo: parseFloat(data.balance) || 10000 };
+  }
+  if (data.maxDailyDD !== undefined && data.maxDailyDD !== null) {
+    state.maxDailyDD = parseFloat(data.maxDailyDD) || 5.0;
+    save(KEY.MAX_DAILY_DD, state.maxDailyDD);
+  }
+  if (data.lossLocks) {
+    state.lossLocks = { ...(state.lossLocks || {}), ...data.lossLocks };
+    save(KEY.LOSS_LOCK, state.lossLocks);
+  }
+  save(KEY.TRADES, state.trades);
+  save(KEY.CFS, state.cfs);
+  save(KEY.BALANCES, state.balances);
+}
+
 function initCloudDatabase() {
-  if (!isCloudActive) {
+  if (!isCloudActive || !firebaseAuth || !firebaseDb) {
+    authReady = true;
     state.syncStatus = 'offline';
+    render();
     return;
   }
 
-  // 1. Connection state monitoring
-  firebase.database().ref('.info/connected').on('value', (snap) => {
-    state.syncStatus = snap.val() === true ? 'synced' : 'offline';
+  firebaseDb.ref('.info/connected').on('value', (snap) => {
+    if (!currentUser) state.syncStatus = 'offline';
+    else if (snap.val() !== true) state.syncStatus = 'offline';
     updateSyncBadge();
   });
 
-  // 2. Real-time value listener with Smart Merge (Zero Data Loss)
-  firebase.database().ref('retro_trading_journal_data').on('value', (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-      // Smart Merge Trades by Unique ID
-      const remoteTrades = Array.isArray(data.trades) ? data.trades : (data.trades ? Object.values(data.trades) : []);
-      const localTrades = Array.isArray(state.trades) ? state.trades : [];
-      const tradeMap = new Map();
-      remoteTrades.forEach(t => { if (t && t.id) tradeMap.set(t.id, t); });
-      localTrades.forEach(t => { if (t && t.id && !tradeMap.has(t.id)) tradeMap.set(t.id, t); });
-      state.trades = Array.from(tradeMap.values());
+  firebaseAuth.onAuthStateChanged((user) => {
+    currentUser = user || null;
+    authReady = true;
+    state.authError = '';
+    if (cloudDataRef) cloudDataRef.off();
+    cloudDataRef = getCloudUserRef();
 
-      // Smart Merge Cashflows by Unique ID
-      const remoteCFs = Array.isArray(data.cfs) ? data.cfs : (data.cfs ? Object.values(data.cfs) : []);
-      const localCFs = Array.isArray(state.cfs) ? state.cfs : [];
-      const cfMap = new Map();
-      remoteCFs.forEach(c => { if (c && c.id) cfMap.set(c.id, c); });
-      localCFs.forEach(c => { if (c && c.id && !cfMap.has(c.id)) cfMap.set(c.id, c); });
-      state.cfs = Array.from(cfMap.values());
-
-      // Merge Multi-Balances
-      if (data.balances) {
-        state.balances = { ...DEFAULT_BALANCES, ...state.balances, ...data.balances };
-      } else if (data.balance) {
-        state.balances = { ...DEFAULT_BALANCES, ...state.balances, Demo: parseFloat(data.balance) || 10000 };
-      }
-
-      // Max Daily DD Setting
-      if (data.maxDailyDD !== undefined && data.maxDailyDD !== null) {
-        state.maxDailyDD = parseFloat(data.maxDailyDD) || 5.0;
-        save(KEY.MAX_DAILY_DD, state.maxDailyDD);
-      }
-
-      // Merge Loss Locks
-      if (data.lossLocks) {
-        state.lossLocks = { ...(state.lossLocks || {}), ...data.lossLocks };
-        save(KEY.LOSS_LOCK, state.lossLocks);
-      }
-
-      save(KEY.TRADES, state.trades);
-      save(KEY.CFS, state.cfs);
-      save(KEY.BALANCES, state.balances);
-
-      state.syncStatus = 'synced';
-      syncCrtView();
+    if (!currentUser) {
+      state.syncStatus = 'offline';
       render();
-    } else {
-      // First boot initialize cloud
-      syncToCloud();
+      return;
     }
-  }, (err) => {
-    console.error("Firebase Listener Error:", err);
-    state.syncStatus = 'offline';
-    updateSyncBadge();
+
+    state.syncStatus = 'syncing';
+    render();
+    cloudDataRef.on('value', (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        applyCloudData(data);
+        state.syncStatus = 'synced';
+        syncCrtView();
+        render();
+      } else if (hasLocalUserData()) {
+        const migrate = confirm('พบข้อมูล Trade ในเครื่องนี้ ต้องการย้ายข้อมูลไปบัญชี Firebase นี้หรือไม่?');
+        if (migrate) syncToCloud();
+        else { state.syncStatus = 'synced'; updateSyncBadge(); }
+      } else {
+        syncToCloud();
+      }
+    }, (err) => {
+      console.error("Firebase Listener Error:", err);
+      state.syncStatus = 'offline';
+      state.authError = 'Firebase ปฏิเสธการอ่านข้อมูล กรุณาตรวจสอบ Rules และ Login';
+      updateSyncBadge();
+      render();
+    });
   });
 }
 
@@ -1111,6 +1161,10 @@ function render() {
 }
 
 function buildApp() {
+  if (!authReady) {
+    return `<div class="card auth-card"><h1>🦉 OWL TRADER</h1><p>กำลังตรวจสอบการเชื่อมต่อบัญชี...</p><span class="sync-badge sync-pending">🟡 CONNECTING...</span></div>`;
+  }
+  if (!currentUser) return buildAuthScreen();
   return `
     ${buildHubHeader()}
     ${buildAlert()}
@@ -1122,6 +1176,20 @@ function buildApp() {
     </div>
     ${buildNav()}
   `;
+}
+
+function buildAuthScreen() {
+  const isSignup = state.authMode === 'signup';
+  return `
+    <div class="card auth-card">
+      <h1>🦉 OWL TRADER</h1>
+      <p>${isSignup ? 'สร้างบัญชีเพื่อเก็บข้อมูล Trade แยกเฉพาะของคุณ' : 'เข้าสู่ระบบเพื่อซิงก์ข้อมูล Trade ของคุณอย่างปลอดภัย'}</p>
+      <input type="email" id="auth-email" placeholder="Email" autocomplete="email">
+      <input type="password" id="auth-password" placeholder="Password อย่างน้อย 6 ตัวอักษร" autocomplete="current-password">
+      <div class="auth-error">${escapeHtml(state.authError || '')}</div>
+      <button class="btn btn-green" id="btn-auth-submit">${isSignup ? '► CREATE ACCOUNT' : '► SIGN IN'}</button>
+      <button class="btn" id="btn-auth-toggle" style="width:100%;margin-top:8px">${isSignup ? 'มีบัญชีแล้ว → เข้าสู่ระบบ' : 'ยังไม่มีบัญชี → สมัครสมาชิก'}</button>
+    </div>`;
 }
 
 function buildHubHeader() {
@@ -1172,7 +1240,11 @@ function buildHubHeader() {
           </div>
         </div>
       </div>
-      <button class="rpg-setting-trigger" id="hub-setting-btn">⚙️</button>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+        <span class="auth-user" title="${escapeHtml(currentUser?.email || '')}">${escapeHtml(currentUser?.email || '')}</span>
+        <button class="rpg-setting-trigger" id="btn-auth-signout" title="ออกจากระบบ">↪</button>
+        <button class="rpg-setting-trigger" id="hub-setting-btn">⚙️</button>
+      </div>
     </div>
   `;
 }
@@ -1819,6 +1891,45 @@ function buildSettings() {
 }
 
 function attachEvents() {
+  const authToggle = document.getElementById('btn-auth-toggle');
+  if (authToggle) authToggle.addEventListener('click', () => {
+    state.authMode = state.authMode === 'signup' ? 'signin' : 'signup';
+    state.authError = '';
+    render();
+  });
+
+  const authSubmit = document.getElementById('btn-auth-submit');
+  if (authSubmit) authSubmit.addEventListener('click', async () => {
+    if (!firebaseAuth) return;
+    const email = String(document.getElementById('auth-email')?.value || '').trim();
+    const password = String(document.getElementById('auth-password')?.value || '');
+    if (!email || !password) { state.authError = 'กรอก Email และ Password ให้ครบ'; render(); return; }
+    if (password.length < 6) { state.authError = 'Password ต้องมีอย่างน้อย 6 ตัวอักษร'; render(); return; }
+    state.authError = '';
+    authSubmit.disabled = true;
+    authSubmit.textContent = 'กำลังเชื่อมต่อ...';
+    try {
+      if (state.authMode === 'signup') await firebaseAuth.createUserWithEmailAndPassword(email, password);
+      else await firebaseAuth.signInWithEmailAndPassword(email, password);
+    } catch (err) {
+      const map = {
+        'auth/email-already-in-use': 'อีเมลนี้มีบัญชีอยู่แล้ว',
+        'auth/invalid-email': 'รูปแบบอีเมลไม่ถูกต้อง',
+        'auth/user-not-found': 'ไม่พบบัญชีนี้',
+        'auth/wrong-password': 'รหัสผ่านไม่ถูกต้อง',
+        'auth/invalid-credential': 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
+        'auth/too-many-requests': 'ลองหลายครั้งเกินไป กรุณารอสักครู่'
+      };
+      state.authError = map[err.code] || `เข้าสู่ระบบไม่สำเร็จ (${err.code || 'unknown'})`;
+      render();
+    }
+  });
+
+  const authSignout = document.getElementById('btn-auth-signout');
+  if (authSignout) authSignout.addEventListener('click', () => {
+    if (firebaseAuth) firebaseAuth.signOut();
+  });
+
   document.querySelectorAll('[data-nav]').forEach(el => { el.addEventListener('click', () => { state.page = el.dataset.nav; beep('click'); render(); }); });
   document.querySelectorAll('[data-tab-input]').forEach(el => { el.addEventListener('click', () => { state.inputTab = el.dataset.tabInput; render(); }); });
   document.querySelectorAll('[data-tab-log]').forEach(el => { el.addEventListener('click', () => { state.logTab = el.dataset.tabLog; render(); }); });

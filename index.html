@@ -1992,12 +1992,18 @@ function attachEvents() {
     authGoogle.textContent = 'กำลังเชื่อมต่อ Google...';
     try {
       const provider = new firebase.auth.GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
       await firebaseAuth.signInWithPopup(provider);
     } catch (err) {
-      if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
-        try { await firebaseAuth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()); return; } catch (redirectErr) { err = redirectErr; }
-      }
-      state.authError = err.code === 'auth/unauthorized-domain' ? 'โดเมนนี้ยังไม่ได้เพิ่มใน Firebase Authorized domains' : `Google Login ไม่สำเร็จ (${err.code || 'unknown'})`;
+      const googleErrors = {
+        'auth/unauthorized-domain': 'โดเมนนี้ยังไม่ได้เพิ่มใน Firebase Authorized domains',
+        'auth/popup-blocked': 'Firefox บล็อกหน้าต่าง Google Login กรุณาอนุญาตป๊อปอัปสำหรับเว็บไซต์นี้ แล้วลองอีกครั้ง หรือสมัครด้วย Email/Password',
+        'auth/popup-closed-by-user': 'ปิดหน้าต่าง Google Login ก่อนเสร็จสิ้น กรุณาลองอีกครั้ง',
+        'auth/cancelled-popup-request': 'มีหน้าต่าง Google Login เปิดอยู่แล้ว กรุณาทำรายการในหน้าต่างนั้น',
+        'auth/account-exists-with-different-credential': 'อีเมลนี้มีบัญชีด้วยวิธีอื่นอยู่แล้ว กรุณาเข้าสู่ระบบด้วยวิธีเดิมก่อน',
+        'auth/operation-not-allowed': 'ยังไม่ได้เปิด Google ใน Firebase Console'
+      };
+      state.authError = googleErrors[err.code] || `Google Login ไม่สำเร็จ (${err.code || 'unknown'})`;
       render();
     }
   });

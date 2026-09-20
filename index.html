@@ -130,8 +130,8 @@ body{
   padding: 12px;
   margin-bottom: 12px;
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  gap: 10px;
   box-shadow: 0 6px 20px -2px rgba(0, 0, 0, 0.35);
 }
 .rpg-avatar-box {
@@ -151,22 +151,39 @@ body{
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+  overflow: hidden;
 }
 .rpg-hub-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 6px;
+  min-width: 0;
 }
 .rpg-hub-label { 
   color: var(--text-sub); 
   font-family: 'Press Start 2P', monospace;
   font-size: 7px; 
   letter-spacing: 0.5px;
+  flex: 0 0 auto;
 }
 .rpg-hub-value { 
   color: var(--text-main); 
   font-weight: 700;
   font-size: 11px; 
+  min-width: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.rpg-hub-controls { display:flex; align-items:center; gap:6px; flex:0 0 auto; }
+.rpg-hub-controls .rpg-setting-trigger { min-width:34px; min-height:34px; }
+@media(max-width:420px) {
+  .rpg-hub-header { padding:10px; gap:8px; }
+  .rpg-avatar-box { width:40px; height:40px; }
+  .rpg-hub-controls { gap:4px; }
+  .rpg-hub-controls .rpg-setting-trigger { min-width:32px; min-height:32px; }
+  .rpg-hub-label { font-size:6px; letter-spacing:0; }
+  .rpg-hub-value { font-size:10px; }
 }
 .rpg-setting-trigger {
   background: var(--bg-input); border: 1.5px solid var(--border-card);
@@ -323,6 +340,19 @@ input:focus,select:focus{
 .trade-row{display:flex;justify-content:space-between;margin-bottom:4px;font-size:11px;}
 .trade-label{color:var(--text-sub);font-weight:500;}
 .trade-value{color:var(--text-main);font-weight:600;}
+.trade-image-strip{display:flex;gap:7px;overflow-x:auto;margin:8px 0 2px;padding-bottom:2px}
+.trade-image-thumb{position:relative;flex:0 0 76px;width:76px;height:58px;padding:0;border:1px solid var(--border-card);border-radius:7px;overflow:hidden;background:var(--bg-card);cursor:pointer}
+.trade-image-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.trade-image-caption{position:absolute;left:0;right:0;bottom:0;padding:2px 3px;background:rgba(9,11,21,.82);color:#e2e8f0;font-size:8px;text-align:center}
+.image-upload{margin:8px 0 10px;padding:9px;border:1px dashed var(--border-card);border-radius:8px;background:rgba(9,11,21,.28)}
+.image-upload label{display:block;margin-bottom:5px;color:var(--text-sub);font-size:10px}
+.image-upload input[type=file]{font-size:11px;min-height:38px;padding:6px}
+.image-upload-hint{display:block;color:var(--text-muted);font-size:9px;margin-top:4px}
+.image-preview{display:flex;align-items:center;gap:8px;margin-top:7px}
+.image-preview img{width:88px;height:62px;object-fit:cover;border:1px solid var(--border-card);border-radius:6px}
+.image-clear{width:auto;min-height:30px;padding:5px 8px;margin:0;font-size:7px}
+.equity-chart-wrap{width:100%;overflow:hidden;border:1px solid var(--border-card);border-radius:8px;background:#090B15}
+.equity-chart{display:block;width:100%;height:auto}
 .badge{padding:3px 6px;font-family:'Press Start 2P',monospace;font-size:7px;display:inline-block;border-radius:4px;}
 .badge-tp{border:1px solid var(--tp-green);color:var(--tp-green-light);background:rgba(16,185,129,0.15)}
 .badge-sl{border:1px solid var(--sl-red);color:var(--sl-red-light);background:rgba(239,68,68,0.15)}
@@ -593,6 +623,64 @@ function fmtDate(s) { if (!s) return ''; const [y,m,d]=s.split('-'); return `${d
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
 function escapeHtml(value) { return String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[ch])); }
 
+function compressTradeImage(file) {
+  return new Promise((resolve, reject) => {
+    if (!file || !String(file.type||'').startsWith('image/')) { reject(new Error('กรุณาเลือกไฟล์รูปภาพ')); return; }
+    if (file.size > 20 * 1024 * 1024) { reject(new Error('ไฟล์รูปใหญ่เกิน 20 MB')); return; }
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      try {
+        let width = image.naturalWidth, height = image.naturalHeight;
+        if (!width || !height) throw new Error('อ่านขนาดรูปภาพไม่ได้');
+        const scale = Math.min(1, 1000 / Math.max(width, height));
+        width = Math.max(1, Math.round(width * scale));
+        height = Math.max(1, Math.round(height * scale));
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('เบราว์เซอร์นี้แปลงรูปภาพไม่ได้');
+        let dataUrl = '';
+        let quality = 0.76;
+        for (let attempt = 0; attempt < 10; attempt++) {
+          canvas.width = width; canvas.height = height;
+          ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(image, 0, 0, width, height);
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+          const approxBytes = Math.floor(dataUrl.length * 0.75);
+          if (approxBytes <= 180 * 1024) break;
+          if (quality > 0.5) quality = Math.max(0.5, quality - 0.08);
+          else { width = Math.max(480, Math.round(width * 0.82)); height = Math.max(320, Math.round(height * 0.82)); }
+        }
+        if (dataUrl.length * 0.75 > 300 * 1024) throw new Error('บีบอัดรูปไม่สำเร็จ กรุณาเลือกรูปที่เล็กลง');
+        resolve(dataUrl);
+      } catch (err) { reject(err); }
+      finally { URL.revokeObjectURL(objectUrl); }
+    };
+    image.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error('เปิดรูปนี้ไม่ได้ กรุณาเลือกรูป JPG หรือ PNG')); };
+    image.src = objectUrl;
+  });
+}
+
+function buildImagePreview(src, clearAttribute) {
+  const safeSrc = safeTradeImage(src);
+  if (!safeSrc) return '';
+  return `<div class="image-preview"><img src="${escapeHtml(safeSrc)}" alt="Trade screenshot preview"><button type="button" class="trade-action image-clear" ${clearAttribute}>REMOVE</button></div>`;
+}
+
+function safeTradeImage(src) {
+  const value = String(src||'');
+  return /^data:image\/(?:jpeg|png|webp);base64,[a-z0-9+/=]+$/i.test(value) ? value : '';
+}
+
+function buildTradeImageStrip(trade) {
+  const images = [];
+  if (trade && safeTradeImage(trade.entryImage)) images.push({ label:'ENTRY', src:safeTradeImage(trade.entryImage) });
+  const exits = exitEvents(trade);
+  exits.forEach((event, index) => { if (event && safeTradeImage(event.image)) images.push({ label:exits.length > 1 ? `EXIT ${index+1}` : 'EXIT', src:safeTradeImage(event.image) }); });
+  if (!images.length) return '';
+  return `<div class="trade-image-strip">${images.map(image => `<a class="trade-image-thumb" href="${escapeHtml(image.src)}" target="_blank" rel="noopener" aria-label="เปิดรูป ${image.label}"><img src="${escapeHtml(image.src)}" alt="${image.label} trade screenshot"><span class="trade-image-caption">${image.label}</span></a>`).join('')}</div>`;
+}
+
 function weekStart(dateStr) { const d=new Date(dateStr); const day=d.getDay(); const diff=day===0?-6:1-day; d.setDate(d.getDate()+diff); return d.toISOString().split('T')[0]; }
 function weekEnd(dateStr) { const ws=weekStart(dateStr); const d=new Date(ws); d.setDate(d.getDate()+6); return d.toISOString().split('T')[0]; }
 function monthStart(dateStr) { return dateStr.slice(0,7)+'-01'; }
@@ -768,8 +856,9 @@ const state = {
   f: {
     date:today(), symbol:'GOLD', dir:'Buy', entry:'', plannedTp:'',
     sl:'', lot:'', tf:'1H',
-    conf:false, fear:false, greed:false, account: savedLastAccount
+    conf:false, fear:false, greed:false, account: savedLastAccount, entryImage:''
   },
+  exitImageDrafts: {},
   cf: { date:today(), type:'Deposit', amount:'', desc:'', account: savedLastAccount },
   filter: { symbol:'ALL', status:'ALL', period:{mode:'all'}, account: savedLastAccount },
   statsPeriod: { mode:'all', account: savedLastAccount }
@@ -1239,7 +1328,7 @@ function buildHubHeader() {
       <div class="rpg-hub-info">
         <div class="rpg-hub-row">
           <span class="rpg-hub-label">ACC:</span>
-          <span class="rpg-hub-value" style="color:#33D6FF; text-decoration:underline; cursor:pointer;" id="hub-acc-label">${targetAcc} ▾</span>
+          <span class="rpg-hub-value" style="color:#33D6FF; text-decoration:underline; cursor:pointer;" id="hub-acc-label">${escapeHtml(targetAcc)} ▾</span>
         </div>
         <div class="rpg-hub-row">
           <span class="rpg-hub-label">NET EQUITY:</span>
@@ -1265,8 +1354,7 @@ function buildHubHeader() {
           </div>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-        <span class="auth-user" title="${escapeHtml(currentUser?.email || '')}">${escapeHtml(currentUser?.email || '')}</span>
+      <div class="rpg-hub-controls">
         <button class="rpg-setting-trigger" id="btn-auth-signout" title="ออกจากระบบ">↪</button>
         <button class="rpg-setting-trigger" id="hub-setting-btn">⚙️</button>
       </div>
@@ -1356,6 +1444,12 @@ function buildTradeForm() {
     <label>Initial Stop Loss (SL เริ่มต้น)</label><input type="number" id="f-sl" placeholder="0.00" value="${f.sl}" inputmode="decimal">
     <label>Take Profit (เป้าหมาย)</label><input type="number" id="f-planned-tp" placeholder="0.00" value="${f.plannedTp||''}" inputmode="decimal">
     <label>Lot Size</label><input type="number" id="f-lot" placeholder="0.01" value="${f.lot}" inputmode="decimal">
+    <div class="image-upload">
+      <label for="f-entry-image">📷 รูปตอนเข้าออเดอร์ (ไม่บังคับ)</label>
+      <input type="file" id="f-entry-image" accept="image/*">
+      <span class="image-upload-hint">รูปจะถูกย่อขนาดและซิงก์ไปกับรายการเทรด</span>
+      <div id="f-entry-image-preview">${buildImagePreview(f.entryImage, 'data-clear-entry-image')}</div>
+    </div>
     <div class="rr-preview" id="plan-rr-preview">
       <div class="rr-cell"><div class="rr-label">R:R</div><div class="rr-value ${planR!==null&&planR>=1?'good':planR!==null&&planR<=0?'bad':''}" id="plan-rr-value">${planR===null?'-':`1:${planR.toFixed(2)}`}</div></div>
       <div class="rr-cell"><div class="rr-label">RISK DIST.</div><div class="rr-value" id="plan-risk-value">${riskDistance===null?'-':fmt(riskDistance,2)}</div></div>
@@ -1526,6 +1620,7 @@ function buildTradeItem(t) {
         <span class="trade-symbol">${t.symbol} [${t.account||'Demo'}] <span class="${t.dir==='Buy'?'glow-green':'glow-red'}">${t.dir==='Buy'?'▲ BUY':'▼ SELL'}</span></span>
         <span class="badge ${badgeCls}">${t.status}</span>
       </div>
+      ${buildTradeImageStrip(t)}
       <div class="trade-row"><span class="trade-label">EXECUTION DATE</span><span class="trade-value">${fmtDate(t.date)}</span></div>
       <div class="trade-row"><span class="trade-label">ENTRY / EXIT</span><span class="trade-value">${fmt(t.entry,2)} → ${fmt(t.exit,2)}</span></div>
       <div class="trade-row"><span class="trade-label">INITIAL SL / LOT</span><span class="trade-value">${fmt(initialStop(t),2)} / ${t.lot}</span></div>
@@ -1557,6 +1652,7 @@ function buildActiveTradeItem(t) {
         <span class="trade-symbol">${t.symbol} [${t.account||'Demo'}] <span class="${t.dir==='Buy'?'glow-green':'glow-red'}">${t.dir==='Buy'?'▲ BUY':'▼ SELL'}</span></span>
         <span class="life-badge ${isOpen?'life-open':lifecycle==='CANCELLED'?'life-cancelled':'life-planned'}">${lifecycle}</span>
       </div>
+      ${buildTradeImageStrip(t)}
       <div class="trade-row"><span class="trade-label">${lifecycle==='PLANNED'?'PLAN ENTRY / TP':'ENTRY / TP'}</span><span class="trade-value">${fmt(plannedEntry(t),2)} → ${fmt(plannedTarget(t),2)}</span></div>
       <div class="trade-row"><span class="trade-label">INITIAL / CURRENT SL</span><span class="trade-value">${fmt(initialStop(t),2)} / ${fmt(t.currentSl||initialStop(t),2)}</span></div>
       <div class="trade-row"><span class="trade-label">LOT REMAINING</span><span class="trade-value">${fmt(remaining,2)} / ${fmt(t.lot,2)}</span></div>
@@ -1607,6 +1703,12 @@ function buildManageTradePanel(t) {
         <div><label>Exit Lot</label><input type="number" id="manage-exit-lot" value="${remaining}" max="${remaining}" inputmode="decimal"></div>
         <div><label>Net P&amp;L (USD)</label><input type="number" id="manage-exit-pnl" placeholder="+/- สุทธิ" inputmode="decimal"></div>
         <div><label>Exit Reason</label><select id="manage-exit-reason"><option>TP Hit</option><option>SL Hit</option><option>Trailing SL</option><option>Manual Close</option><option>Break Even</option></select></div>
+      </div>
+      <div class="image-upload">
+        <label for="manage-exit-image">📷 รูปตอนออกออเดอร์ (ไม่บังคับ)</label>
+        <input type="file" id="manage-exit-image" accept="image/*">
+        <span class="image-upload-hint">แนบภาพได้กับรายการปิดบางส่วนหรือปิดทั้งหมด</span>
+        <div id="manage-exit-image-preview">${buildImagePreview((state.exitImageDrafts||{})[t.id]||'', `data-clear-exit-image="${t.id}"`)}</div>
       </div>
       <button class="btn btn-green" data-record-exit="${t.id}">► RECORD PARTIAL / CLOSE</button>
     </div>`;
@@ -1743,6 +1845,8 @@ function buildStats() {
   const todayTrades=allTrades.filter(tr=>tr && tr.date===today() && (targetAcc === 'ALL' || (tr.account || 'Demo') === targetAcc));
   const todayPnl=todayTrades.reduce((s,tr)=>s+(Number(tr.pnl)||0),0); 
   const st=computeStats(filtered, accStartBal); 
+  const chartTrades = allTrades.filter(t => targetAcc === 'ALL' || (t.account||'Demo') === targetAcc);
+  const chartCashflows = (Array.isArray(state.cfs)?state.cfs:[]).filter(cf => targetAcc === 'ALL' || (cf.account||'Demo') === targetAcc);
   
   const safeCFs = Array.isArray(state.cfs) ? state.cfs : [];
   const netDeposit=safeCFs.filter(c=>c && (targetAcc==='ALL'||(c.account||'Demo') === targetAcc))
@@ -1823,28 +1927,75 @@ function buildStats() {
       <div class="stats-block">
         <div class="stats-block-title">📊 SYSTEM DATA CHARTS</div>
         <div class="stat-subbox" style="margin-bottom:6px;"><div class="stat-sublabel">TODAY'S NET P&amp;L HUM</div><div class="stat-subvalue ${todayPnl >= 0 ? 'glow-green' : 'glow-red'}">${todayPnl>=0?'+':''}$${fmt(todayPnl,2)}</div></div>
-        ${buildEquityCurve(filtered)}
+        ${buildEquityCurve(chartTrades, accStartBal, chartCashflows, p)}
         ${buildPieChart(st)}
       </div>
 
     </div>`;
 }
 
-function buildEquityCurve(trades) {
-  const safeTrades = Array.isArray(trades) ? trades : [];
-  if (safeTrades.length < 2) return `<div class="empty" style="margin-top:12px">เพิ่มประวัติการเทรดเพื่อสร้างสายกราฟพอร์ต</div>`;
-  const sorted=[...safeTrades].sort((a,b)=>(a&&b&&a.date&&b.date)?a.date.localeCompare(b.date):0); 
-  let cum=0; const points=sorted.map(t=>{ cum+=Number(t.pnl)||0; return cum; }); 
-  const maxV=Math.max(...points,0); const minV=Math.min(...points,0); const range=maxV-minV||1; 
-  const W=300,H=110,PL=4,PR=4,PT=8,PB=20; const IW=W-PL-PR, IH=H-PT-PB;
-  const pts=points.map((v,i)=>{ const x=PL+(i/(points.length-1||1))*IW; const y=PT+IH-((v-minV)/range)*IH; return `${x.toFixed(1)},${y.toFixed(1)}`; }).join(' ');
-  const zeroY=(PT+IH-((0-minV)/range)*IH).toFixed(1);
+function buildEquityCurve(trades, startBalance, cashflows, period) {
+  const safeTrades = (Array.isArray(trades) ? trades : []).filter(isClosedTrade);
+  const safeCashflows = Array.isArray(cashflows) ? cashflows : [];
+  const daily = new Map();
+  const add = (date, kind, amount) => {
+    if (!date) return;
+    if (!daily.has(date)) daily.set(date, { pnl:0, cashflow:0 });
+    daily.get(date)[kind] += Number(amount)||0;
+  };
+  safeTrades.forEach(t => add(t.date, 'pnl', t.pnl));
+  safeCashflows.forEach(cf => add(cf.date, 'cashflow', cf.type==='Deposit' ? Number(cf.amount)||0 : -(Number(cf.amount)||0)));
+  const dates = [...daily.keys()].sort();
+  const safePeriod = period || { mode:'all' };
+  const visibleDates = dates.filter(date => filterByPeriod([{date}], safePeriod).length > 0);
+  if (!visibleDates.length) return `<div class="empty" style="margin-top:12px">ยังไม่มีรายการในช่วงเวลานี้ให้แสดงกราฟ</div>`;
+
+  const firstVisible = visibleDates[0];
+  let equity = Number(startBalance)||0;
+  let openingEquity = equity;
+  const points = [];
+  dates.forEach(date => {
+    const event = daily.get(date);
+    if (date < firstVisible) equity += event.pnl + event.cashflow;
+    else if (visibleDates.includes(date)) {
+      if (!points.length) openingEquity = equity;
+      equity += event.pnl + event.cashflow;
+      points.push({ date, value:equity });
+    }
+  });
+  const [by,bm,bd] = firstVisible.split('-').map(Number);
+  const priorDay = new Date(by, bm-1, bd); priorDay.setDate(priorDay.getDate()-1);
+  const priorDate = `${priorDay.getFullYear()}-${String(priorDay.getMonth()+1).padStart(2,'0')}-${String(priorDay.getDate()).padStart(2,'0')}`;
+  points.unshift({ date:priorDate, value:openingEquity });
+
+  const W=440,H=238,PL=74,PR=12,PT=18,PB=42,IX=W-PL-PR,IY=H-PT-PB;
+  const parseDate = date => Date.parse(`${date}T12:00:00Z`);
+  const minX=parseDate(points[0].date), maxX=parseDate(points[points.length-1].date);
+  const xRange=maxX-minX || 86400000;
+  let minY=Math.min(...points.map(point=>point.value)), maxY=Math.max(...points.map(point=>point.value));
+  const rawRange=maxY-minY, pad=rawRange ? rawRange*0.1 : Math.max(Math.abs(maxY)*0.03,1);
+  minY-=pad; maxY+=pad;
+  const yRange=maxY-minY || 1;
+  const xOf=date=>PL+((parseDate(date)-minX)/xRange)*IX;
+  const yOf=value=>PT+((maxY-value)/yRange)*IY;
+  const polyline=points.map(point=>`${xOf(point.date).toFixed(1)},${yOf(point.value).toFixed(1)}`).join(' ');
+  const yTicks=Array.from({length:5},(_,index)=>maxY-(yRange*index/4));
+  const yTickLabel=value=>`${value<0?'-':''}$${Math.abs(value)>=10000?(Math.abs(value)/1000).toFixed(0)+'k':Math.abs(value)>=1000?(Math.abs(value)/1000).toFixed(1)+'k':Math.abs(value).toLocaleString('en-US',{maximumFractionDigits:0})}`;
+  const xIndexes=points.length<=3?points.map((_,index)=>index):[0,Math.floor((points.length-1)/2),points.length-1];
+  const xTicks=[...new Set(xIndexes)].map(index=>points[index]);
   return `
-    <div style="margin-top:12px;color:#FFD54F;font-size:7px;margin-bottom:4px">📈 EQUITY GROWTH TRAJECTORY</div>
-    <div style="overflow-x:auto">
-      <svg width="${W}" height="${H}" style="display:block;background:#090B15;border:2px solid #304FFE">
-        <line x1="${PL}" y1="${zeroY}" x2="${W-PR}" y2="${zeroY}" stroke="#111827" stroke-width="1" stroke-dasharray="4,3"/>
-        <polyline points="${pts}" fill="none" stroke="#33D6FF" stroke-width="2"/>
+    <div style="margin-top:12px;color:#FFD54F;font-size:9px;margin-bottom:4px">📈 EQUITY GROWTH TRAJECTORY</div>
+    <div style="font-size:10px;color:#94A3B8;margin-bottom:5px">แกน X: วันที่　•　แกน Y: มูลค่าพอร์ต (USD)</div>
+    <div class="equity-chart-wrap">
+      <svg class="equity-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Equity growth by date and account value">
+        ${yTicks.map(value=>`<line x1="${PL}" y1="${yOf(value).toFixed(1)}" x2="${W-PR}" y2="${yOf(value).toFixed(1)}" stroke="#26364f" stroke-width="1"/><text x="${PL-8}" y="${(yOf(value)+3.5).toFixed(1)}" text-anchor="end" fill="#94A3B8" font-size="10">${yTickLabel(value)}</text>`).join('')}
+        <line x1="${PL}" y1="${PT}" x2="${PL}" y2="${H-PB}" stroke="#64748B" stroke-width="1"/>
+        <line x1="${PL}" y1="${H-PB}" x2="${W-PR}" y2="${H-PB}" stroke="#64748B" stroke-width="1"/>
+        <text transform="translate(14 ${PT+IY/2}) rotate(-90)" text-anchor="middle" fill="#CBD5E1" font-size="10">EQUITY (USD)</text>
+        <polyline points="${polyline}" fill="none" stroke="#33D6FF" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+        ${points.slice(1).map(point=>`<circle cx="${xOf(point.date).toFixed(1)}" cy="${yOf(point.value).toFixed(1)}" r="2.5" fill="#33D6FF"><title>${fmtDate(point.date)} — $${fmt(point.value,2)}</title></circle>`).join('')}
+        ${xTicks.map(point=>`<line x1="${xOf(point.date).toFixed(1)}" y1="${H-PB}" x2="${xOf(point.date).toFixed(1)}" y2="${H-PB+4}" stroke="#94A3B8"/><text x="${xOf(point.date).toFixed(1)}" y="${H-15}" text-anchor="middle" fill="#94A3B8" font-size="10">${fmtDate(point.date)}</text>`).join('')}
+        <text x="${PL+IX/2}" y="${H-2}" text-anchor="middle" fill="#CBD5E1" font-size="10">DATE</text>
       </svg>
     </div>`;
 }
@@ -2062,6 +2213,47 @@ function attachEvents() {
   const fAcc = document.getElementById('f-account');
   if (fAcc) fAcc.addEventListener('change', e => updateActiveAccount(e.target.value));
 
+  const entryImageInput = document.getElementById('f-entry-image');
+  if (entryImageInput) entryImageInput.addEventListener('change', async e => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const saveButton = document.getElementById('btn-add-trade');
+    if (saveButton) saveButton.disabled = true;
+    try {
+      state.f.entryImage = await compressTradeImage(file);
+      const preview = document.getElementById('f-entry-image-preview');
+      if (preview) preview.innerHTML = buildImagePreview(state.f.entryImage, 'data-clear-entry-image');
+    } catch (err) { alert(err.message || 'เตรียมรูปไม่สำเร็จ'); e.target.value = ''; }
+    finally { if (saveButton) saveButton.disabled = false; }
+  });
+  document.querySelectorAll('[data-clear-entry-image]').forEach(el => el.addEventListener('click', () => {
+    state.f.entryImage = '';
+    const input = document.getElementById('f-entry-image'); if (input) input.value = '';
+    const preview = document.getElementById('f-entry-image-preview'); if (preview) preview.innerHTML = '';
+  }));
+
+  const exitImageInput = document.getElementById('manage-exit-image');
+  if (exitImageInput) exitImageInput.addEventListener('change', async e => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const tradeId = state.manageTradeId;
+    const saveButton = document.querySelector(`[data-record-exit="${tradeId}"]`);
+    if (saveButton) saveButton.disabled = true;
+    try {
+      const image = await compressTradeImage(file);
+      if (!state.exitImageDrafts) state.exitImageDrafts = {};
+      state.exitImageDrafts[tradeId] = image;
+      const preview = document.getElementById('manage-exit-image-preview');
+      if (preview) preview.innerHTML = buildImagePreview(image, `data-clear-exit-image="${tradeId}"`);
+      document.querySelectorAll('[data-clear-exit-image]').forEach(el => el.addEventListener('click', () => {
+        delete state.exitImageDrafts[tradeId];
+        const input = document.getElementById('manage-exit-image'); if (input) input.value = '';
+        const target = document.getElementById('manage-exit-image-preview'); if (target) target.innerHTML = '';
+      }));
+    } catch (err) { alert(err.message || 'เตรียมรูปไม่สำเร็จ'); e.target.value = ''; }
+    finally { if (saveButton) saveButton.disabled = false; }
+  });
+
   document.querySelectorAll('[data-dir]').forEach(el => { el.addEventListener('click', () => { state.f.dir = el.dataset.dir; render(); }); });
   document.querySelectorAll('[data-psych]').forEach(el => { el.addEventListener('click', () => { const k = el.dataset.psych; state.f[k] = !state.f[k]; el.classList.toggle('checked'); beep('click'); }); });
   document.querySelectorAll('[data-trade-view]').forEach(el => { el.addEventListener('click', () => { state.tradeView = el.dataset.tradeView; state.manageTradeId = null; render(); }); });
@@ -2085,12 +2277,12 @@ function attachEvents() {
     const f = state.f;
     const entry=Number(f.entry), stop=Number(f.sl), target=Number(f.plannedTp), lot=Number(f.lot);
     if (!entry || !stop || !target || !lot || lot <= 0) {
-      alert('กรอก Planned Entry, Initial SL, Planned TP และ Lot ให้ครบถ้วน');
+      alert('กรอก Entry Price, Initial SL, Take Profit และ Lot ให้ครบถ้วน');
       return;
     }
     const directionValid = f.dir === 'Sell' ? stop > entry && target < entry : stop < entry && target > entry;
     if (!directionValid) {
-      alert(f.dir === 'Sell' ? 'แผน SELL ต้องมี SL สูงกว่า Entry และ TP ต่ำกว่า Entry' : 'แผน BUY ต้องมี SL ต่ำกว่า Entry และ TP สูงกว่า Entry');
+      alert(f.dir === 'Sell' ? 'ออเดอร์ SELL ต้องมี SL สูงกว่า Entry และ TP ต่ำกว่า Entry' : 'ออเดอร์ BUY ต้องมี SL ต่ำกว่า Entry และ TP สูงกว่า Entry');
       return;
     }
 
@@ -2131,6 +2323,7 @@ function attachEvents() {
       tf: f.tf,
       psychology: { conf: f.conf, fear: f.fear, greed: f.greed },
       account: f.account,
+      entryImage: f.entryImage || '',
       currentPrice: entry,
       openedAt,
       createdAt: openedAt
@@ -2140,7 +2333,7 @@ function attachEvents() {
     syncToCloud();
     beep('win');
     const currentAccount = state.f.account;
-    state.f = { ...state.f, entry: '', plannedTp: '', sl: '', lot: '', conf: false, fear: false, greed: false, account: currentAccount };
+    state.f = { ...state.f, entry: '', plannedTp: '', sl: '', lot: '', conf: false, fear: false, greed: false, entryImage:'', account: currentAccount };
     state.page = 'LOG'; state.tradeView = 'ACTIVE'; state.manageTradeId = newTrade.id;
     render();
   });
@@ -2314,7 +2507,8 @@ function attachEvents() {
       if (!price || !lot || lot <= 0 || pnlRaw === '' || !Number.isFinite(pnl)) { alert('กรอก Exit Price, Exit Lot และ Net P&L ให้ครบ'); return; }
       if (lot > remaining + 0.0000001) { alert(`Exit Lot ต้องไม่เกิน ${fmt(remaining,2)} lot ที่เหลือ`); return; }
       if (!Array.isArray(t.exits)) t.exits = [];
-      t.exits.push({ price, lot, pnl, reason, at:new Date().toISOString() });
+      const exitImage = (state.exitImageDrafts||{})[t.id] || '';
+      t.exits.push({ price, lot, pnl, reason, at:new Date().toISOString(), image:exitImage });
       t.pnl = t.exits.reduce((sum, e) => sum + (Number(e.pnl) || 0), 0);
       t.currentPrice = price; t.updatedAt = new Date().toISOString();
       if (remainingLot(t) <= 0.0000001) {
@@ -2333,6 +2527,7 @@ function attachEvents() {
         }
         state.manageTradeId = null; state.tradeView = 'CLOSED';
       }
+      if (state.exitImageDrafts) delete state.exitImageDrafts[t.id];
       save(KEY.TRADES, state.trades); syncToCloud(); beep(Number(t.pnl)>=0?'win':'lose'); render();
     });
   });

@@ -1,4 +1,4 @@
-# OWL Trader Journal · V4.1
+# OWL Trader Journal · V4.2
 
 OWL Trader is a mobile-first trading journal for recording a position as soon as it is opened, then updating its stop loss and partial exits while it is active.
 
@@ -29,7 +29,15 @@ cd android
 gradlew.bat assembleDebug
 ```
 
-The Android package ID remains `com.snoopy.retrotradingjournal` so the updated APK can replace an existing installation. The app version is 1.1.
+The Android package ID remains `com.snoopy.retrotradingjournal` so the updated APK can replace an existing installation. The app version is 1.2 (versionCode 3). This repository contains a debug APK for testing.
+
+## Reports and backups
+
+Open **REPORTS**, select the account and month, and prepare a Markdown report. A separate **Save file** or **Share file** action follows. Android uses the system document picker, which lets the user select the destination. ZIP backups include photos; JSON exports are data-only. See [the Thai report and backup guide](REPORTS_GUIDE.md).
+
+Monthly reports and the growth chart allocate realized P&L to each partial exit's Thailand date, including positions still open. A manual trade-total correction is reconciled on the last exit date. Imported files are validated before confirmation and merged by record ID. Local caches are now scoped by Firebase UID; legacy unscoped records can be exported separately for review and import.
+
+Run `npm test` for accounting, BUY/SELL validation, Firebase transaction callback, merge, and ZIP round-trip tests. `node tests/serve-qa.cjs` serves a local-only synthetic-data UI fixture at port 4173 and does not contact production Firebase. Never package the test server in the Android assets.
 
 ## Links
 

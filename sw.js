@@ -1,7 +1,10 @@
-const CACHE_NAME = 'owl-trading-journal-v105';
+const CACHE_NAME = 'owl-trading-journal-v106';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
+  './journal-core.js',
+  './export-ui.js',
+  './journal-ui.css',
   './manifest.json',
   './assets/icons/app-logo.png',
   './assets/icons/icon-192.png',

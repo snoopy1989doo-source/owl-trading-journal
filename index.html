@@ -620,6 +620,9 @@ input,select,textarea{font:500 14px 'Plus Jakarta Sans',sans-serif;min-height:46
 .auth-google:hover{background:#fff!important}
 @media(max-width:680px){body{padding:10px 10px 84px}.master-header{padding:10px 12px}.master-title{font-size:11px}.rpg-hub-header{padding:12px;gap:10px}.rpg-avatar-box{width:54px!important;height:54px!important;flex:none}.rpg-hub-label{font-size:9px}.rpg-hub-value{font-size:12px}.card{padding:13px;border-radius:16px}.manage-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.bottom-nav{width:calc(100% - 16px);bottom:8px}.nav-btn{min-height:56px}.dashboard-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.dashboard-tile{padding:11px}.dashboard-tile-value{font-size:17px}}
 </style>
+<script src="journal-core.js"></script>
+<script src="export-ui.js"></script>
+<link rel="stylesheet" href="journal-ui.css">
 </head>
 <body>
 <div id="crt-layer" class="crt"></div>
@@ -627,7 +630,7 @@ input,select,textarea{font:500 14px 'Plus Jakarta Sans',sans-serif;min-height:46
 <!-- 👾 MASTER HEADER & CLOUD REALTIME SYNC -->
 <div class="master-header">
   <div style="display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden;">
-  <span class="master-title">🦉 OWL TRADER V.4.1</span>
+  <span class="master-title">🦉 OWL TRADER V.4.2</span>
     <span id="cloud-sync-badge" class="sync-badge sync-offline">🔴 OFFLINE</span>
   </div>
 </div>
@@ -660,6 +663,9 @@ try {
   isCloudActive = true;
 } catch (e) { console.error("Cloud Connection Failed:", e); }
 
+let storageScope = '__signed_out__';
+let cloudLoaded = false;
+let storageWarning = '';
 const KEY = {
   TRADES:       'rtj_trades_v2',
   CFS:          'rtj_cfs_v2',
@@ -682,9 +688,10 @@ const DEFAULT_BALANCES = {
   Swingtrade: 2000
 };
 
+function scopedKey(key){return [KEY.SOUND,KEY.CRT].includes(key)?key:`${key}:${storageScope}`;}
 function load(key, def) { 
   try { 
-    const v=localStorage.getItem(key); 
+    const v=localStorage.getItem(scopedKey(key));
     if (v === null || v === 'undefined') return def;
     if (key === KEY.BALANCES) {
       const parsed = JSON.parse(v);
@@ -697,7 +704,26 @@ function load(key, def) {
   } catch { return def; } 
 }
 
-function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
+function save(key, val) {
+  try { localStorage.setItem(scopedKey(key), JSON.stringify(val)); return true; }
+  catch { storageWarning='พื้นที่บันทึกในเครื่องไม่พอ ข้อมูลล่าสุดอาจยังไม่อยู่ในเครื่อง กรุณาสร้าง Backup และตรวจสถานะซิงก์ก่อนปิดแอป';return false; }
+}
+function persistUserData(){
+  [['TRADES','trades'],['CFS','cfs'],['BALANCES','balances'],['MAX_DAILY_DD','maxDailyDD'],['LOSS_LOCK','lossLocks'],['DAILY_SNAPSHOTS','dailySnapshots'],['CONTRACT_VALUES','contractValues'],['DELETED_TRADES','deletedTradeIds'],['DELETED_CFS','deletedCfIds']].forEach(([key,field])=>save(KEY[key],state[field]));
+}
+function useUserCache(user){
+  storageScope=user?.uid||'__signed_out__';storageWarning='';
+  state.trades=load(KEY.TRADES,[]).map(normalizeTradeSchema);state.cfs=load(KEY.CFS,[]);
+  state.balances=load(KEY.BALANCES,{...DEFAULT_BALANCES});state.maxDailyDD=load(KEY.MAX_DAILY_DD,5);
+  state.lossLocks=load(KEY.LOSS_LOCK,{});state.dailySnapshots=load(KEY.DAILY_SNAPSHOTS,{});
+  state.contractValues=load(KEY.CONTRACT_VALUES,{});state.deletedTradeIds=load(KEY.DELETED_TRADES,[]);state.deletedCfIds=load(KEY.DELETED_CFS,[]);
+  const account=load(KEY.LAST_ACCOUNT,'Demo');
+  state.f={...state.f,date:today(),entry:'',sl:'',lot:'',plannedTp:'',entryImage:'',account};
+  state.cf={date:today(),type:'Deposit',amount:'',desc:'',account};
+  state.filter.account=account;state.statsPeriod.account=account;state.reportAccount=account;
+  state.manageTradeId=null;state.editTradeId=null;state.exitImageDrafts={};state.editImageDrafts={};state.slError={};state.slEditMode={};
+  clearPreparedExport();
+}
 
 function beep(type) {
   if (!state || !state.sound) return;
@@ -832,13 +858,14 @@ function tradeLifecycle(t) {
 }
 
 function isClosedTrade(t) { return !!t && tradeLifecycle(t) === 'CLOSED'; }
-function initialStop(t) { return Number(t && (t.initialSl ?? t.sl)) || 0; }
+function thaiDateTime(at,fallback=today()){const date=new Date(at||`${fallback}T12:00:00+07:00`);if(!Number.isFinite(date.getTime()))return `${fallback}T12:00`;return bangkokDate(date)+'T'+new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',hour12:false}).format(date);}
+function initialStop(t) { return Number(t && (t.initialSl ?? t.initialSL ?? t.sl)) || 0; }
 function currentStop(t) { return Number(t && (t.currentSL ?? t.currentSl)) || initialStop(t); }
 function plannedEntry(t) { return Number(t && (t.plannedEntry ?? t.entry)) || 0; }
 function actualEntry(t) { return Number(t && (t.actualEntry ?? t.entry)) || 0; }
 function plannedTarget(t) { return Number(t && (t.plannedTp ?? t.exit)) || 0; }
 function exitEvents(t) { return t && Array.isArray(t.exits) ? t.exits : (t && t.exits && typeof t.exits==='object' ? Object.values(t.exits) : []); }
-function realizedPnlOnDate(trade,date){const exits=exitEvents(trade);if(exits.length)return exits.filter(e=>e.at&&bangkokDate(new Date(e.at))===date).reduce((sum,e)=>sum+(Number(e.pnl)||0),0);return isClosedTrade(trade)&&trade.date===date?Number(trade.pnl)||0:0;}
+function realizedPnlOnDate(trade,date){return OwlCore.ledger([trade]).filter(e=>e.date===date).reduce((sum,e)=>sum+e.pnl,0);}
 
 function directionMove(t, fromPrice, toPrice) {
   return t && t.dir === 'Sell' ? Number(fromPrice) - Number(toPrice) : Number(toPrice) - Number(fromPrice);
@@ -881,6 +908,8 @@ function realizedR(t) {
   const entry = actualEntry(t), stop = initialStop(t), originalLot = Number(t && t.lot) || 0;
   const risk = Math.abs(entry - stop);
   if (!entry || !stop || !risk || !originalLot) return null;
+  const factor=contractValueFor(t);
+  if(factor>0)return (Number(t.pnl)||0)/(risk*originalLot*factor);
   const events = exitEvents(t);
   if (events.length) {
     return events.reduce((sum, e) => sum + (directionMove(t, entry, Number(e.price) || entry) / risk) * ((Number(e.lot) || 0) / originalLot), 0);
@@ -908,11 +937,11 @@ function fmtR(value) {
 }
 
 function computeStats(trades, startBal) {
-  const safeTrades = (Array.isArray(trades) ? trades : []).filter(isClosedTrade);
+  const safeTrades = Array.isArray(trades) ? trades : [];
   const total=safeTrades.length;
-  const wins=safeTrades.filter(t=>t && t.status==='TP').length;
-  const loses=safeTrades.filter(t=>t && t.status==='SL').length;
-  const bes=safeTrades.filter(t=>t && t.status==='BE').length;
+  const wins=safeTrades.filter(t=>t && Number(t.pnl)>0).length;
+  const loses=safeTrades.filter(t=>t && Number(t.pnl)<0).length;
+  const bes=safeTrades.filter(t=>t && Number(t.pnl)===0).length;
   const wr=total>0?(wins/total*100).toFixed(1):0;
   const netPnl=safeTrades.reduce((s,t)=>s+(Number(t.pnl)||0),0);
 
@@ -1009,7 +1038,7 @@ const state = {
   calYear:      Number(today().slice(0,4)),
   calMonth:     Number(today().slice(5,7))-1,
   f: {
-    date:today(), symbol:'GOLD', dir:'Buy', entry:'', plannedTp:'',
+    date:today(), time:new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date()), symbol:'GOLD', dir:'Buy', entry:'', plannedTp:'',
     sl:'', lot:'', tf:'1H',
     conf:false, fear:false, greed:false, account: savedLastAccount, entryImage:'', session:marketSessionAt(), sessionAuto:true, usdPerPriceUnitPerLot:''
   },
@@ -1036,7 +1065,7 @@ function normalizeTradeSchema(trade) {
     if(event.type&&['breakEven','trailing','manual'].includes(event.type)){
       const next={...event,id:event.id||uid(),newSL:Number(event.newSL??event.price)||prior,oldSL:Number(event.oldSL)||prior,priceAtAdjustment:Number(event.priceAtAdjustment)||Number(trade.currentPrice)||actualEntry(trade),timestamp:Number(event.timestamp)||Date.parse(event.at||'')||Date.now()};
       next.at=event.at||new Date(next.timestamp).toISOString();
-      if(!Number.isFinite(Number(next.rAtAdjustment))){const risk=Math.abs(actualEntry(trade)-initial);next.rAtAdjustment=risk?directionMove(trade,actualEntry(trade),next.priceAtAdjustment)/risk:null;}
+      if(next.rAtAdjustment==null||!Number.isFinite(Number(next.rAtAdjustment))){const risk=Math.abs(actualEntry(trade)-initial);next.rAtAdjustment=risk?directionMove(trade,actualEntry(trade),next.priceAtAdjustment)/risk:null;}
       migrated.push(next);prior=Number(next.newSL);return;
     }
     if(/initial/i.test(String(event.note||''))){prior=Number(event.price)||initial;return;}
@@ -1124,13 +1153,7 @@ function exportTradesToCSV(trades, filename) {
 
   const csvContent = "\uFEFF" + [headers.join(','), ...rows].join('\r\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename || `retro-trading-journal-${today()}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-  beep('win');
+  return downloadOrShare(blob,filename || `owl-trader-${today()}.csv`);
 }
 
 /* ─── 🧠 2 CONSECUTIVE LOSS COOLDOWN ENGINE (2 HOURS REST LOCK) ─────────── */
@@ -1227,32 +1250,23 @@ function getDailyRiskStats(account) {
   const accountKey = targetAcc === 'ALL' ? 'ALL' : targetAcc;
   if (!state.dailySnapshots[tDate]) state.dailySnapshots[tDate] = {};
   let snapshot = state.dailySnapshots[tDate][accountKey];
-  const realizedOn = (trade, date) => {
-    const exits = exitEvents(trade);
-    if (exits.length) return exits.filter(e => e.at && bangkokDate(new Date(e.at)) === date).reduce((sum,e)=>sum+(Number(e.pnl)||0),0);
-    return isClosedTrade(trade) && trade.date === date ? Number(trade.pnl)||0 : 0;
-  };
+  const realizedOn = realizedPnlOnDate;
   const openFloat = accTrades.filter(t=>tradeLifecycle(t)==='OPEN').reduce((sum,t)=>{
     const remaining=remainingLot(t), pnl=calculateExitPnl(t, Number(t.currentPrice)||actualEntry(t), remaining);
     return sum+(pnl===null?0:pnl);
   },0);
   if (!snapshot) {
-    const beforeDatePnl=accTrades.reduce((sum,t)=>{
-      if (exitEvents(t).length) return sum+exitEvents(t).filter(e=>e.at && bangkokDate(new Date(e.at))<tDate).reduce((s,e)=>s+(Number(e.pnl)||0),0);
-      return sum+(isClosedTrade(t)&&t.date<tDate?(Number(t.pnl)||0):0);
-    },0);
+    const beforeDatePnl=OwlCore.ledger(accTrades).filter(e=>e.date<tDate).reduce((sum,e)=>sum+e.pnl,0);
     const beforeDateCash=accCFs.filter(c=>c.date<tDate).reduce((sum,c)=>sum+(c.type==='Deposit'?1:-1)*(Number(c.amount)||0),0);
-    snapshot={startEquity:Math.max(1,baseBal+beforeDateCash+beforeDatePnl+openFloat),openFloating:openFloat,createdAt:new Date().toISOString(),source:'journal-ledger'};
-    state.dailySnapshots[tDate][accountKey]=snapshot;
-    save(KEY.DAILY_SNAPSHOTS,state.dailySnapshots);
-    if (currentUser) syncToCloud();
+    snapshot={startEquity:Math.max(0,baseBal+beforeDateCash+beforeDatePnl+openFloat),openFloating:openFloat,createdAt:new Date().toISOString(),source:'journal-ledger'};
+    if(cloudLoaded){state.dailySnapshots[tDate][accountKey]=snapshot;save(KEY.DAILY_SNAPSHOTS,state.dailySnapshots);}
   }
   const todayTrades=accTrades.filter(t=>tradeOpenedDate(t)===tDate || exitEvents(t).some(e=>e.at&&bangkokDate(new Date(e.at))===tDate) || (!exitEvents(t).length&&t.date===tDate));
   const todayPnL=accTrades.reduce((sum,t)=>sum+realizedOn(t,tDate),0)+openFloat-(Number(snapshot.openFloating)||0);
   const todayCFs=accCFs.filter(c=>c.date===tDate);
   const todayNetDeposit=todayCFs.reduce((sum,cf)=>sum+(cf.type==='Deposit'?1:-1)*(Number(cf.amount)||0),0);
-  const startOfDayBal=Math.max(1,Number(snapshot.startEquity)||baseBal);
-  const currentEquity=startOfDayBal+todayPnL+todayNetDeposit;
+  const startOfDayBal=Math.max(0,Number(snapshot.startEquity)||0);
+  const currentEquity=baseBal+OwlCore.ledger(accTrades).filter(e=>e.date<=tDate).reduce((sum,e)=>sum+e.pnl,0)+accCFs.filter(c=>c.date<=tDate).reduce((sum,c)=>sum+(c.type==='Deposit'?1:-1)*Number(c.amount||0),0)+openFloat;
 
   // 6. Drawdown Calculations
   const maxDDPct = typeof state.maxDailyDD === 'number' && state.maxDailyDD > 0 ? state.maxDailyDD : 5.0;
@@ -1261,7 +1275,7 @@ function getDailyRiskStats(account) {
   const netToday=todayPnL;
   if (netToday < 0) {
     todayDDUSD = Math.abs(netToday);
-    todayDDPct = (todayDDUSD / startOfDayBal) * 100;
+    todayDDPct = startOfDayBal>0?(todayDDUSD / startOfDayBal) * 100:0;
   }
 
   const maxDDUSD = startOfDayBal * (maxDDPct / 100);
@@ -1320,43 +1334,29 @@ function getCloudUserRef() {
 function crc32(bytes){let crc=0xffffffff;for(const byte of bytes){crc^=byte;for(let j=0;j<8;j++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}return(crc^0xffffffff)>>>0;}
 function zipStore(entries){
   const encoder=new TextEncoder(),locals=[],centrals=[];let offset=0;
-  for(const entry of entries){const name=encoder.encode(entry.name),data=typeof entry.data==='string'?encoder.encode(entry.data):entry.data,crc=crc32(data);const local=new Uint8Array(30+name.length+data.length),v=new DataView(local.buffer);v.setUint32(0,0x04034b50,true);v.setUint16(4,20,true);v.setUint16(6,0,true);v.setUint16(8,0,true);v.setUint16(10,0,true);v.setUint16(12,0x21,true);v.setUint32(14,crc,true);v.setUint32(18,data.length,true);v.setUint32(22,data.length,true);v.setUint16(26,name.length,true);v.setUint16(28,0,true);local.set(name,30);local.set(data,30+name.length);locals.push(local);
-    const central=new Uint8Array(46+name.length),c=new DataView(central.buffer);c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0,true);c.setUint16(10,0,true);c.setUint16(12,0,true);c.setUint16(14,0x21,true);c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,name.length,true);c.setUint16(30,0,true);c.setUint16(32,0,true);c.setUint16(34,0,true);c.setUint16(36,0,true);c.setUint32(38,0,true);c.setUint32(42,offset,true);central.set(name,46);centrals.push(central);offset+=local.length;
+  for(const entry of entries){const name=encoder.encode(entry.name),data=typeof entry.data==='string'?encoder.encode(entry.data):entry.data,crc=crc32(data);const local=new Uint8Array(30+name.length+data.length),v=new DataView(local.buffer);v.setUint32(0,0x04034b50,true);v.setUint16(4,20,true);v.setUint16(6,0x800,true);v.setUint16(8,0,true);v.setUint16(10,0,true);v.setUint16(12,0x21,true);v.setUint32(14,crc,true);v.setUint32(18,data.length,true);v.setUint32(22,data.length,true);v.setUint16(26,name.length,true);v.setUint16(28,0,true);local.set(name,30);local.set(data,30+name.length);locals.push(local);
+    const central=new Uint8Array(46+name.length),c=new DataView(central.buffer);c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x800,true);c.setUint16(10,0,true);c.setUint16(12,0,true);c.setUint16(14,0x21,true);c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,name.length,true);c.setUint16(30,0,true);c.setUint16(32,0,true);c.setUint16(34,0,true);c.setUint16(36,0,true);c.setUint32(38,0,true);c.setUint32(42,offset,true);central.set(name,46);centrals.push(central);offset+=local.length;
   }
   const centralSize=centrals.reduce((sum,item)=>sum+item.length,0),end=new Uint8Array(22),ev=new DataView(end.buffer);ev.setUint32(0,0x06054b50,true);ev.setUint16(4,0,true);ev.setUint16(6,0,true);ev.setUint16(8,entries.length,true);ev.setUint16(10,entries.length,true);ev.setUint32(12,centralSize,true);ev.setUint32(16,offset,true);ev.setUint16(20,0,true);return new Blob([...locals,...centrals,end],{type:'application/zip'});
 }
 function unzipStore(buffer){
-  const bytes=new Uint8Array(buffer),view=new DataView(buffer),decoder=new TextDecoder(),files={};let offset=0;
-  while(offset+4<=bytes.length&&view.getUint32(offset,true)===0x04034b50){const method=view.getUint16(offset+8,true),compressed=view.getUint32(offset+18,true),nameLen=view.getUint16(offset+26,true),extraLen=view.getUint16(offset+28,true);if(method!==0)throw new Error('ไฟล์ ZIP นี้ใช้วิธีบีบอัดที่ไม่รองรับ');const name=decoder.decode(bytes.slice(offset+30,offset+30+nameLen)),start=offset+30+nameLen+extraLen;files[name]=bytes.slice(start,start+compressed);offset=start+compressed;}
+  const bytes=new Uint8Array(buffer),view=new DataView(buffer),decoder=new TextDecoder(),files=Object.create(null);let offset=0;
+  while(offset+4<=bytes.length&&view.getUint32(offset,true)===0x04034b50){
+    if(offset+30>bytes.length)throw new Error('ไฟล์ ZIP ไม่ครบ');
+    const flags=view.getUint16(offset+6,true),method=view.getUint16(offset+8,true),compressed=view.getUint32(offset+18,true),nameLen=view.getUint16(offset+26,true),extraLen=view.getUint16(offset+28,true);
+    if(method!==0||(flags&9))throw new Error('นำเข้าได้เฉพาะ Backup ZIP ที่สร้างจาก OWL Trader');
+    const start=offset+30+nameLen+extraLen;if(start+compressed>bytes.length)throw new Error('ไฟล์ ZIP ไม่ครบ');
+    const name=decoder.decode(bytes.slice(offset+30,offset+30+nameLen)),data=bytes.slice(start,start+compressed);
+    if(files[name]||name.includes('..')||crc32(data)!==view.getUint32(offset+14,true))throw new Error('ไฟล์ ZIP เสียหรือมีรายการซ้ำ');
+    files[name]=data;offset=start+compressed;
+  }
   if(!files['backup.json'])throw new Error('ไม่พบ backup.json ในไฟล์ ZIP');return files;
 }
 function bytesToDataUrl(bytes,mime='image/jpeg'){let binary='';for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,Math.min(i+0x8000,bytes.length)));return `data:${mime};base64,${btoa(binary)}`;}
 async function imageBytes(src,storagePath){if(!src)return null;if(String(src).startsWith('data:'))return new Uint8Array(await dataUrlBlob(src).arrayBuffer());if(storagePath&&firebaseStorage){try{return await firebaseStorage.ref(storagePath).getBytes(2*1024*1024);}catch{}}try{const response=await fetch(src);if(!response.ok)throw new Error('download failed');return new Uint8Array(await response.arrayBuffer());}catch{return null;}}
-async function downloadOrShare(blob,filename){
-  const file=typeof File==='function'?new File([blob],filename,{type:blob.type||'application/octet-stream'}):null;
-  if(file&&navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:filename});const status=document.getElementById('export-status');if(status)status.textContent=`พร้อมแชร์ไฟล์ ${filename}`;return;}catch(err){if(err&&err.name==='AbortError')return;}}
-  const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=filename;link.click();setTimeout(()=>URL.revokeObjectURL(url),1500);const status=document.getElementById('export-status');if(status)status.textContent=`สร้าง ${filename} แล้ว ตรวจดูโฟลเดอร์ Downloads หรือเลือกแชร์`;beep('win');
-}
-
-function createMonthlyMarkdown(account,month){
-  const trades=(state.trades||[]).filter(t=>isClosedTrade(t)&&String(t.date||'').startsWith(month)&&(account==='ALL'||(t.account||'Demo')===account));
-  const pnl=trades.reduce((s,t)=>s+(Number(t.pnl)||0),0),wins=trades.filter(t=>Number(t.pnl)>0).length,losses=trades.filter(t=>Number(t.pnl)<0).length,grossWin=trades.filter(t=>Number(t.pnl)>0).reduce((s,t)=>s+Number(t.pnl),0),grossLoss=Math.abs(trades.filter(t=>Number(t.pnl)<0).reduce((s,t)=>s+Number(t.pnl),0)),sessions=['Asia','London','New York','Overlap','Unknown'].map(session=>({session,pnl:trades.filter(t=>tradeSession(t)===session).reduce((s,t)=>s+(Number(t.pnl)||0),0)}));
-  const moves=trades.reduce((s,t)=>s+slMoveEvents(t).length,0),be=trades.filter(t=>slMoveEvents(t).some(e=>e.type==='breakEven')).length;
-  const dailyPnl=new Map();trades.forEach(t=>dailyPnl.set(t.date,(dailyPnl.get(t.date)||0)+(Number(t.pnl)||0)));
-  let cumulative=0,peak=0,maxRealizedDd=0;[...dailyPnl.keys()].sort().forEach(date=>{cumulative+=dailyPnl.get(date);peak=Math.max(peak,cumulative);maxRealizedDd=Math.max(maxRealizedDd,peak-cumulative);});
-  const protectedRs=trades.map(t=>slMoveEvents(t).slice(-1)[0]).filter(e=>e&&e.rAtAdjustment!==null&&e.rAtAdjustment!==undefined&&Number.isFinite(Number(e.rAtAdjustment))).map(e=>Number(e.rAtAdjustment));
-  const symbols=[...new Set(trades.map(t=>t.symbol||'Unknown'))].map(symbol=>{const list=trades.filter(t=>(t.symbol||'Unknown')===symbol),sum=list.reduce((s,t)=>s+(Number(t.pnl)||0),0);return `| ${symbol} | ${list.length} | ${sum>=0?'+':''}$${fmt(sum,2)} |`;}).join('\n');
-  const rows=trades.slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))).map(t=>`| ${t.date||''} | ${t.symbol||''} | ${t.dir||''} | ${tradeSession(t)} | ${fmt(t.entry,2)} → ${fmt(t.exit,2)} | ${fmt(t.lot,2)} | ${Number(t.pnl)>=0?'+':''}${fmt(t.pnl,2)} | ${fmtR(realizedR(t))} | ${slMoveEvents(t).length} |`).join('\n');
-  return `# OWL Trader · Monthly Report\n\n- Month: ${month}\n- Account: ${account}\n- Trades: ${trades.length}\n- Net P&L: ${pnl>=0?'+':''}$${fmt(pnl,2)}\n- Win rate: ${trades.length?(wins/trades.length*100).toFixed(1):'0.0'}% (${wins} wins / ${losses} losses)\n- Profit factor: ${grossLoss? (grossWin/grossLoss).toFixed(2):(grossWin?'∞':'0.00')}\n- Expectancy: ${trades.length?'$'+fmt(pnl/trades.length,2):'$0.00'} per trade\n- Max realized drawdown from monthly P&L curve: $${fmt(maxRealizedDd,2)} (closed trades only)\n- Average last protected R: ${protectedRs.length?`${(protectedRs.reduce((a,b)=>a+b,0)/protectedRs.length).toFixed(2)}R`:'—'}\n- SL moves: ${moves}\n- Trades that reached Break Even: ${be}${trades.length?` (${(be/trades.length*100).toFixed(1)}%)`:''}\n\n## Session result\n\n${sessions.map(s=>`- ${s.session}: ${s.pnl>=0?'+':''}$${fmt(s.pnl,2)}`).join('\n')}\n\n## Asset result\n\n| Asset | Trades | Net P&L |\n|---|---:|---:|\n${symbols||'| — | 0 | $0.00 |'}\n\n## Trades\n\n| Date | Symbol | Side | Session | Entry → Exit | Lot | Net P&L (USD) | R | SL moves |\n|---|---|---|---|---:|---:|---:|---:|---:|\n${rows||'| — | — | — | — | — | — | — | — | — |'}\n`;
-}
-
-function createPortfolioMarkdown(month,account){
-  const chosen=(state.trades||[]).filter(t=>isClosedTrade(t)&&(month==='ALL'||String(t.date||'').startsWith(month))&&(account==='ALL'||(t.account||'Demo')===account));
-  const accounts=[...new Set(chosen.map(t=>t.account||'Demo'))];
-  const rows=accounts.map(name=>{const trades=chosen.filter(t=>(t.account||'Demo')===name),pnl=trades.reduce((s,t)=>s+(Number(t.pnl)||0),0),wins=trades.filter(t=>Number(t.pnl)>0).length;return `| ${name} | ${trades.length} | ${pnl>=0?'+':''}$${fmt(pnl,2)} | ${trades.length?(wins/trades.length*100).toFixed(1):'0.0'}% |`;}).join('\n');
-  const total=chosen.reduce((s,t)=>s+(Number(t.pnl)||0),0);
-  return `# OWL Trader · Portfolio Summary\n\n- Period: ${month==='ALL'?'All time':month}\n- Scope: ${account==='ALL'?'All accounts':account}\n- Total closed trades: ${chosen.length}\n- Combined net P&L: ${total>=0?'+':''}$${fmt(total,2)}\n- Created: ${new Date().toISOString()}\n\n## By account\n\n| Account | Trades | Net P&L | Win rate |\n|---|---:|---:|---:|\n${rows||'| — | 0 | $0.00 | 0.0% |'}\n`;
-}
+async function downloadOrShare(blob,filename){return prepareExport(blob,filename);}
+function createMonthlyMarkdown(account,month){return OwlCore.markdown(reportData(),account,month);}
+function createPortfolioMarkdown(month,account){return OwlCore.markdown(reportData(),account,month);}
 
 async function createBackupZip(){
   const backup={version:12,exportedAt:new Date().toISOString(),balances:state.balances,trades:JSON.parse(JSON.stringify(state.trades||[])),cfs:state.cfs||[],maxDailyDD:state.maxDailyDD,lossLocks:state.lossLocks,dailySnapshots:state.dailySnapshots,contractValues:state.contractValues,deletedTradeIds:state.deletedTradeIds||[],deletedCfIds:state.deletedCfIds||[]};
@@ -1371,8 +1371,8 @@ async function createBackupZip(){
 async function parseBackupFile(file){
   if(file.name.toLowerCase().endsWith('.zip')){
     const files=unzipStore(await file.arrayBuffer()),decoder=new TextDecoder(),backup=JSON.parse(decoder.decode(files['backup.json']));
-    for(const trade of backup.trades||[]){if(String(trade.entryImage||'').startsWith('images/')){const bytes=files[trade.entryImage];trade.entryImage=bytes?bytesToDataUrl(bytes):'';}
-      trade.exits=exitEvents(trade);for(const event of trade.exits)if(String(event.image||'').startsWith('images/')){const bytes=files[event.image];event.image=bytes?bytesToDataUrl(bytes):'';}}
+    for(const trade of backup.trades||[]){if(String(trade.entryImage||'').startsWith('images/')){const bytes=files[trade.entryImage];if(!bytes)throw new Error('Backup ขาดรูป Entry');trade.entryImage=bytesToDataUrl(bytes);}
+      trade.exits=exitEvents(trade);for(const event of trade.exits)if(String(event.image||'').startsWith('images/')){const bytes=files[event.image];if(!bytes)throw new Error('Backup ขาดรูป Exit');event.image=bytesToDataUrl(bytes);}}
     return backup;
   }
   return JSON.parse(await file.text());
@@ -1395,9 +1395,9 @@ function mergeTradeRecord(a,b) {
   const winner=String(b.updatedAt||b.closedAt||b.openedAt||'')>=String(a.updatedAt||a.closedAt||a.openedAt||'')?b:a;
   const events=new Map();
   const history=t=>Array.isArray(t&&t.slHistory)?t.slHistory:(t&&t.slHistory&&typeof t.slHistory==='object'?Object.values(t.slHistory):[]);
-  [...history(a),...history(b)].forEach(e=>{if(e)events.set(e.id||`${e.timestamp||e.at||''}:${e.type||e.note||''}:${e.newSL??e.price??''}`,e);});
+  [...history(winner===a?b:a),...history(winner)].forEach(e=>{if(e)events.set(e.id||`${e.timestamp||e.at||''}:${e.type||e.note||''}:${e.newSL??e.price??''}`,e);});
   const exits=new Map();
-  [...exitEvents(a),...exitEvents(b)].forEach(e=>{if(e)exits.set(e.id||`${e.at||''}:${e.price||''}:${e.lot||''}`,e);});
+  [...exitEvents(winner===a?b:a),...exitEvents(winner)].forEach(e=>{if(e)exits.set(e.id||`${e.at||''}:${e.price||''}:${e.lot||''}`,e);});
   const deletedExitIds=[...new Set([...(a.deletedExitIds||[]),...(b.deletedExitIds||[])])];
   const deletedSlEventIds=[...new Set([...(a.deletedSlEventIds||[]),...(b.deletedSlEventIds||[])])];
   const merged={...a,...b,...winner,deletedExitIds,deletedSlEventIds,slHistory:[...events.values()].filter(e=>!deletedSlEventIds.includes(e.id)).sort((x,y)=>Number(x.timestamp||Date.parse(x.at)||0)-Number(y.timestamp||Date.parse(y.at)||0)),exits:[...exits.values()].filter(e=>!deletedExitIds.includes(e.id)).sort((x,y)=>Date.parse(x.at||0)-Date.parse(y.at||0))};
@@ -1413,16 +1413,18 @@ function dataUrlBlob(dataUrl) {
 
 async function uploadTradeImages(trades) {
   if(!firebaseStorage||!currentUser)return;
+  const owner=currentUser.uid;
   for(const trade of trades){
+    if(currentUser?.uid!==owner)return;
     if(!trade||!trade.id)continue;
     if(safeTradeImage(trade.entryImage)?.startsWith('data:')&&!trade.entryImageUrl){
-      const path=`users/${currentUser.uid}/trades/${trade.id}/entry.jpg`;
+      const path=`users/${owner}/trades/${trade.id}/entry.jpg`;
       try{const ref=firebaseStorage.ref(path);await ref.put(dataUrlBlob(trade.entryImage),{contentType:'image/jpeg'});trade.entryImageStoragePath=path;trade.entryImageUrl=await ref.getDownloadURL();trade.entryImage=trade.entryImageUrl;}
       catch(err){console.warn('Entry photo Storage upload failed; keeping local photo.',err);}
     }
     for(const event of exitEvents(trade)){
       if(!event||!safeTradeImage(event.image)?.startsWith('data:')||event.imageUrl)continue;
-      const eventId=event.id||uid(),path=`users/${currentUser.uid}/trades/${trade.id}/exits/${eventId}.jpg`;
+      const eventId=event.id||uid(),path=`users/${owner}/trades/${trade.id}/exits/${eventId}.jpg`;
       try{const ref=firebaseStorage.ref(path);await ref.put(dataUrlBlob(event.image),{contentType:'image/jpeg'});event.id=eventId;event.imageStoragePath=path;event.imageUrl=await ref.getDownloadURL();event.image=event.imageUrl;}
       catch(err){console.warn('Exit photo Storage upload failed; keeping local photo.',err);}
     }
@@ -1445,7 +1447,7 @@ function cloudPayload() {
 }
 
 function syncToCloud() {
-  if (!isCloudActive || !authReady || !currentUser || !cloudDataRef) {
+  if (!isCloudActive || !authReady || !currentUser || !cloudDataRef || !cloudLoaded) {
     state.syncStatus = 'offline';
     updateSyncBadge();
     return;
@@ -1453,10 +1455,13 @@ function syncToCloud() {
   state.syncStatus = 'syncing';
   updateSyncBadge();
 
+  const owner=currentUser.uid, targetRef=cloudDataRef;
   const run=async()=>{
-    const localTrades=state.trades||[]; await uploadTradeImages(localTrades);save(KEY.TRADES,localTrades);
+    const localTrades=state.trades||[]; await uploadTradeImages(localTrades);
+    if(currentUser?.uid!==owner)return;
+    save(KEY.TRADES,localTrades);
     const payload=cloudPayload();
-    cloudDataRef.transaction(current=>{
+    targetRef.transaction(current=>{
       if(!current)return payload;
       const cloudTrades=recordsAsMap(current.trades),nextTrades={...cloudTrades};
       Object.values(payload.trades).forEach(t=>{nextTrades[t.id]=mergeTradeRecord(nextTrades[t.id],t);});
@@ -1466,8 +1471,9 @@ function syncToCloud() {
       const deletedCfIds=[...new Set([...(current.deletedCfIds||[]),...(payload.deletedCfIds||[])])];
       deletedCfIds.forEach(id=>delete nextCfs[id]);
       return {...current,...payload,trades:nextTrades,cfs:nextCfs,deletedTradeIds,deletedCfIds};
-    },(err,result)=>{
-      if(err||!result?.committed){console.error('Firebase Sync Error:',err);state.syncStatus='offline';}
+    },(err,committed)=>{
+      if(currentUser?.uid!==owner)return;
+      if(err||!committed){console.error('Firebase Sync Error:',err);state.syncStatus='offline';}
       else{
         state.syncStatus='synced';
       }
@@ -1495,7 +1501,7 @@ function applyCloudData(data) {
   const localCFs = Array.isArray(state.cfs) ? state.cfs : [];
   const cfMap = new Map();
   remoteCFs.forEach(c => { if (c && c.id&&!deletedCfs.has(c.id)) cfMap.set(c.id, c); });
-  localCFs.forEach(c => { if (c && c.id&&!deletedCfs.has(c.id) && !cfMap.has(c.id)) cfMap.set(c.id, c); });
+  localCFs.forEach(c => { if (c && c.id&&!deletedCfs.has(c.id) && (!cfMap.has(c.id)||String(c.updatedAt||'')>String(cfMap.get(c.id).updatedAt||''))) cfMap.set(c.id, c); });
   state.cfs = Array.from(cfMap.values());
 
   if (data.balances) {
@@ -1535,6 +1541,8 @@ function initCloudDatabase() {
 
   firebaseAuth.onAuthStateChanged((user) => {
     currentUser = user || null;
+    cloudLoaded=false;
+    useUserCache(currentUser);
     authReady = true;
     state.authError = '';
     if (cloudDataRef) cloudDataRef.off();
@@ -1549,17 +1557,17 @@ function initCloudDatabase() {
     state.syncStatus = 'syncing';
     render();
     cloudDataRef.on('value', (snapshot) => {
+      const initialLoad=!cloudLoaded;
+      cloudLoaded=true;
       const data = snapshot.val();
       if (data) {
         applyCloudData(data);
         state.syncStatus = 'synced';
-        if(Array.isArray(data.trades)||Array.isArray(data.cfs)||Number(data.schemaVersion||0)<2)syncToCloud();
+        if(initialLoad||Array.isArray(data.trades)||Array.isArray(data.cfs)||Number(data.schemaVersion||0)<2)syncToCloud();
         syncCrtView();
-        render();
+        if(document.activeElement?.matches('input,select,textarea')||state.editTradeId||state.manageTradeId)updateSyncBadge();else render();
       } else if (hasLocalUserData()) {
-        const migrate = confirm('พบข้อมูล Trade ในเครื่องนี้ ต้องการย้ายข้อมูลไปบัญชี Firebase นี้หรือไม่?');
-        if (migrate) syncToCloud();
-        else { state.syncStatus = 'synced'; updateSyncBadge(); }
+        syncToCloud();
       } else {
         syncToCloud();
       }
@@ -1597,6 +1605,11 @@ function render() {
   document.getElementById('app').innerHTML = buildApp();
   updateSyncBadge();
   attachEvents();
+  attachReportEvents();
+}
+function renderKeepingExitInputs(){
+  const fields=[...document.querySelectorAll('[id^="manage-exit-"]')].filter(el=>['INPUT','SELECT'].includes(el.tagName)&&el.type!=='file').map(el=>({id:el.id,value:el.value,manual:el.dataset.manual}));
+  render();fields.forEach(field=>{const el=document.getElementById(field.id);if(el){el.value=field.value;if(field.manual)el.dataset.manual=field.manual;}});
 }
 
 function buildApp() {
@@ -1606,12 +1619,14 @@ function buildApp() {
   if (!currentUser) return buildAuthScreen();
   return `
     ${buildHubHeader()}
+    ${storageWarning?`<div role="alert" class="storage-warning">${escapeHtml(storageWarning)}</div>`:''}
     ${buildAlert()}
     <div class="page-wrap">
       ${state.page==='HOME'     ? buildHome()     : ''}
       ${state.page==='LOG'      ? buildLog()      : ''}
       ${state.page==='STATS'    ? buildStats()    : ''}
       ${state.page==='SETTINGS' ? buildSettings() : ''}
+      ${state.page==='REPORTS' ? buildReports() : ''}
     </div>
     ${buildNav()}
   `;
@@ -1645,59 +1660,10 @@ function buildAuthScreen() {
 }
 
 function buildHubHeader() {
-  const targetAcc = (state.f && state.f.account) ? state.f.account : 'Demo';
-  const risk = getDailyRiskStats(targetAcc);
-
-  let hpColor = '#52FF6B';
-  let hpStatusText = 'HEALTHY';
-  if (risk.hp <= 0) {
-    hpColor = '#FF4E63';
-    hpStatusText = 'GAME OVER';
-  } else if (risk.hp <= 50) {
-    hpColor = '#FFD54F';
-    hpStatusText = 'CRITICAL';
-  }
-
-  return `
-    <div class="rpg-hub-header">
-      <div class="rpg-avatar-box" id="hub-acc-trigger" title="คลิกสลับพอร์ตอย่างรวดเร็ว" style="overflow:hidden; padding:0;">
-        <img src="./assets/icons/app-logo.png" alt="Logo" style="width:100%; height:100%; object-fit:cover; image-rendering:pixelated; display:block;">
-      </div>
-      <div class="rpg-hub-info">
-        <div class="rpg-hub-row">
-          <span class="rpg-hub-label">ACC:</span>
-          <span class="rpg-hub-value" style="color:#33D6FF; text-decoration:underline; cursor:pointer;" id="hub-acc-label">${escapeHtml(targetAcc)} ▾</span>
-        </div>
-        <div class="rpg-hub-row">
-          <span class="rpg-hub-label">NET EQUITY:</span>
-          <span class="rpg-hub-value" style="color:#52FF6B;">$${fmt(risk.currentEquity, 1)}</span>
-        </div>
-        <div class="rpg-hub-row">
-          <span class="rpg-hub-label">TODAY P/L:</span>
-          <span class="rpg-hub-value ${risk.todayPnL >= 0 ? 'glow-green' : 'glow-red'}">${risk.todayPnL >= 0 ? '+' : ''}$${fmt(risk.todayPnL, 1)}</span>
-        </div>
-
-        <!-- 🎮 RETRO RPG DAILY RISK HP BAR -->
-        <div style="margin-top: 5px; border-top: 1px dashed #304FFE; padding-top: 4px;">
-          <div class="rpg-hub-row" style="font-size:6px; margin-bottom:2px;">
-            <span style="color:#FFD54F;">DAILY HP: <span style="color:${hpColor}; font-weight:bold;">${risk.hp}%</span> <span style="color:#8892b0; font-size:5px;">(${hpStatusText})</span></span>
-            <span style="color:#33D6FF; font-size:5.5px;">DD: -${fmt(risk.todayDDPct, 2)}% / Max -${fmt(risk.maxDDPct, 1)}%</span>
-          </div>
-          <div class="hp-bar-wrap" style="height: 9px; margin-top: 1px;">
-            <div class="hp-bar-fill" style="width: ${risk.hp}%; background: ${hpColor};"></div>
-          </div>
-          <div class="rpg-hub-row" style="font-size:5px; color:#8892b0; margin-top:3px;">
-            <span>START: $${fmt(risk.startOfDayBal, 1)}</span>
-            <span>REM RISK: <span style="color:${risk.remainingRiskUSD > 0 ? '#52FF6B' : '#FF4E63'}; font-weight:bold;">$${fmt(risk.remainingRiskUSD, 1)}</span></span>
-          </div>
-        </div>
-      </div>
-      <div class="rpg-hub-controls">
-        <button class="rpg-setting-trigger" id="btn-auth-signout" title="ออกจากระบบ">↪</button>
-        <button class="rpg-setting-trigger" id="hub-setting-btn">⚙️</button>
-      </div>
-    </div>
-  `;
+  const account=state.f.account||'Demo',risk=getDailyRiskStats(account);
+  return `<section class="portfolio-header" aria-label="สรุปพอร์ต"><div class="portfolio-top"><img src="assets/icons/app-logo.png" alt="OWL Trader"><select id="hub-account-select" aria-label="เลือกพอร์ต">${getAccountList().map(a=>`<option value="${escapeHtml(a)}" ${a===account?'selected':''}>${escapeHtml(a)}</option>`).join('')}</select><button id="hub-setting-btn" aria-label="ตั้งค่า">⚙</button></div>
+    <div class="portfolio-values"><div><span>NET EQUITY · USD</span><strong>${OwlCore.money(risk.currentEquity)}</strong></div><div><span>TODAY P&L</span><strong class="${risk.todayPnL>=0?'glow-green':'glow-red'}">${OwlCore.money(risk.todayPnL)}</strong></div></div>
+    <div class="portfolio-risk"><div><span>Daily DD <strong>${fmt(risk.todayDDPct,2)}%</strong></span><span>ขีดจำกัด ${fmt(risk.maxDDPct,1)}%</span></div><div class="hp-bar-wrap"><div class="hp-bar-fill" style="width:${risk.hp}%;background:${risk.hp>30?'#20d6a7':'#ff6575'}"></div></div><div><small>ฐานวันนี้ ${OwlCore.money(risk.startOfDayBal)}</small><small>เหลือความเสี่ยง ${OwlCore.money(risk.remainingRiskUSD)}</small></div></div><button class="portfolio-signout" id="btn-auth-signout">ออกจากระบบ</button></section>`;
 }
 
 function buildAlert() {
@@ -1733,7 +1699,8 @@ function buildNav() {
   const pages=[
     {id:'HOME',icon:'📝',label:'TRADE'},
     {id:'LOG',icon:'📋',label:'TRADES'},
-    {id:'STATS',icon:'📊',label:'STATS'}
+    {id:'STATS',icon:'📊',label:'STATS'},
+    {id:'REPORTS',icon:'📁',label:'REPORTS'}
   ];
   return `<div class="bottom-nav">
     ${pages.map(p=>`<button class="nav-btn ${state.page===p.id?'active':''}" data-nav="${p.id}"><span class="nav-icon">${p.icon}</span>${p.label}</button>`).join('')}
@@ -1783,18 +1750,18 @@ function buildTradeForm() {
     <select id="f-account">
       ${accList.map(a => `<option value="${a}" ${f.account===a?'selected':''}>${a}</option>`).join('')}
     </select>
-    <label>วันที่ทำรายการ</label><input type="date" id="f-date" value="${f.date}">
-    <div class="trade-meta-row"><div><label>Session (เวลาไทย)</label><select id="f-session"><option value="AUTO" ${f.sessionAuto?'selected':''}>อัตโนมัติตอนเปิด · ${marketSessionAt()}</option>${['Asia','London','New York','Overlap','Unknown'].map(s=>`<option value="${s}" ${!f.sessionAuto&&f.session===s?'selected':''}>${s}</option>`).join('')}</select></div><div><label>Timeframe</label><select id="f-tf">${tfs.map(t=>`<option ${f.tf===t?'selected':''}>${t}</option>`).join('')}</select></div></div>
+    <div class="manage-grid"><div><label for="f-date">วันที่เปิดออเดอร์</label><input type="date" id="f-date" value="${f.date}"></div><div><label for="f-time">เวลาเปิด · ไทย</label><input type="time" id="f-time" value="${f.time||'12:00'}"></div></div>
+    <div class="trade-meta-row"><div><label>Session (เวลาไทย)</label><select id="f-session"><option value="AUTO" ${f.sessionAuto?'selected':''}>อัตโนมัติตอนเปิด · ${f.session||marketSessionAt()}</option>${['Asia','London','New York','Overlap','Unknown'].map(s=>`<option value="${s}" ${!f.sessionAuto&&f.session===s?'selected':''}>${s}</option>`).join('')}</select></div><div><label>Timeframe</label><select id="f-tf">${tfs.map(t=>`<option ${f.tf===t?'selected':''}>${t}</option>`).join('')}</select></div></div>
     <label>คู่เงิน / สินทรัพย์</label><select id="f-symbol">${symbols.map(s=>`<option ${f.symbol===s?'selected':''}>${s}</option>`).join('')}</select>
     <label>ทิศทางคำสั่ง</label>
     <div class="status-row" style="margin-bottom:10px">
       <button class="status-btn ${f.dir==='Buy'?'active-tp':'tp'}" data-dir="Buy">▲ BUY</button>
       <button class="status-btn ${f.dir==='Sell'?'active-sl':'sl'}" data-dir="Sell">▼ SELL</button>
     </div>
-    <label>Entry Price (ราคาที่เข้าแล้ว)</label><input type="number" id="f-entry" placeholder="0.00" value="${f.entry}" inputmode="decimal">
-    <label>Initial Stop Loss (SL เริ่มต้น)</label><input type="number" id="f-sl" placeholder="0.00" value="${f.sl}" inputmode="decimal">
-    <label>Take Profit (ถ้ามี)</label><input type="number" id="f-planned-tp" placeholder="ไม่ใส่ก็ได้" value="${f.plannedTp||''}" inputmode="decimal">
-    <label>Lot Size</label><input type="number" id="f-lot" placeholder="0.01" value="${f.lot}" inputmode="decimal">
+    <div class="manage-grid price-fields"><div><label for="f-entry">Entry · ราคาเข้า</label><input type="number" id="f-entry" step="any" placeholder="0.00" value="${f.entry}" inputmode="decimal"></div>
+    <div><label for="f-lot">ขนาดออเดอร์ · Lot</label><input type="number" id="f-lot" step="any" placeholder="0.01" value="${f.lot}" inputmode="decimal"></div>
+    <div><label for="f-sl">Initial SL · เริ่มต้น</label><input type="number" id="f-sl" step="any" placeholder="0.00" value="${f.sl}" inputmode="decimal"></div>
+    <div><label for="f-planned-tp">Take Profit · ไม่บังคับ</label><input type="number" id="f-planned-tp" step="any" placeholder="ราคาเป้าหมาย" value="${f.plannedTp||''}" inputmode="decimal"></div></div>
     <details class="advanced-field"><summary>ตั้งค่าคำนวณ P&amp;L สำหรับ ${escapeHtml(f.symbol)}</summary><label>มูลค่า USD ต่อราคาที่ขยับ 1.00 ต่อ 1 Lot</label><input type="number" id="f-contract-value" min="0" step="any" value="${contractValue}" placeholder="ใส่ตามสเปกโบรกเกอร์"><button class="btn" type="button" id="btn-save-contract">บันทึกเป็นค่าเริ่มต้นของ ${escapeHtml(f.symbol)}</button><small>ไม่ตั้งค่าก็ยังบันทึก P&amp;L เองได้ ค่านี้ไม่เดาสเปกสัญญาให้</small></details>
     <div class="image-upload">
       <label for="f-entry-image">📷 รูปตอนเข้าออเดอร์ (ไม่บังคับ)</label>
@@ -1952,13 +1919,13 @@ function buildTradeEditPanel(t) {
         <div><label>Take Profit</label><input type="number" id="edit-tp" value="${plannedTarget(t)}" inputmode="decimal"></div>
         <div><label>Lot Size</label><input type="number" id="edit-lot" value="${t.lot||''}" inputmode="decimal"></div>
         <div><label>Current Price</label><input type="number" id="edit-current-price" value="${t.currentPrice||''}" inputmode="decimal"></div>
-        <div><label>Exit Price</label><input type="number" id="edit-exit" value="${t.exit||''}" inputmode="decimal"></div>
+        <div><label>${exits.length?'Exit เฉลี่ย (แก้ในรายการปิดด้านล่าง)':'Exit Price'}</label><input type="number" id="edit-exit" value="${t.exit||''}" inputmode="decimal" ${exits.length?'readonly':''}></div>
         <div><label>P&amp;L รวม (USD)</label><input type="number" id="edit-pnl" value="${Number(t.pnl)||0}" inputmode="decimal" data-manual="${t.pnlMode==='manual'||!exits.length?'true':'false'}"><button type="button" class="trade-action" id="recalc-total-pnl">รวม/คำนวณ P&amp;L ใหม่</button></div>
       </div>
       <div class="psych-row edit-psych"><label>อารมณ์ตอนเทรด</label>${[['conf','มั่นใจ'],['fear','กลัว'],['greed','โลภ']].map(([k,label])=>`<label class="check-chip"><input type="checkbox" id="edit-psych-${k}" ${(t.psychology||{})[k]?'checked':''}>${label}</label>`).join('')}</div>
       <details class="advanced-field"><summary>รูปภาพและรายการปิดบางส่วน (${exits.length})</summary>
         <label>รูปตอนเข้า</label><input type="file" accept="image/*" id="edit-entry-image"><div id="edit-entry-preview">${buildImagePreview((state.editImageDrafts[t.id]||{}).entry||t.entryImageUrl||t.entryImage,'data-clear-edit-entry')}</div>
-        ${exits.map((e,i)=>`<div class="exit-edit-card"><strong>รายการปิด ${i+1}</strong><div class="manage-grid"><div><label>ราคาออก</label><input type="number" id="edit-exit-price-${i}" value="${Number(e.price)||0}" step="any"></div><div><label>Lot</label><input type="number" id="edit-exit-lot-${i}" value="${Number(e.lot)||0}" step="any"></div><div><label>P&amp;L (USD)</label><input type="number" id="edit-exit-pnl-${i}" value="${Number(e.pnl)||0}" step="any" data-manual="${e.pnlMode==='manual'?'true':'false'}"></div><div><label>เหตุผล</label><select id="edit-exit-reason-${i}">${['TP Hit','SL Hit','Manual Close'].map(r=>`<option ${e.reason===r?'selected':''}>${r}</option>`).join('')}</select></div></div><button type="button" class="trade-action" data-recalc-exit-pnl="${i}">คำนวณ P&amp;L ใหม่</button><label class="check-chip"><input type="checkbox" id="delete-exit-event-${i}">ลบรายการปิดนี้</label><label>รูปตอนออก (ไม่บังคับ)</label><input type="file" accept="image/*" data-edit-exit-image="${i}"><div>${buildImagePreview((state.editImageDrafts[t.id]||{})[`exit${i}`]||e.imageUrl||e.image,`data-clear-edit-exit="${i}"`)}</div></div>`).join('')}
+        ${exits.map((e,i)=>`<div class="exit-edit-card"><strong>รายการปิด ${i+1}</strong><label>วันเวลาปิด · ไทย</label><input type="datetime-local" id="edit-exit-at-${i}" value="${thaiDateTime(e.at,t.date)}"><div class="manage-grid"><div><label>ราคาออก</label><input type="number" id="edit-exit-price-${i}" value="${Number(e.price)||0}" step="any"></div><div><label>Lot</label><input type="number" id="edit-exit-lot-${i}" value="${Number(e.lot)||0}" step="any"></div><div><label>P&amp;L (USD)</label><input type="number" id="edit-exit-pnl-${i}" value="${Number(e.pnl)||0}" step="any" data-manual="${e.pnlMode==='manual'?'true':'false'}"></div><div><label>เหตุผล</label><select id="edit-exit-reason-${i}">${['TP Hit','SL Hit','Manual Close'].map(r=>`<option ${e.reason===r?'selected':''}>${r}</option>`).join('')}</select></div></div><button type="button" class="trade-action" data-recalc-exit-pnl="${i}">คำนวณ P&amp;L ใหม่</button><label class="check-chip"><input type="checkbox" id="delete-exit-event-${i}">ลบรายการปิดนี้</label><label>รูปตอนออก (ไม่บังคับ)</label><input type="file" accept="image/*" data-edit-exit-image="${i}"><div>${buildImagePreview((state.editImageDrafts[t.id]||{})[`exit${i}`]||e.imageUrl||e.image,`data-clear-edit-exit="${i}"`)}</div></div>`).join('')}
       </details>
       ${slMoveEvents(t).length?`<details class="advanced-field"><summary>ประวัติการขยับ SL (${slMoveEvents(t).length})</summary>${slMoveEvents(t).map((e,i)=>`<div class="exit-edit-card"><strong>การขยับ SL ${i+1} · ${fmtDate(bangkokDate(new Date(e.timestamp||e.at||Date.now())))}</strong><div class="manage-grid"><div><label>SL เดิม</label><input type="number" id="edit-sl-old-${i}" value="${Number(e.oldSL)||0}" step="any"></div><div><label>SL ใหม่</label><input type="number" id="edit-sl-new-${i}" value="${Number(e.newSL)||0}" step="any"></div><div><label>ราคาตลาดตอนขยับ</label><input type="number" id="edit-sl-price-${i}" value="${Number(e.priceAtAdjustment)||0}" step="any"></div><div><label>ประเภท</label><select id="edit-sl-type-${i}">${[['breakEven','Break Even'],['trailing','Trailing'],['manual','Manual']].map(([v,l])=>`<option value="${v}" ${e.type===v?'selected':''}>${l}</option>`).join('')}</select></div></div><label class="check-chip"><input type="checkbox" id="delete-sl-event-${i}">ลบเหตุการณ์นี้</label></div>`).join('')}</details>`:''}
       ${isClosed?`<div class="manage-grid"><div><label>Status</label><select id="edit-status"><option value="TP" ${t.status==='TP'?'selected':''}>TP</option><option value="SL" ${t.status==='SL'?'selected':''}>SL</option><option value="BE" ${t.status==='BE'?'selected':''}>BE</option></select></div><div><label>Exit Reason</label><select id="edit-exit-reason"><option ${t.exitReason==='TP Hit'?'selected':''}>TP Hit</option><option ${t.exitReason==='SL Hit'?'selected':''}>SL Hit</option><option ${t.exitReason==='Manual Close'?'selected':''}>Manual Close</option></select></div></div>`:''}
@@ -2106,6 +2073,9 @@ function refreshExitPnlEstimate() {
 }
 
 function addSLMove(trade,newSL,type,price) {
+  if(tradeLifecycle(trade)!=='OPEN')throw new Error('ปรับ SL ได้เฉพาะออเดอร์ OPEN');
+  if(!['breakEven','trailing','manual'].includes(type)||![newSL,price].every(v=>Number.isFinite(Number(v))&&Number(v)>0))throw new Error('ราคา SL หรือราคาปัจจุบันไม่ถูกต้อง');
+  if(trade.dir==='Buy'?Number(newSL)>=Number(price):Number(newSL)<=Number(price))throw new Error('SL ต้องอยู่ด้านที่ยังไม่ถูกแตะของราคาปัจจุบัน');
   const oldSL=currentStop(trade);
   const check=validateSLMove(trade.dir,oldSL,newSL);
   if(!check.ok)throw new Error(check.msg);
@@ -2119,6 +2089,7 @@ function addSLMove(trade,newSL,type,price) {
 
 async function saveSLAdjustment(tradeId,newSL,type,price) {
   const local=state.trades.find(t=>t&&t.id===tradeId);if(!local)return false;
+  const owner=currentUser?.uid;
   try{
     let updated;
     if(firebaseDb&&currentUser&&cloudDataRef&&navigator.onLine){
@@ -2131,18 +2102,19 @@ async function saveSLAdjustment(tradeId,newSL,type,price) {
         if(!check.ok){validationError=check.msg;return;}
         if((source.dir==='Buy'&&Number(newSL)>=Number(price))||(source.dir==='Sell'&&Number(newSL)<=Number(price))){validationError='SL ใหม่ต้องอยู่ด้านที่ยังไม่ถูกแตะของราคาปัจจุบัน';return;}
         return tradeForCloud(addSLMove(source,newSL,type,price).updated);
-      },(error,result)=>error?reject(error):resolve(result),false));
+      },(error,committed,snapshot)=>error?reject(error):resolve({committed,snapshot}),false));
       if(!tx.committed){if(validationError)throw new Error(validationError);throw new Error('ยังบันทึก SL บน Firebase ไม่สำเร็จ');}
       updated=mergeTradeRecord(local,tx.snapshot.val());
     }else{
       updated=addSLMove(local,newSL,type,price).updated;
     }
-    const index=state.trades.findIndex(t=>t&&t.id===tradeId);state.trades[index]=updated;
+    if(currentUser?.uid!==owner)return false;
+    const index=state.trades.findIndex(t=>t&&t.id===tradeId);if(index<0)return false;state.trades[index]=updated;
     save(KEY.TRADES,state.trades);state.slError[tradeId]='';state.slEditMode[tradeId]='';
     if(firebaseDb&&currentUser&&navigator.onLine)state.syncStatus='synced';else syncToCloud();
-    beep('win');render();return true;
+    beep('win');renderKeepingExitInputs();return true;
   }catch(error){
-    state.slError[tradeId]=error.message||'บันทึกการขยับ SL ไม่สำเร็จ';render();return false;
+    state.slError[tradeId]=error.message||'บันทึกการขยับ SL ไม่สำเร็จ';renderKeepingExitInputs();return false;
   }
 }
 
@@ -2166,7 +2138,7 @@ function buildCFLog() {
 }
 
 function buildCalendarSection(allTrades, accountFilter) {
-  const safeTrades = Array.isArray(allTrades) ? allTrades : [];
+  const safeTrades = OwlCore.ledger(allTrades);
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const year = state.calYear || new Date().getFullYear(); 
   const month = state.calMonth !== undefined ? state.calMonth : new Date().getMonth();
@@ -2185,7 +2157,7 @@ function buildCalendarSection(allTrades, accountFilter) {
     let dayTrades = safeTrades.filter(t => t && t.date === currentStr);
     if (accountFilter !== 'ALL') dayTrades = dayTrades.filter(t => t && (t.account || 'Demo') === accountFilter);
 
-    const tradeCount = dayTrades.length;
+    const tradeCount = new Set(dayTrades.map(t=>t.tradeId)).size;
     const totalPnl = dayTrades.reduce((s, t) => s + (Number(t.pnl)||0), 0);
 
     let skinClass = "skin-cal-neutral";
@@ -2276,7 +2248,7 @@ function buildStats() {
   const p = state.statsPeriod || { mode: 'all', account: 'ALL', session:'ALL', symbol:'ALL' };
   const targetAcc = p.account || 'ALL'; 
   const allTrades = (Array.isArray(state.trades) ? state.trades : []).filter(isClosedTrade);
-  let filtered = filterByPeriod(allTrades, p);
+  let filtered = filterByPeriod(allTrades.map(t=>({...t,date:OwlCore.closeDate(t)})), p);
   if (targetAcc !== 'ALL') filtered = filtered.filter(t => t && (t.account || 'Demo') === targetAcc);
   if(p.session&&p.session!=='ALL')filtered=filtered.filter(t=>tradeSession(t)===p.session);
   if(p.symbol&&p.symbol!=='ALL')filtered=filtered.filter(t=>t&&t.symbol===p.symbol);
@@ -2289,16 +2261,16 @@ function buildStats() {
     accStartBal = Number(safeBalances[targetAcc]) || 0;
   }
 
-  const todayTrades=allTrades.filter(tr=>tr && (tradeOpenedDate(tr)===today()||exitEvents(tr).some(e=>e.at&&bangkokDate(new Date(e.at))===today())) && (targetAcc === 'ALL' || (tr.account || 'Demo') === targetAcc));
+  const todayTrades=(state.trades||[]).filter(tr=>tr && (tradeOpenedDate(tr)===today()||exitEvents(tr).some(e=>e.at&&bangkokDate(new Date(e.at))===today())) && (targetAcc === 'ALL' || (tr.account || 'Demo') === targetAcc));
   const todayPnl=todayTrades.reduce((sum,tr)=>sum+realizedPnlOnDate(tr,today()),0);
   const st=computeStats(filtered, accStartBal); 
-  const chartTrades = allTrades.filter(t => (targetAcc === 'ALL' || (t.account||'Demo') === targetAcc) && (!p.session||p.session==='ALL'||tradeSession(t)===p.session) && (!p.symbol||p.symbol==='ALL'||t.symbol===p.symbol));
+  const chartTrades = (state.trades||[]).filter(t => (targetAcc === 'ALL' || (t.account||'Demo') === targetAcc) && (!p.session||p.session==='ALL'||tradeSession(t)===p.session) && (!p.symbol||p.symbol==='ALL'||t.symbol===p.symbol));
   const chartCashflows = (Array.isArray(state.cfs)?state.cfs:[]).filter(cf => targetAcc === 'ALL' || (cf.account||'Demo') === targetAcc);
   
   const safeCFs = Array.isArray(state.cfs) ? state.cfs : [];
   const netDeposit=safeCFs.filter(c=>c && (targetAcc==='ALL'||(c.account||'Demo') === targetAcc))
                          .reduce((s,cf)=>s+(cf.type==='Deposit'?Number(cf.amount)||0:-Number(cf.amount)||0),0); 
-  const equity=accStartBal + netDeposit + filtered.reduce((s,t)=>s+(Number(t.pnl)||0),0);
+  const equity=accStartBal + netDeposit + OwlCore.ledger(state.trades).filter(t=>targetAcc==='ALL'||t.account===targetAcc).reduce((s,t)=>s+t.pnl,0);
 
   const pfClass = parseFloat(st.profitFactor) >= 1.5 ? 'glow-green' : (parseFloat(st.profitFactor) < 1.0 ? 'glow-red' : 'txt-white');
   const expClass = parseFloat(st.expectancy) >= 0 ? 'glow-green' : 'glow-red';
@@ -2370,7 +2342,7 @@ function buildStats() {
           <div class="psych-cost-row"><span>FEAR COST:</span><span class="glow-red">-$${fmt(st.fearCost,2)}</span></div>
         </div>
 
-        ${buildCalendarSection(allTrades, targetAcc)}
+        ${buildCalendarSection(chartTrades, targetAcc)}
       </div>
 
       <!-- SYSTEM GRAPHICAL CHARTS FOOTER -->
@@ -2393,7 +2365,7 @@ function buildEquityCurve(trades, startBalance, cashflows, period) {
     if (!daily.has(date)) daily.set(date, { pnl:0, cashflow:0 });
     daily.get(date)[kind] += Number(amount)||0;
   };
-  safeTrades.forEach(t => add(t.date, 'pnl', t.pnl));
+  OwlCore.ledger(safeTrades).forEach(e => add(e.date, 'pnl', e.pnl));
   safeCashflows.forEach(cf => add(cf.date, 'cashflow', cf.type==='Deposit' ? Number(cf.amount)||0 : -(Number(cf.amount)||0)));
   const dates = [...daily.keys()].sort();
   const safePeriod = period || { mode:'all' };
@@ -2418,7 +2390,7 @@ function buildEquityCurve(trades, startBalance, cashflows, period) {
   const priorDate = `${priorDay.getFullYear()}-${String(priorDay.getMonth()+1).padStart(2,'0')}-${String(priorDay.getDate()).padStart(2,'0')}`;
   points.unshift({ date:priorDate, value:openingEquity });
 
-  const W=440,H=238,PL=74,PR=12,PT=18,PB=42,IX=W-PL-PR,IY=H-PT-PB;
+  const W=Math.max(280,Math.min(880,window.innerWidth-100)),H=250,PL=66,PR=16,PT=18,PB=46,IX=W-PL-PR,IY=H-PT-PB;
   const parseDate = date => Date.parse(`${date}T12:00:00Z`);
   const minX=parseDate(points[0].date), maxX=parseDate(points[points.length-1].date);
   const xRange=maxX-minX || 86400000;
@@ -2430,12 +2402,11 @@ function buildEquityCurve(trades, startBalance, cashflows, period) {
   const yOf=value=>PT+((maxY-value)/yRange)*IY;
   const polyline=points.map(point=>`${xOf(point.date).toFixed(1)},${yOf(point.value).toFixed(1)}`).join(' ');
   const yTicks=Array.from({length:5},(_,index)=>maxY-(yRange*index/4));
-  const yTickLabel=value=>`${value<0?'-':''}$${Math.abs(value)>=10000?(Math.abs(value)/1000).toFixed(0)+'k':Math.abs(value)>=1000?(Math.abs(value)/1000).toFixed(1)+'k':Math.abs(value).toLocaleString('en-US',{maximumFractionDigits:0})}`;
-  const xIndexes=points.length<=3?points.map((_,index)=>index):[0,Math.floor((points.length-1)/2),points.length-1];
-  const xTicks=[...new Set(xIndexes)].map(index=>points[index]);
+  const yTickLabel=value=>{const scale=Math.max(Math.abs(minY),Math.abs(maxY))>=10000?1000:1;const digits=Math.max(0,Math.min(4,Math.ceil(-Math.log10(yRange/4/scale))+1));return `${value<0?'-':''}$${(Math.abs(value)/scale).toFixed(digits)}${scale===1000?'k':''}`;};
+  const xTicks=[...new Set([points[0].date,new Date(minX+xRange/2).toISOString().slice(0,10),points.at(-1).date])].map(date=>({date}));
   return `
     <div style="margin-top:12px;color:#FFD54F;font-size:9px;margin-bottom:4px">📈 EQUITY GROWTH TRAJECTORY</div>
-    <div style="font-size:10px;color:#94A3B8;margin-bottom:5px">แกน X: วันที่　•　แกน Y: มูลค่าพอร์ต (USD)</div>
+    <div class="helper">X: วันที่ · Y: ยอดพอร์ต USD ไม่รวมลอยตัว${period?.session&&period.session!=='ALL'||period?.symbol&&period.symbol!=='ALL'?' · เฉพาะรายการตามตัวกรอง':''}</div>
     <div class="equity-chart-wrap">
       <svg class="equity-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Equity growth by date and account value">
         ${yTicks.map(value=>`<line x1="${PL}" y1="${yOf(value).toFixed(1)}" x2="${W-PR}" y2="${yOf(value).toFixed(1)}" stroke="#26364f" stroke-width="1"/><text x="${PL-8}" y="${(yOf(value)+3.5).toFixed(1)}" text-anchor="end" fill="#94A3B8" font-size="10">${yTickLabel(value)}</text>`).join('')}
@@ -2444,7 +2415,7 @@ function buildEquityCurve(trades, startBalance, cashflows, period) {
         <text transform="translate(14 ${PT+IY/2}) rotate(-90)" text-anchor="middle" fill="#CBD5E1" font-size="10">EQUITY (USD)</text>
         <polyline points="${polyline}" fill="none" stroke="#33D6FF" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
         ${points.slice(1).map(point=>`<circle cx="${xOf(point.date).toFixed(1)}" cy="${yOf(point.value).toFixed(1)}" r="2.5" fill="#33D6FF"><title>${fmtDate(point.date)} — $${fmt(point.value,2)}</title></circle>`).join('')}
-        ${xTicks.map(point=>`<line x1="${xOf(point.date).toFixed(1)}" y1="${H-PB}" x2="${xOf(point.date).toFixed(1)}" y2="${H-PB+4}" stroke="#94A3B8"/><text x="${xOf(point.date).toFixed(1)}" y="${H-15}" text-anchor="middle" fill="#94A3B8" font-size="10">${fmtDate(point.date)}</text>`).join('')}
+        ${xTicks.map((point,i)=>`<line x1="${xOf(point.date).toFixed(1)}" y1="${H-PB}" x2="${xOf(point.date).toFixed(1)}" y2="${H-PB+4}" stroke="#94A3B8"/><text x="${xOf(point.date).toFixed(1)}" y="${H-19}" text-anchor="${i===0?'start':i===xTicks.length-1?'end':'middle'}" fill="#94A3B8" font-size="10">${fmtDate(point.date)}</text>`).join('')}
         <text x="${PL+IX/2}" y="${H-2}" text-anchor="middle" fill="#CBD5E1" font-size="10">DATE</text>
       </svg>
     </div>`;
@@ -2540,12 +2511,7 @@ function buildSettings() {
       </div>
 
       <div class="divider"></div>
-      <div class="section-heading"><span>ส่งออกและสำรองข้อมูล</span><span class="subtle">Obsidian · CSV · Backup</span></div>
-      <div class="manage-grid"><div><label>บัญชีรายงาน</label><select id="export-account"><option value="${escapeHtml(reportAccount)}">${escapeHtml(reportAccount)}</option><option value="ALL">รวมทุกบัญชี</option>${accList.filter(a=>a!==reportAccount).map(a=>`<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('')}</select></div><div><label>เดือนรายงาน</label><input type="month" id="export-month" value="${reportMonth}"></div></div>
-      <div class="export-actions"><button class="btn btn-green" id="btn-export-monthly-md">รายงานรายเดือน (.md)</button><button class="btn" id="btn-export-portfolio-md">สรุปพอร์ตรายเดือน (.md)</button><button class="btn" id="btn-export-portfolio-all-md">สรุปพอร์ตทั้งหมด (.md)</button><button class="btn" id="btn-export-raw-json">ส่งออกข้อมูลดิบ (.json)</button><button class="btn" id="btn-export-all-csv">ส่งออก Trades (.csv)</button><button class="btn btn-green" id="btn-backup">สำรองข้อมูลพร้อมรูป (.zip)</button><button class="btn" id="btn-import-trigger">นำเข้า ZIP หรือ JSON</button></div>
-      <div id="export-status" class="export-status" aria-live="polite"></div>
-      <input type="file" id="btn-import" accept=".json,.zip,application/zip" style="display:none">
-      
+      <button class="btn btn-green" data-nav="REPORTS">เปิดรายงานรายเดือน / Backup / Import</button>
       <div class="divider"></div>
       <div style="color:#FF4E63;font-size:7px;margin-bottom:8px">⚠ DANGER ZONE DEPOT</div>
       <button class="btn" id="btn-reset-loss-lock" style="margin-bottom:8px; border-color:#FFD54F; color:#FFD54F;">🔓 ปลดล็อก BRAIN COOLDOWN ทันที (EMERGENCY)</button>
@@ -2636,7 +2602,7 @@ function attachEvents() {
     if (firebaseAuth) firebaseAuth.signOut();
   });
 
-  document.querySelectorAll('[data-nav]').forEach(el => { el.addEventListener('click', () => { state.page = el.dataset.nav; beep('click'); render(); }); });
+  document.querySelectorAll('[data-nav]').forEach(el => { el.addEventListener('click', () => { state.page = el.dataset.nav; beep('click'); render(); window.scrollTo({top:0,behavior:'instant'}); }); });
   document.querySelectorAll('[data-tab-input]').forEach(el => { el.addEventListener('click', () => { state.inputTab = el.dataset.tabInput; render(); }); });
   document.querySelectorAll('[data-tab-log]').forEach(el => { el.addEventListener('click', () => { state.logTab = el.dataset.tabLog; render(); }); });
   
@@ -2644,6 +2610,7 @@ function attachEvents() {
   if (hubSetting) { hubSetting.addEventListener('click', () => { state.page = 'SETTINGS'; beep('click'); render(); }); }
 
   /* 🛠️ QUICK PORTFOLIO SWITCHER */
+  document.getElementById('hub-account-select')?.addEventListener('change',e=>updateActiveAccount(e.target.value));
   const hubAccTrigger = document.getElementById('hub-acc-trigger');
   const hubAccLabel = document.getElementById('hub-acc-label');
   const triggerSwitch = () => {
@@ -2658,6 +2625,7 @@ function attachEvents() {
 
   const liveF = {
     'f-date': v => state.f.date = v,
+    'f-time': v => state.f.time = v,
     'f-symbol': v => { state.f.symbol = v; state.f.usdPerPriceUnitPerLot=state.contractValues[v]||''; const factor=document.getElementById('f-contract-value'); if(factor)factor.value=state.f.usdPerPriceUnitPerLot; },
     'f-tf': v => state.f.tf = v,
     'f-entry': v => state.f.entry = v,
@@ -2666,7 +2634,7 @@ function attachEvents() {
     'f-lot': v => state.f.lot = v,
     'f-contract-value': v => state.f.usdPerPriceUnitPerLot = v
   };
-  Object.entries(liveF).forEach(([id, fn]) => { const el = document.getElementById(id); if (el) el.addEventListener('input', e => { fn(e.target.value); updatePlanPreview(); }); });
+  Object.entries(liveF).forEach(([id, fn]) => { const el = document.getElementById(id); if (el) el.addEventListener('input', e => { fn(e.target.value); if(state.f.sessionAuto){state.f.session=marketSessionAt(new Date(`${state.f.date}T${state.f.time||'12:00'}:00+07:00`));const option=document.querySelector('#f-session option[value="AUTO"]');if(option)option.textContent='อัตโนมัติตอนเปิด · '+state.f.session;}updatePlanPreview(); }); });
   const sessionInput=document.getElementById('f-session'); if(sessionInput)sessionInput.addEventListener('change',e=>{state.f.sessionAuto=e.target.value==='AUTO';state.f.session=state.f.sessionAuto?marketSessionAt(new Date()):e.target.value;render();});
   const saveContract=document.getElementById('btn-save-contract');
   if(saveContract)saveContract.addEventListener('click',()=>{
@@ -2739,6 +2707,7 @@ function attachEvents() {
 
   const editPnlInput=document.getElementById('edit-pnl');
   if(editPnlInput)editPnlInput.addEventListener('input',()=>{editPnlInput.dataset.manual='true';});
+  document.querySelectorAll('[id^="edit-exit-pnl-"]').forEach(input=>input.addEventListener('input',()=>{input.dataset.manual='true';}));
   ['edit-exit-price-','edit-exit-lot-'].forEach(prefix=>document.querySelectorAll(`[id^="${prefix}"]`).forEach(input=>input.addEventListener('input',()=>{
     const index=Number(input.id.slice(prefix.length)),pnlInput=document.getElementById(`edit-exit-pnl-${index}`);
     if(!pnlInput||pnlInput.dataset.manual==='true')return;
@@ -2767,9 +2736,9 @@ function attachEvents() {
   refreshExitPnlEstimate();
 
   document.querySelectorAll('[data-open-trail]').forEach(el=>el.addEventListener('click',()=>{
-    state.slEditMode[el.dataset.openTrail]='trail'; state.slError[el.dataset.openTrail]=''; state.slDistanceMode=false; render();
+    state.slEditMode[el.dataset.openTrail]='trail'; state.slError[el.dataset.openTrail]=''; state.slDistanceMode=false; renderKeepingExitInputs();
   }));
-  document.querySelectorAll('[data-sl-mode]').forEach(el=>el.addEventListener('click',()=>{state.slDistanceMode=el.dataset.slMode==='distance';render();}));
+  document.querySelectorAll('[data-sl-mode]').forEach(el=>el.addEventListener('click',()=>{state.slDistanceMode=el.dataset.slMode==='distance';renderKeepingExitInputs();}));
   document.querySelectorAll('[data-break-even]').forEach(el=>el.addEventListener('click',async()=>{
     const trade=state.trades.find(t=>t&&t.id===el.dataset.breakEven);if(!trade)return;
     const entry=actualEntry(trade),oldSl=Number(trade.currentSl||initialStop(trade)),price=Number(trade.currentPrice)||entry;
@@ -2813,7 +2782,7 @@ function attachEvents() {
   if (btnTrade) btnTrade.addEventListener('click', () => {
     const f = state.f;
     const entry=Number(f.entry), stop=Number(f.sl), target=Number(f.plannedTp), lot=Number(f.lot);
-    if (!entry || !stop || !lot || lot <= 0) {
+    if (![entry,stop,lot].every(v=>Number.isFinite(v)&&v>0)||!Number.isFinite(target)||target<0) {
       alert('กรอก Entry Price, Initial SL และ Lot ให้ครบถ้วน ส่วน Take Profit ใส่ได้ถ้ามี');
       return;
     }
@@ -2826,8 +2795,7 @@ function attachEvents() {
     const lockInfo = getConsecutiveLossLock(f.account || 'Demo');
     if (lockInfo.isLocked) {
       beep('alert');
-      alert(`🧠 BRAIN COOLDOWN ACTIVE\n\nยังเปิดไม้ใหม่ไม่ได้ กรุณาพักอีก ${formatCooldown(lockInfo.remainingSec)}`);
-      return;
+      if(!confirm(`แนะนำพักอีก ${formatCooldown(lockInfo.remainingSec)} แต่คุณยังบันทึกไม้ที่เปิดจริงแล้วได้ ยืนยันบันทึกหรือไม่?`))return;
     }
     const dailyRisk = getDailyRiskStats(f.account || 'Demo');
     if (dailyRisk.level === 'STOP') {
@@ -2837,7 +2805,9 @@ function attachEvents() {
     }
 
     if (!Array.isArray(state.trades)) state.trades = [];
-    const openedAt = new Date().toISOString();
+    const openedDate=new Date(`${f.date}T${f.time||'12:00'}:00+07:00`);
+    if(!Number.isFinite(openedDate.getTime())){alert('กรอกวันที่และเวลาเปิดให้ถูกต้อง');return;}
+    const openedAt = openedDate.toISOString();
     const contractValue=Number(f.usdPerPriceUnitPerLot||state.contractValues[f.symbol])||null;
     const newTrade = {
       id: uid(),
@@ -2926,8 +2896,9 @@ function attachEvents() {
 
   document.querySelectorAll('[data-save-edit-trade]').forEach(el => {
     el.addEventListener('click', () => {
-      const t = state.trades.find(x => x && x.id === el.dataset.saveEditTrade);
-      if (!t) return;
+      const original = state.trades.find(x => x && x.id === el.dataset.saveEditTrade);
+      if (!original) return;
+      const t=JSON.parse(JSON.stringify(original));
       const entry = Number(document.getElementById('edit-entry')?.value);
       const initialSl = Number(document.getElementById('edit-initial-sl')?.value);
       const currentSl = Number(document.getElementById('edit-current-sl')?.value);
@@ -2938,6 +2909,7 @@ function attachEvents() {
       if (!valid) { alert('ตรวจสอบ Entry, Initial SL, Lot และทิศทางให้ถูกต้อง (Take Profit ใส่ได้ถ้ามี)'); return; }
       const pnlInput=document.getElementById('edit-pnl'),pnlIsManual=pnlInput?.dataset.manual==='true';
       t.date = document.getElementById('edit-date')?.value || t.date;
+      t.openedAt=`${t.date}T${thaiDateTime(t.openedAt,t.date).slice(11)}:00+07:00`;
       t.session = document.getElementById('edit-session')?.value || tradeSession(t);
       t.account = document.getElementById('edit-account')?.value || t.account || 'Demo';
       t.symbol = document.getElementById('edit-symbol')?.value || t.symbol;
@@ -2955,6 +2927,7 @@ function attachEvents() {
       const updatedExits=[];
       exitEvents(t).forEach((exit,i)=>{
         if(document.getElementById(`delete-exit-event-${i}`)?.checked){if(exit.id)t.deletedExitIds=[...new Set([...t.deletedExitIds,exit.id])];return;}
+        const exitAt=document.getElementById(`edit-exit-at-${i}`)?.value;exit.at=exitAt?`${exitAt}:00+07:00`:exit.at;
         exit.price=Number(document.getElementById(`edit-exit-price-${i}`)?.value)||0;
         exit.lot=Number(document.getElementById(`edit-exit-lot-${i}`)?.value)||0;
         exit.pnl=Number(document.getElementById(`edit-exit-pnl-${i}`)?.value)||0;
@@ -2963,6 +2936,7 @@ function attachEvents() {
         updatedExits.push(exit);
       });
       t.exits=updatedExits;
+      if(updatedExits.length){const totalLot=updatedExits.reduce((sum,e)=>sum+e.lot,0);t.exit=totalLot?updatedExits.reduce((sum,e)=>sum+e.price*e.lot,0)/totalLot:0;}
       t.deletedSlEventIds=Array.isArray(t.deletedSlEventIds)?t.deletedSlEventIds:[];
       slMoveEvents(t).forEach((event,i)=>{
         if(document.getElementById(`delete-sl-event-${i}`)?.checked){if(event.id)t.deletedSlEventIds=[...new Set([...t.deletedSlEventIds,event.id])];t.slHistory=t.slHistory.filter(item=>item!==event);return;}
@@ -2970,6 +2944,7 @@ function attachEvents() {
         event.newSL=Number(document.getElementById(`edit-sl-new-${i}`)?.value)||0;
         event.priceAtAdjustment=Number(document.getElementById(`edit-sl-price-${i}`)?.value)||0;
         event.type=document.getElementById(`edit-sl-type-${i}`)?.value||event.type;
+        const initialRisk=Math.abs(entry-initialSl);event.rAtAdjustment=initialRisk?directionMove(t,entry,event.priceAtAdjustment)/initialRisk:null;
       });
       if(!pnlIsManual){
         if(exitEvents(t).length){t.pnl=exitEvents(t).reduce((sum,e)=>sum+(Number(e.pnl)||0),0);t.pnlMode='auto';}
@@ -2979,7 +2954,9 @@ function attachEvents() {
         t.status = document.getElementById('edit-status')?.value || t.status;
         t.exitReason = document.getElementById('edit-exit-reason')?.value || t.exitReason || 'Manual Close';
       }
+      try{OwlCore.validateTrade(t);}catch(error){alert(error.message);return;}
       t.updatedAt = new Date().toISOString();
+      state.trades[state.trades.findIndex(item=>item.id===t.id)]=t;
       delete state.editImageDrafts[t.id];
       save(KEY.TRADES, state.trades); syncToCloud(); beep('click'); state.editTradeId = null; render();
     });
@@ -3052,7 +3029,7 @@ function attachEvents() {
       const slInput = document.getElementById('manage-current-sl');
       const currentPrice = Number(priceInput?.value);
       const currentSl = Number(slInput?.value);
-      if (!currentPrice || !currentSl) { alert('กรอก Current Price และ Current SL ให้ครบ'); return; }
+      if (![currentPrice,currentSl].every(v=>Number.isFinite(v)&&v>0)) { alert('กรอก Current Price และ Current SL ให้ครบ'); return; }
       if ((t.dir === 'Buy' && currentSl >= currentPrice) || (t.dir === 'Sell' && currentSl <= currentPrice)) {
         alert(t.dir === 'Buy' ? 'Current SL ของ BUY ต้องต่ำกว่า Current Price' : 'Current SL ของ SELL ต้องสูงกว่า Current Price'); return;
       }
@@ -3075,7 +3052,7 @@ function attachEvents() {
       const pnl = pnlRaw===''?calculateExitPnl(t,price,lot):Number(pnlRaw);
       const reason = document.getElementById('manage-exit-reason')?.value || 'Manual Close';
       const remaining = remainingLot(t);
-      if (!price || !lot || lot <= 0 || pnl===null || !Number.isFinite(pnl)) { alert(contractValueFor(t)?'กรอก Exit Price และ Exit Lot ให้ครบ':'กรอก Exit Price, Exit Lot และ Net P&L ให้ครบ หรือกำหนดตัวคูณ P&L ของสินทรัพย์นี้'); return; }
+      if (![price,lot].every(v=>Number.isFinite(v)&&v>0) || pnl===null || !Number.isFinite(pnl)) { alert(contractValueFor(t)?'กรอก Exit Price และ Exit Lot ให้ครบ':'กรอก Exit Price, Exit Lot และ Net P&L ให้ครบ หรือกำหนดตัวคูณ P&L ของสินทรัพย์นี้'); return; }
       if (lot > remaining + 0.0000001) { alert(`Exit Lot ต้องไม่เกิน ${fmt(remaining,2)} lot ที่เหลือ`); return; }
       if (!Array.isArray(t.exits)) t.exits = [];
       const exitImage = (state.exitImageDrafts||{})[t.id] || '';
@@ -3278,52 +3255,38 @@ function attachEvents() {
 
   const btnBackup = document.getElementById('btn-backup');
   if (btnBackup) btnBackup.addEventListener('click', async () => {
+    const owner=currentUser?.uid;exportBusy=true;
     btnBackup.disabled=true;btnBackup.textContent='กำลังเตรียม Backup...';
-    try{const blob=await createBackupZip();await downloadOrShare(blob,`owl-trader-backup-${today()}.zip`);}
+    try{const blob=await createBackupZip();if(currentUser?.uid!==owner)return;await downloadOrShare(blob,`owl-trader-backup-${today()}.zip`);}
     catch(error){alert(`สร้าง Backup ไม่สำเร็จ: ${error.message||'unknown error'}`);}
-    finally{btnBackup.disabled=false;btnBackup.textContent='สำรองข้อมูลพร้อมรูป (.zip)';}
+    finally{exportBusy=false;btnBackup.disabled=false;btnBackup.textContent='สร้าง Backup พร้อมรูป (.zip)';}
   });
 
   const btnImportTrigger = document.getElementById('btn-import-trigger');
   if (btnImportTrigger) btnImportTrigger.addEventListener('click', () => { document.getElementById('btn-import')?.click(); });
 
   const importInput = document.getElementById('btn-import');
-  if (importInput) importInput.addEventListener('change', e => {
-    const file = e.target.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async ev => {
-      try {
-        const data=file.name.toLowerCase().endsWith('.zip')?await parseBackupFile(file):JSON.parse(ev.target.result); let importedTrades = []; let importedCfs = [];
-        if (Array.isArray(data)) { importedTrades = data; }
-        else if (data && Array.isArray(data.trades)) {
-          importedTrades = data.trades.map(normalizeTradeSchema); importedCfs = data.cfs || [];
-          if (data.balances) {
-            state.balances = { ...DEFAULT_BALANCES, ...data.balances };
-          } else if (data.balance) {
-            state.balances = { ...DEFAULT_BALANCES, Demo: parseFloat(data.balance) || 10000 };
-          }
-          if (data.maxDailyDD !== undefined) {
-            state.maxDailyDD = parseFloat(data.maxDailyDD) || 5.0;
-            save(KEY.MAX_DAILY_DD, state.maxDailyDD);
-          }
-          if (data.lossLocks) {
-            state.lossLocks = { ...data.lossLocks };
-            save(KEY.LOSS_LOCK, state.lossLocks);
-          }
-          if(data.dailySnapshots){state.dailySnapshots=data.dailySnapshots;save(KEY.DAILY_SNAPSHOTS,state.dailySnapshots);}
-          if(data.contractValues){state.contractValues=data.contractValues;save(KEY.CONTRACT_VALUES,state.contractValues);}
-          save(KEY.BALANCES, state.balances);
-        } else { alert('โครงสร้างข้อมูลดิสก์ไม่ถูกต้อง!'); return; }
-        if (!confirm(`พบฐานข้อมูลเทรด ${importedTrades.length} ไม้\nยืนยันนำเข้าเพื่อเขียนทับระบบปัจจุบันและซิงก์คลาวด์?`)) return;
-        state.trades = importedTrades; save(KEY.TRADES, state.trades);
-        state.cfs = importedCfs; save(KEY.CFS, state.cfs);
-        state.deletedTradeIds=Array.isArray(data.deletedTradeIds)?data.deletedTradeIds:[];state.deletedCfIds=Array.isArray(data.deletedCfIds)?data.deletedCfIds:[];
-        save(KEY.DELETED_TRADES,state.deletedTradeIds);save(KEY.DELETED_CFS,state.deletedCfIds);
-        syncToCloud(); beep('win'); render();
-        alert('✅ IMPORT & CLOUD SYNC COMPLETELY!');
-      } catch (err) { alert(`อ่าน Backup ไม่สำเร็จ: ${err.message||'ไฟล์เสียหรือรูปแบบไม่รองรับ'}`); }
-    };
-    if(file.name.toLowerCase().endsWith('.zip'))reader.readAsArrayBuffer(file);else reader.readAsText(file);e.target.value='';
+  if(importInput)importInput.addEventListener('change',async e=>{
+    const file=e.target.files[0];e.target.value='';if(!file)return;
+    const owner=currentUser?.uid;
+    try{
+      const data=OwlCore.parseBackup(await parseBackupFile(file));
+      const trades=data.trades.map(t=>normalizeTradeSchema({...t,id:!t.id||state.deletedTradeIds.includes(t.id)?uid():t.id}));
+      const cfs=data.cfs.map(c=>({...c,id:!c.id||state.deletedCfIds.includes(c.id)?uid():c.id}));
+      if(currentUser?.uid!==owner)return;
+      if(!confirm('พบ '+trades.length+' เทรด และ '+cfs.length+' รายการฝากถอน\nนำเข้าโดยรวมกับข้อมูลเดิม รายการ ID เดียวกันใช้ข้อมูลจาก Backup รวมถึงยอดเริ่มต้นบัญชีที่อยู่ในไฟล์ ยืนยันหรือไม่?'))return;
+      const stamp=new Date().toISOString(),tradeMap=new Map(state.trades.map(t=>[t.id,t])),cfMap=new Map(state.cfs.map(c=>[c.id,c]));
+      trades.forEach(t=>tradeMap.set(t.id,{...t,updatedAt:stamp}));cfs.forEach(c=>cfMap.set(c.id,{...c,updatedAt:stamp}));
+      const nextTrades=[...tradeMap.values()],nextCfs=[...cfMap.values()];
+      state.trades=nextTrades;state.cfs=nextCfs;
+      state.balances={...state.balances,...(data.balances||{})};
+      state.deletedTradeIds=state.deletedTradeIds.filter(id=>!trades.some(t=>t.id===id));
+      state.deletedCfIds=state.deletedCfIds.filter(id=>!cfs.some(c=>c.id===id));
+      if(Number(data.maxDailyDD)>0&&Number(data.maxDailyDD)<=100)state.maxDailyDD=Number(data.maxDailyDD);
+      state.contractValues={...state.contractValues,...(data.contractValues||{})};
+      persistUserData();syncToCloud();render();
+      setExportNotice('นำเข้าแล้ว '+trades.length+' เทรด ตรวจสถานะ SYNCED ด้านบนเพื่อยืนยันการซิงก์คลาวด์');
+    }catch(err){setExportNotice('นำเข้าไม่สำเร็จ: '+err.message);alert('นำเข้าไม่สำเร็จ: '+err.message);}
   });
 
   const calPrev = document.getElementById('cal-prev');
@@ -3345,7 +3308,7 @@ function attachEvents() {
 function bindPeriodFilter(prefix, period, onChange) {
   const modeEl = document.getElementById(`${prefix}-period-mode`); if (!modeEl) return;
   const safePeriod = period || { mode: 'all', account: 'ALL' };
-  modeEl.addEventListener('change', e => { const newP = { mode: e.target.value, account: safePeriod.account }; if (e.target.value === 'daily') newP.date = today(); onChange(newP); });
+  modeEl.addEventListener('change', e => { const newP = { ...safePeriod, mode: e.target.value }; if (e.target.value === 'daily') newP.date = today(); onChange(newP); });
   const dateEl = document.getElementById(`${prefix}-period-date`); if (dateEl) dateEl.addEventListener('change', e => { onChange({ ...safePeriod, date: e.target.value }); });
   const fromEl = document.getElementById(`${prefix}-period-from`); if (fromEl) fromEl.addEventListener('change', e => { onChange({ ...safePeriod, from: e.target.value }); });
   const toEl = document.getElementById(`${prefix}-period-to`); if (toEl) toEl.addEventListener('change', e => { onChange({ ...safePeriod, to: e.target.value }); });

@@ -1,40 +1,38 @@
-# 🦉 OWL TRADING JOURNAL (V.4.0 STATION) 📊
+# OWL Trader Journal · V4.1
 
-Gamified 8-Bit Retro RPG trading station & psychological risk manager for forex/crypto traders.
+OWL Trader is a mobile-first trading journal for recording a position as soon as it is opened, then updating its stop loss and partial exits while it is active.
 
-🎮 **Core Features:**
-- **🦉 Owl Mascot & Retro 8-Bit Theme**: Authentic pixel art UI, CRT monitor scanline filter, and sound effects.
-- **🛡️ % Daily Drawdown (DD) Risk Engine**: Calculate daily drawdown based on Starting Balance of the day (e.g. 5% Max DD limit).
-- **❤️ Retro Daily Risk HP Bar**: Dynamic HP life gauge tracking remaining daily loss tolerance (Green > 50%, Yellow 1%-50%, Red 0% Game Over).
-- **🧠 Max Consecutive Loss Lock (2 Hours Cooldown)**: เมื่อแพ้ (SL) ครบ 2 ไม้ในวันเดียว ระบบล็อกปุ่มบันทึกไม้ใหม่ชั่วคราว 2 ชั่วโมง พร้อมตัวนับเวลาถอยหลังแบบเรียลไทม์เพื่อบังคับพักสมองและป้องกัน Revenge Trading.
-- **🎯 Open → Manage → Close Workflow**: กรอก Entry, Initial SL และ Take Profit เมื่อเปิดออเดอร์แล้ว ระบบสร้างสถานะ OPEN ทันที จากนั้นอัปเดตราคาปัจจุบัน เลื่อน SL และแบ่งปิดระหว่างถือไม้ได้.
-- **📷 Trade Screenshots**: แนบภาพ Entry ตอนบันทึกออเดอร์ และแนบภาพ Exit ได้ทุกครั้งที่ปิดบางส่วนหรือปิดทั้งหมด รูปจะถูกบีบอัดและซิงก์ไปกับรายการเทรด.
-- **📐 Live R-Multiple & Partial Exits**: แสดง Planned R:R, Floating R, Protected R และ Realized R พร้อมรองรับการแบ่งปิดหลายครั้งโดยคง Initial SL เป็นฐาน 1R.
-- **📊 CSV Export for AI Agents (Agent_Shark / Agent_Bee)**: ปุ่ม Export ข้อมูลสถิติไม้เทรดเป็น CSV พร้อมการคำนวณ R:R, PnL, Psychology, Timeframe รองรับทั้ง Export ตาม Filter (รายเดือน/รายสัปดาห์) และ Export ทั้งหมดใน Settings.
-- **⚠️ 2-Level Alert System**:
-  - *Level 1 (70% DD used)*: Caution warning to reduce lot size.
-  - *Level 2 (100% DD reached)*: Hard Stop alarm & discipline prompt to prevent revenge trading.
-- **📡 Real-Time Cloud Sync (Zero Data Loss)**: Live cross-device synchronization between Mobile and PC via Firebase Realtime Database with Smart Merge.
-- **📱 Standalone Android APK**: Package ready with Capacitor (`Owl-Trading-Journal.apk`).
-- **Multi-Account Support**: Manage multiple accounts (Demo, LIFE, RISK, Swingtrade, Custom accounts).
-- **Equity Curve & Deep Analytics**: กราฟ Equity ใช้แกน X เป็นวันที่และแกน Y เป็นมูลค่าพอร์ต พร้อม Profit factor, expectancy, weekday matrix, calendar diary, and action ratio pie charts.
-- **Offline First**: Full offline support with LocalStorage and auto-sync when online.
+## What it does
 
-📱 **Live Web App:**
-https://snoopy1989doo-source.github.io/owl-trading-journal/
+- Records an open trade from the main screen with Entry, Initial SL, optional Take Profit, lot size, account, timeframe, Thai-time Session, and an optional Entry screenshot.
+- Shows a live planned R:R preview. BUY/SELL direction and SL placement are validated before saving.
+- Manages an open trade with Break Even, Trailing SL, manual current-price updates, partial exits, optional Exit screenshots, and a typed SL-movement timeline.
+- Prevents SL moves that increase risk. SL movement history is stored separately from the Initial SL and synchronized per trade through Firebase transactions.
+- Estimates realized P&L from price movement, lot size, and a user-provided USD-per-price-unit multiplier. It does not guess broker contract specifications; commissions and swaps can be included with a manual correction.
+- Tracks daily drawdown from a persistent start-of-day equity snapshot, including realized and configured floating P&L while excluding same-day deposits from the loss limit.
+- Filters history and statistics by date, account, Session, and instrument. Equity growth uses date on the X axis and account value in USD on the Y axis.
+- Exports monthly account reports as Markdown, portfolio summaries as Markdown, trades as CSV, and a ZIP backup that includes screenshots. ZIP and JSON backups can be imported.
+- Keeps local data available offline and synchronizes each signed-in user's records under `users/{uid}`.
 
-📦 **Repository:**
-https://github.com/snoopy1989doo-source/owl-trading-journal
+## Firebase setup
 
-🗺️ **Commercial & Store Roadmap:**
-See [STORE_LAUNCH_ROADMAP.md](STORE_LAUNCH_ROADMAP.md) for full App Store & Google Play Store release guidelines.
+Email/Password and Google sign-in must be enabled in Firebase Authentication. Add the hosted app domain under Authentication → Settings → Authorized domains. Publish the rules in [`database.rules.json`](database.rules.json) and [`storage.rules`](storage.rules); the latter is required for cross-device screenshot sync. See [`FIREBASE_SETUP.md`](FIREBASE_SETUP.md) for the steps.
 
-## Tech Stack
-- Vanilla HTML5, CSS3, Modern JavaScript
-- Capacitor 7 (Android Native Wrapper)
-- Firebase Realtime Database (Real-time listener & isolated node)
-- Web Audio API (Retro 8-bit sound synthesizers)
-- LocalStorage caching engine
+P&L auto-calculation remains disabled until a contract multiplier is set for an instrument. Configure it using the broker's contract specification. This keeps instruments such as Gold, crypto, indices, and FX from silently sharing an incorrect multiplier.
 
-## License
-MIT
+## Build the Android app
+
+```sh
+npm install
+npx cap sync android
+cd android
+gradlew.bat assembleDebug
+```
+
+The Android package ID remains `com.snoopy.retrotradingjournal` so the updated APK can replace an existing installation. The app version is 1.1.
+
+## Links
+
+- Web app: https://snoopy1989doo-source.github.io/owl-trading-journal/
+- Repository: https://github.com/snoopy1989doo-source/owl-trading-journal
+- Store planning: [`STORE_LAUNCH_ROADMAP.md`](STORE_LAUNCH_ROADMAP.md)

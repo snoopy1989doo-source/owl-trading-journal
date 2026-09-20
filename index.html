@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>OWL TRADING JOURNAL - RETRO STATION</title>
+<title>OWL Trader Journal</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#090B15">
   <meta name="mobile-web-app-capable" content="yes">
@@ -16,6 +16,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
 <style>
 /* ─── 🦉 COZY OWL ARCADE THEME (MODERN PIXEL HYBRID) ─────────────────────── */
 :root {
@@ -39,9 +40,22 @@
   --text-main: #F8FAFC;
   --text-sub: #94A3B8;
   --text-muted: #64748B;
-  --radius-card: 14px;
-  --radius-btn: 8px;
-  --radius-input: 8px;
+  --radius-card: 18px;
+  --radius-btn: 12px;
+  --radius-input: 12px;
+  --bg-main: #07111f;
+  --bg-card: #101d2c;
+  --bg-card-header: #14263a;
+  --bg-input: #0b1725;
+  --border-card: #20354b;
+  --border-input: #2a4158;
+  --owl-gold: #dce7f1;
+  --owl-gold-light: #f2f7fb;
+  --owl-blue: #06b88b;
+  --owl-blue-dark: #058b71;
+  --owl-cyan: #55d6c2;
+  --tp-green: #13c99a;
+  --tp-green-light: #45e0b4;
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
@@ -68,6 +82,63 @@ body{
   opacity: 0.35;
 }
 .crt.disabled { display: none; }
+
+/* Modern trading workspace inspired by the supplied product mockup. */
+body { max-width: 1180px; margin: 0 auto; padding: 16px 18px 96px; background: radial-gradient(ellipse at 15% 0%, #102338 0, #07111f 54%); }
+.crt { opacity: .025; }
+.master-header,.rpg-hub-header,.card,.stats-block,.trade-item,.manage-box,.cal-box,.auth-layout { box-shadow: 0 12px 34px rgba(0,0,0,.20); }
+.master-header { padding: 12px 16px; background:rgba(16,29,44,.92); backdrop-filter:blur(14px); }
+.master-title { font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; font-weight:800; letter-spacing:.4px; color:#e7f1f8; }
+.sync-badge { font-family:'Plus Jakarta Sans',sans-serif; font-size:10px; font-weight:800; border-radius:999px; padding:6px 10px; }
+.rpg-hub-header { padding:18px; gap:16px; background:linear-gradient(135deg,rgba(18,37,56,.98),rgba(12,25,39,.98)); }
+.rpg-hub-info,.rpg-hub-header * { min-width:0; }
+.rpg-hub-info { flex:1; }
+.rpg-hub-row { gap:8px; }
+.rpg-hub-label,.rpg-hub-value { font-family:'Plus Jakarta Sans',sans-serif; letter-spacing:0; overflow-wrap:anywhere; }
+.rpg-hub-label { font-size:11px; }
+.rpg-hub-value { font-size:15px; }
+.card { padding:18px; margin-bottom:16px; border-radius:20px; background:rgba(16,29,44,.94); border-color:#223a50; }
+.card-title,.stats-block-title { font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; font-weight:800; letter-spacing:.25px; }
+label { font-size:12px; font-weight:700; color:#d8e5ef; margin:12px 0 6px; }
+input,select,textarea { font:inherit; min-height:46px; padding:11px 13px; border-radius:12px; background:#0a1725; border-color:#2a4057; }
+button,.btn,.trade-action,.status-btn,.psych-btn,.tab,.nav-btn { font-family:'Plus Jakarta Sans',sans-serif; letter-spacing:0; }
+.btn,.trade-action { min-height:44px; border-radius:12px; font-size:12px; font-weight:800; }
+.btn-green { background:linear-gradient(135deg,#16c99b,#0eaa82); box-shadow:0 8px 20px rgba(16,185,129,.16); }
+.tabs { gap:8px; margin-bottom:14px; }
+.tab { min-height:44px; border-radius:12px; }
+.rr-preview { border-radius:14px; background:linear-gradient(140deg,#132d40,#102336); border-color:#235369; padding:12px 8px; }
+.rr-label,.rr-value { font-family:'Plus Jakarta Sans',sans-serif; font-size:11px; letter-spacing:0; }
+.trade-item { border-radius:16px; padding:14px; background:#0c1928; }
+.trade-header { gap:10px; align-items:flex-start; }
+.trade-symbol { font-size:13px; line-height:1.5; }
+.life-badge { border-radius:999px; font-size:9px; padding:5px 9px; }
+.trade-row { font-size:11px; gap:12px; }
+.trade-label { color:#91a7ba; }
+.trade-value { color:#eef6fb; text-align:right; overflow-wrap:anywhere; }
+.manage-box { border-radius:16px; padding:14px; background:#102033; }
+.manage-grid { gap:10px; }
+.bottom-nav { max-width:1180px; left:50%; transform:translateX(-50%); width:calc(100% - 24px); bottom:10px; border:1px solid #263c52; border-radius:16px; box-shadow:0 10px 38px rgba(0,0,0,.45); overflow:hidden; }
+.nav-btn { min-height:60px; font-size:10px; }
+.nav-icon { font-size:19px; }
+.stat-subbox,.inner-grid,.weekday-node,.rr-cell { border-radius:12px; }
+.stats-block { border-radius:16px; padding:14px; }
+.stats-block-title { color:#dceaf4; }
+.image-upload { border-radius:14px; background:#0b1928; border-color:#2a4057; padding:12px; }
+.image-upload label,.image-upload-hint { font-size:11px; }
+.equity-chart-wrap { width:100%; overflow:hidden; }
+.equity-chart { display:block; width:100%; height:auto; }
+@media (max-width:680px) {
+  body { padding:10px 10px 86px; }
+  .master-header { padding:10px 12px; }
+  .master-title { font-size:11px; }
+  .rpg-hub-header { padding:12px; gap:10px; }
+  .rpg-avatar-box { width:54px!important; height:54px!important; flex:none; }
+  .rpg-hub-label { font-size:9px; }
+  .rpg-hub-value { font-size:13px; }
+  .card { padding:13px; border-radius:16px; }
+  .manage-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .bottom-nav { width:calc(100% - 16px); bottom:8px; }
+}
 
 /* 👾 MASTER HEADER & CLOUD SYNC */
 .master-header {
@@ -519,6 +590,35 @@ input:focus,select:focus{
   padding: 10px 12px; margin-bottom: 8px;
   display: flex; justify-content: space-between; align-items: center;
 }
+/* Final responsive theme overrides */
+body{max-width:1180px;margin:0 auto;padding:16px 18px 96px;background:radial-gradient(ellipse at 12% 0%,#10283c 0,#07111f 52%);font-size:14px}
+.crt{opacity:.025}.master-header{background:rgba(16,29,44,.94);backdrop-filter:blur(14px);padding:12px 16px;border-radius:16px}
+.master-title,.card-title,.stats-block-title,.life-badge,.lifecycle-tab,.rr-value{font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:0}
+.master-title{font-size:14px;font-weight:800;color:#e5f1f7}.sync-badge{font:800 10px 'Plus Jakarta Sans',sans-serif;border-radius:999px;padding:6px 10px}
+.rpg-hub-header{padding:17px;gap:14px;background:linear-gradient(135deg,#13283a,#0d1a28);box-shadow:0 12px 34px rgba(0,0,0,.22)}
+.rpg-hub-info{flex:1;min-width:0}.rpg-hub-row{gap:8px}.rpg-hub-label{font:700 11px 'Plus Jakarta Sans',sans-serif;letter-spacing:0;color:#a9bfce}.rpg-hub-value{font:800 14px 'Plus Jakarta Sans',sans-serif;letter-spacing:0;overflow-wrap:anywhere}
+.card{padding:18px;margin-bottom:16px;border:1px solid #243d52;border-radius:20px;background:rgba(16,29,44,.96);box-shadow:0 12px 34px rgba(0,0,0,.2)}
+.card-title,.stats-block-title{font-size:14px;font-weight:800;color:#e3edf4}.tabs{gap:8px;margin-bottom:14px}.tab,.status-btn,.psych-btn{font:700 12px 'Plus Jakarta Sans',sans-serif;letter-spacing:0;border-radius:12px;min-height:44px}
+label{font:700 12px 'Plus Jakarta Sans',sans-serif;color:#d6e4ed;margin:12px 0 6px}
+input,select,textarea{font:500 14px 'Plus Jakarta Sans',sans-serif;min-height:46px;padding:10px 12px;border-radius:12px;background:#091725;border-color:#2b4359}
+.btn,.trade-action{font:800 12px 'Plus Jakarta Sans',sans-serif;letter-spacing:0;min-height:44px;border-radius:12px}
+.btn-green{background:linear-gradient(135deg,#17c99b,#0ca77f);box-shadow:0 8px 20px rgba(16,185,129,.16)}
+.rr-preview{padding:12px 8px;border-radius:14px;background:linear-gradient(140deg,#153043,#102336);border-color:#28546a}.rr-label,.rr-value{font:700 11px 'Plus Jakarta Sans',sans-serif;letter-spacing:0}
+.trade-item{padding:14px;border-radius:16px;background:#0b1927;box-shadow:0 10px 28px rgba(0,0,0,.18)}.trade-symbol{font:800 13px 'Plus Jakarta Sans',sans-serif;line-height:1.5}.life-badge{padding:5px 9px;border-radius:99px;font-size:9px}
+.trade-row{font-size:12px;gap:12px}.trade-label{color:#8fa8ba}.trade-value{text-align:right;overflow-wrap:anywhere}.trade-actions{gap:8px}.trade-action{padding:10px}
+.manage-box{margin-top:12px;padding:14px;border:1px solid #243e54;border-radius:16px;background:#102033}.manage-grid{gap:10px}.manage-grid label{font-size:11px}
+.stats-block{padding:14px;border-radius:16px;box-shadow:0 9px 26px rgba(0,0,0,.16)}.stat-subbox,.weekday-node,.rr-cell{border-radius:12px}.stat-sublabel{font:700 10px 'Plus Jakarta Sans',sans-serif;letter-spacing:0}.stat-subvalue{font:800 16px 'Plus Jakarta Sans',sans-serif}
+.image-upload{padding:12px;border-radius:14px;background:#0b1928;border-color:#294359}.image-upload label,.image-upload-hint{font-size:11px}
+.equity-chart-wrap{width:100%;overflow:hidden}.equity-chart{display:block;width:100%;height:auto}
+.bottom-nav{left:50%;transform:translateX(-50%);width:calc(100% - 24px);max-width:1180px;bottom:10px;border:1px solid #263e53;border-radius:16px;overflow:hidden;box-shadow:0 10px 38px rgba(0,0,0,.45)}.nav-btn{min-height:60px;font:800 10px 'Plus Jakarta Sans',sans-serif;letter-spacing:0}.nav-icon{font-size:19px}
+.section-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 0 10px;font-size:13px;font-weight:800;color:#e4f0f6}.subtle,.helper-copy,.advanced-field small{font-size:11px;color:#94aabc;line-height:1.55}.trade-meta-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.advanced-field{margin:12px 0;padding:12px;border:1px solid #294257;border-radius:14px;background:#0b1928}.advanced-field summary{cursor:pointer;font-weight:800;color:#c4d8e6}.advanced-field small{display:block;margin:6px 0}.advanced-field .btn{width:100%}
+.sl-manager{margin:0 0 14px;padding:12px;border:1px solid #275447;border-radius:15px;background:linear-gradient(135deg,rgba(11,68,57,.28),rgba(11,26,40,.88))}.sl-action-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.sl-action-row button:disabled{opacity:.42;filter:grayscale(1)}.sl-hint{font-size:11px;color:#a5bfcb;margin-top:7px}.trail-editor{margin-top:10px;padding-top:10px;border-top:1px solid #2b4b4b}.trail-editor .btn{width:100%;margin-top:8px}.trail-editor small{display:block;color:#a6bac6;font-size:10px}.mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:6px}.mode-switch button{min-height:38px;border-radius:10px;border:1px solid #2b4258;background:#0a1725;color:#a9bdcc}.mode-switch button.active{border-color:#18c99a;color:#46dfb6;background:rgba(19,201,154,.12)}.inline-error{margin-top:8px;color:#ff7b87;font-size:12px}
+.exit-pnl-hint,.manage-box small{font-size:10px;color:#93aabb}.edit-psych{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:10px 0}.edit-psych>label:first-child{width:100%}.check-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid #2b4358;border-radius:99px;color:#d5e3ec}.check-chip input{width:18px;min-height:18px;margin:0;accent-color:#17c99b}.exit-edit-card{margin:10px 0;padding:10px;border:1px solid #263f54;border-radius:12px;background:#0b1928}.edit-actions,.export-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.export-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.export-status{margin-top:8px;color:#55d6c2;font-size:11px;min-height:18px}.contract-profile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.contract-profile-grid label{margin:0}.contract-profile-grid input{margin-top:5px}.stats-extra-filters{margin:8px 0 12px}.stats-extra-filters>*{flex:1;min-width:0}.sl-timeline-list{display:grid;gap:9px;margin-top:12px}.sl-timeline-row{padding:10px;border-radius:12px;background:#0a1725}.sl-timeline-row strong,.sl-timeline-row small{display:block;font-size:11px}.sl-timeline-row small{color:#a3b6c3;margin-top:5px}.sl-pixel-track{height:8px;display:flex;gap:3px;margin-top:7px}.sl-pixel{height:100%;min-width:4px;border-radius:6px;background:#17c99b}.sl-pixel.negative{background:#fb6470}
+.dashboard-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 14px}.dashboard-tile{min-width:0;padding:14px;border:1px solid #20384d;border-radius:16px;background:linear-gradient(145deg,#14283b,#0d1b2b);box-shadow:0 8px 22px rgba(0,0,0,.16)}.dashboard-tile-label{font-size:10px;font-weight:800;letter-spacing:.45px;color:#8fa8bb}.dashboard-tile-value{margin-top:6px;font-size:19px;font-weight:800;color:#f2f7fb;overflow-wrap:anywhere}.dashboard-tile-note{margin-top:3px;font-size:10px;color:#8299aa}
+.auth-google{background:#f8fafc!important;color:#172033!important;border:1px solid #cbd5e1!important;box-shadow:0 8px 20px rgba(15,23,42,.18)!important}
+.auth-google:hover{background:#fff!important}
+@media(max-width:680px){body{padding:10px 10px 84px}.master-header{padding:10px 12px}.master-title{font-size:11px}.rpg-hub-header{padding:12px;gap:10px}.rpg-avatar-box{width:54px!important;height:54px!important;flex:none}.rpg-hub-label{font-size:9px}.rpg-hub-value{font-size:12px}.card{padding:13px;border-radius:16px}.manage-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.bottom-nav{width:calc(100% - 16px);bottom:8px}.nav-btn{min-height:56px}.dashboard-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.dashboard-tile{padding:11px}.dashboard-tile-value{font-size:17px}}
 </style>
 </head>
 <body>
@@ -527,7 +627,7 @@ input:focus,select:focus{
 <!-- 👾 MASTER HEADER & CLOUD REALTIME SYNC -->
 <div class="master-header">
   <div style="display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden;">
-    <span class="master-title">🦉 OWL TRADER V.4.0</span>
+  <span class="master-title">🦉 OWL TRADER V.4.1</span>
     <span id="cloud-sync-badge" class="sync-badge sync-offline">🔴 OFFLINE</span>
   </div>
 </div>
@@ -548,6 +648,7 @@ const firebaseConfig = {
 let isCloudActive = false;
 let firebaseAuth = null;
 let firebaseDb = null;
+let firebaseStorage = null;
 let currentUser = null;
 let cloudDataRef = null;
 let authReady = false;
@@ -555,6 +656,7 @@ try {
   firebase.initializeApp(firebaseConfig);
   firebaseAuth = firebase.auth();
   firebaseDb = firebase.database();
+  firebaseStorage = firebase.storage ? firebase.storage() : null;
   isCloudActive = true;
 } catch (e) { console.error("Cloud Connection Failed:", e); }
 
@@ -566,7 +668,11 @@ const KEY = {
   CRT:          'rtj_crt_v2',
   LAST_ACCOUNT: 'rtj_last_account_v1',
   MAX_DAILY_DD: 'rtj_max_daily_dd_v1', /* 🛡️ Max Daily DD % Key */
-  LOSS_LOCK:    'rtj_loss_lock_v1'     /* 🧠 2 Consecutive Loss Cooldown Key */
+  LOSS_LOCK:    'rtj_loss_lock_v1',    /* 🧠 2 Consecutive Loss Cooldown Key */
+  DAILY_SNAPSHOTS: 'rtj_daily_equity_snapshots_v1',
+  CONTRACT_VALUES: 'rtj_contract_values_v1',
+  DELETED_TRADES: 'rtj_deleted_trades_v1',
+  DELETED_CFS: 'rtj_deleted_cfs_v1'
 };
 
 const DEFAULT_BALANCES = {
@@ -617,7 +723,28 @@ function beep(type) {
   } catch {}
 }
 
-function today() { return new Date().toISOString().split('T')[0]; }
+function bangkokParts(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone:'Asia/Bangkok', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hourCycle:'h23' }).formatToParts(date);
+  return Object.fromEntries(parts.filter(p => p.type !== 'literal').map(p => [p.type, Number(p.value)]));
+}
+function bangkokDate(date = new Date()) { const p=bangkokParts(date); return `${p.year}-${String(p.month).padStart(2,'0')}-${String(p.day).padStart(2,'0')}`; }
+function today() { return bangkokDate(); }
+function zoneMinutes(date, timeZone) {
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone, hour:'2-digit', minute:'2-digit', hourCycle:'h23' }).formatToParts(date);
+  const values = Object.fromEntries(parts.filter(p => p.type !== 'literal').map(p => [p.type, Number(p.value)]));
+  return values.hour * 60 + values.minute;
+}
+function marketSessionAt(date = new Date()) {
+  const inRange = (zone, start, end) => { const mins=zoneMinutes(date,zone); return mins>=start*60 && mins<end*60; };
+  const asia=inRange('Asia/Tokyo',9,18), london=inRange('Europe/London',8,17), newYork=inRange('America/New_York',8,17);
+  if (london && newYork) return 'Overlap';
+  if (newYork) return 'New York';
+  if (london) return 'London';
+  if (asia) return 'Asia';
+  return 'Unknown';
+}
+function tradeOpenedDate(t) { return t && (t.openedAt ? bangkokDate(new Date(t.openedAt)) : t.date) || today(); }
+function tradeSession(t) { return t && t.session || (t && t.openedAt ? marketSessionAt(new Date(t.openedAt)) : 'Unknown'); }
 function fmt(n,d=2) { return Number(n||0).toFixed(d); }
 function fmtDate(s) { if (!s) return ''; const [y,m,d]=s.split('-'); return `${d}/${m}/${y.slice(2)}`; }
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
@@ -669,7 +796,7 @@ function buildImagePreview(src, clearAttribute) {
 
 function safeTradeImage(src) {
   const value = String(src||'');
-  return /^data:image\/(?:jpeg|png|webp);base64,[a-z0-9+/=]+$/i.test(value) ? value : '';
+  return /^data:image\/(?:jpeg|png|webp);base64,[a-z0-9+/=]+$/i.test(value) || /^https:\/\/firebasestorage\.googleapis\.com\//i.test(value) ? value : '';
 }
 
 function buildTradeImageStrip(trade) {
@@ -681,8 +808,8 @@ function buildTradeImageStrip(trade) {
   return `<div class="trade-image-strip">${images.map(image => `<a class="trade-image-thumb" href="${escapeHtml(image.src)}" target="_blank" rel="noopener" aria-label="เปิดรูป ${image.label}"><img src="${escapeHtml(image.src)}" alt="${image.label} trade screenshot"><span class="trade-image-caption">${image.label}</span></a>`).join('')}</div>`;
 }
 
-function weekStart(dateStr) { const d=new Date(dateStr); const day=d.getDay(); const diff=day===0?-6:1-day; d.setDate(d.getDate()+diff); return d.toISOString().split('T')[0]; }
-function weekEnd(dateStr) { const ws=weekStart(dateStr); const d=new Date(ws); d.setDate(d.getDate()+6); return d.toISOString().split('T')[0]; }
+function weekStart(dateStr) { const [y,m,day]=dateStr.split('-').map(Number),d=new Date(Date.UTC(y,m-1,day)),weekday=d.getUTCDay(),diff=weekday===0?-6:1-weekday;d.setUTCDate(d.getUTCDate()+diff);return d.toISOString().slice(0,10); }
+function weekEnd(dateStr) { const d=new Date(`${weekStart(dateStr)}T00:00:00Z`);d.setUTCDate(d.getUTCDate()+6);return d.toISOString().slice(0,10); }
 function monthStart(dateStr) { return dateStr.slice(0,7)+'-01'; }
 function monthEnd(dateStr) { const [y,m]=dateStr.split('-'); const last=new Date(+y, +m, 0); return `${y}-${m}-${String(last.getDate()).padStart(2,'0')}`; }
 
@@ -706,13 +833,41 @@ function tradeLifecycle(t) {
 
 function isClosedTrade(t) { return !!t && tradeLifecycle(t) === 'CLOSED'; }
 function initialStop(t) { return Number(t && (t.initialSl ?? t.sl)) || 0; }
+function currentStop(t) { return Number(t && (t.currentSL ?? t.currentSl)) || initialStop(t); }
 function plannedEntry(t) { return Number(t && (t.plannedEntry ?? t.entry)) || 0; }
 function actualEntry(t) { return Number(t && (t.actualEntry ?? t.entry)) || 0; }
 function plannedTarget(t) { return Number(t && (t.plannedTp ?? t.exit)) || 0; }
-function exitEvents(t) { return t && Array.isArray(t.exits) ? t.exits : []; }
+function exitEvents(t) { return t && Array.isArray(t.exits) ? t.exits : (t && t.exits && typeof t.exits==='object' ? Object.values(t.exits) : []); }
+function realizedPnlOnDate(trade,date){const exits=exitEvents(trade);if(exits.length)return exits.filter(e=>e.at&&bangkokDate(new Date(e.at))===date).reduce((sum,e)=>sum+(Number(e.pnl)||0),0);return isClosedTrade(trade)&&trade.date===date?Number(trade.pnl)||0:0;}
 
 function directionMove(t, fromPrice, toPrice) {
   return t && t.dir === 'Sell' ? Number(fromPrice) - Number(toPrice) : Number(toPrice) - Number(fromPrice);
+}
+
+function contractValueFor(t) {
+  const configured = Number(t && t.usdPerPriceUnitPerLot);
+  if (configured > 0) return configured;
+  const saved = Number(state && state.contractValues && state.contractValues[t && t.symbol]);
+  return saved > 0 ? saved : 0;
+}
+
+function calculateExitPnl(t, price, lot) {
+  const factor=contractValueFor(t), entry=actualEntry(t), amount=Number(lot);
+  if (!factor || !entry || !Number.isFinite(Number(price)) || !Number.isFinite(amount)) return null;
+  return directionMove(t, entry, Number(price)) * amount * factor;
+}
+
+function validateSLMove(direction, oldSL, newSL) {
+  if (!Number.isFinite(Number(oldSL)) || !Number.isFinite(Number(newSL))) return {ok:false,msg:'กรุณาตรวจสอบราคา SL'};
+  if (Math.abs(Number(newSL)-Number(oldSL))<1e-9) return {ok:false,msg:'กรุณาระบุราคา SL ที่ต่างจากค่าเดิม'};
+  if (direction === 'Buy' && Number(newSL) < Number(oldSL)) return {ok:false,msg:'SL ใหม่ต้องสูงกว่าหรือเท่ากับเดิมสำหรับออเดอร์ BUY'};
+  if (direction === 'Sell' && Number(newSL) > Number(oldSL)) return {ok:false,msg:'SL ใหม่ต้องต่ำกว่าหรือเท่ากับเดิมสำหรับออเดอร์ SELL'};
+  return {ok:true};
+}
+
+function slMoveEvents(trade) {
+  const history=Array.isArray(trade&&trade.slHistory)?trade.slHistory:(trade&&trade.slHistory&&typeof trade.slHistory==='object'?Object.values(trade.slHistory):[]);
+  return history.filter(event => event && event.type && ['breakEven','trailing','manual'].includes(event.type)).sort((a,b)=>Number(a.timestamp||Date.parse(a.at)||0)-Number(b.timestamp||Date.parse(b.at)||0));
 }
 
 function plannedRR(t) {
@@ -851,18 +1006,53 @@ const state = {
   syncStatus:   'offline',
   authMode:     'signin',
   authError:    '',
-  calYear:      new Date().getFullYear(),
-  calMonth:     new Date().getMonth(),
+  calYear:      Number(today().slice(0,4)),
+  calMonth:     Number(today().slice(5,7))-1,
   f: {
     date:today(), symbol:'GOLD', dir:'Buy', entry:'', plannedTp:'',
     sl:'', lot:'', tf:'1H',
-    conf:false, fear:false, greed:false, account: savedLastAccount, entryImage:''
+    conf:false, fear:false, greed:false, account: savedLastAccount, entryImage:'', session:marketSessionAt(), sessionAuto:true, usdPerPriceUnitPerLot:''
   },
   exitImageDrafts: {},
+  editImageDrafts: {},
+  slEditMode: {},
+  slError: {},
+  contractValues: load(KEY.CONTRACT_VALUES, {}),
+  dailySnapshots: load(KEY.DAILY_SNAPSHOTS, {}),
+  deletedTradeIds: load(KEY.DELETED_TRADES, []),
+  deletedCfIds: load(KEY.DELETED_CFS, []),
   cf: { date:today(), type:'Deposit', amount:'', desc:'', account: savedLastAccount },
-  filter: { symbol:'ALL', status:'ALL', period:{mode:'all'}, account: savedLastAccount },
-  statsPeriod: { mode:'all', account: savedLastAccount }
+  filter: { symbol:'ALL', status:'ALL', period:{mode:'all'}, account: savedLastAccount, session:'ALL' },
+  statsPeriod: { mode:'all', account: savedLastAccount, session:'ALL', symbol:'ALL' }
 };
+
+function normalizeTradeSchema(trade) {
+  if(!trade||typeof trade!=='object')return trade;
+  const initial=initialStop(trade),history=Array.isArray(trade.slHistory)?trade.slHistory:(trade.slHistory&&typeof trade.slHistory==='object'?Object.values(trade.slHistory):[]);
+  let prior=initial;
+  const migrated=[];
+  history.forEach(event=>{
+    if(!event)return;
+    if(event.type&&['breakEven','trailing','manual'].includes(event.type)){
+      const next={...event,id:event.id||uid(),newSL:Number(event.newSL??event.price)||prior,oldSL:Number(event.oldSL)||prior,priceAtAdjustment:Number(event.priceAtAdjustment)||Number(trade.currentPrice)||actualEntry(trade),timestamp:Number(event.timestamp)||Date.parse(event.at||'')||Date.now()};
+      next.at=event.at||new Date(next.timestamp).toISOString();
+      if(!Number.isFinite(Number(next.rAtAdjustment))){const risk=Math.abs(actualEntry(trade)-initial);next.rAtAdjustment=risk?directionMove(trade,actualEntry(trade),next.priceAtAdjustment)/risk:null;}
+      migrated.push(next);prior=Number(next.newSL);return;
+    }
+    if(/initial/i.test(String(event.note||''))){prior=Number(event.price)||initial;return;}
+    const nextSL=Number(event.newSL??event.price);
+    if(!nextSL||Math.abs(nextSL-prior)<1e-9)return;
+    const at=event.at||new Date(Number(event.timestamp)||Date.now()).toISOString(),risk=Math.abs(actualEntry(trade)-initial),price=Number(event.priceAtAdjustment)||Number(trade.currentPrice)||actualEntry(trade);
+    migrated.push({id:event.id||uid(),timestamp:Number(event.timestamp)||Date.parse(at)||Date.now(),at,oldSL:Number(event.oldSL)||prior,newSL:nextSL,type:'manual',priceAtAdjustment:price,rAtAdjustment:risk?directionMove(trade,actualEntry(trade),price)/risk:null,price:nextSL,note:'Manual SL update'});prior=nextSL;
+  });
+  trade.initialSl=initial;trade.currentSl=Number(trade.currentSL??trade.currentSl)||prior||initial;trade.currentSL=trade.currentSl;trade.slHistory=migrated;
+  trade.exits=(Array.isArray(trade.exits)?trade.exits:(trade.exits&&typeof trade.exits==='object'?Object.values(trade.exits):[])).filter(Boolean).map(event=>({...event,id:event.id||uid()}));
+  if(!trade.session)trade.session=trade.openedAt||trade.createdAt?marketSessionAt(new Date(trade.openedAt||trade.createdAt)):'Unknown';
+  trade.currentPrice=Number(trade.currentPrice)||actualEntry(trade);
+  return trade;
+}
+state.trades=(Array.isArray(state.trades)?state.trades:[]).map(normalizeTradeSchema);
+save(KEY.TRADES,state.trades);
 
 /* ─── 📊 CSV EXPORT UTILITY FOR AI AGENTS (AGENT_SHARK / AGENT_BEE) ───────── */
 function exportTradesToCSV(trades, filename) {
@@ -948,16 +1138,17 @@ function getConsecutiveLossLock(account) {
   const targetAcc = account || (state.f ? state.f.account : 'Demo') || 'Demo';
   const tDate = today();
   const allTrades = Array.isArray(state.trades) ? state.trades : [];
-  const todayTrades = allTrades.filter(t => t && t.date === tDate && (targetAcc === 'ALL' || (t.account || 'Demo') === targetAcc));
-  const todaySLTrades = todayTrades.filter(t => t && t.status === 'SL');
+  const todayTrades = allTrades.filter(t => t && (tradeOpenedDate(t)===tDate || exitEvents(t).some(e=>e.at&&bangkokDate(new Date(e.at))===tDate)) && (targetAcc === 'ALL' || (t.account || 'Demo') === targetAcc));
+  const todaySLTrades = todayTrades.filter(t => t && isClosedTrade(t) && t.status === 'SL' && (exitEvents(t).some(e=>e.at&&bangkokDate(new Date(e.at))===tDate)||(!exitEvents(t).length&&t.date===tDate)));
 
   const lockKey = `${targetAcc}_${tDate}`;
   let lockUntil = state.lossLocks ? state.lossLocks[lockKey] : undefined;
 
   // Auto initialize lock timestamp ONLY if undefined (not recorded yet and not explicitly cleared with 0)
   if (todaySLTrades.length >= 2 && (lockUntil === undefined || lockUntil === null)) {
-    const latestSL = todaySLTrades[todaySLTrades.length - 1];
-    const baseTime = (latestSL && latestSL.createdAt) ? new Date(latestSL.createdAt).getTime() : Date.now();
+    const latestSL = todaySLTrades.slice().sort((a,b)=>(Date.parse(a.closedAt||a.updatedAt||a.createdAt||'')||0)-(Date.parse(b.closedAt||b.updatedAt||b.createdAt||'')||0)).slice(-1)[0];
+    const lastExit=latestSL&&exitEvents(latestSL).slice(-1)[0];
+    const baseTime = Date.parse(lastExit&&lastExit.at||latestSL&&latestSL.closedAt||latestSL&&latestSL.updatedAt||latestSL&&latestSL.createdAt||'') || Date.now();
     lockUntil = baseTime + (2 * 60 * 60 * 1000);
     if (!state.lossLocks) state.lossLocks = {};
     state.lossLocks[lockKey] = lockUntil;
@@ -1032,28 +1223,44 @@ function getDailyRiskStats(account) {
   const accTrades = allTrades.filter(t => t && (targetAcc === 'ALL' || (t.account || 'Demo') === targetAcc));
   const accCFs = safeCFs.filter(c => c && (targetAcc === 'ALL' || (c.account || 'Demo') === targetAcc));
 
-  // 3. Current Net Equity
-  const totalNetDeposit = accCFs.reduce((s, cf) => s + (cf.type === 'Deposit' ? Number(cf.amount) || 0 : -Number(cf.amount) || 0), 0);
-  const totalTradePnL = accTrades.reduce((s, t) => s + (Number(t.pnl) || 0), 0);
-  const currentEquity = baseBal + totalNetDeposit + totalTradePnL;
-
-  // 4. Today's Trades & Deposits
   const tDate = today();
-  const todayTrades = accTrades.filter(t => t.date === tDate);
-  const todayCFs = accCFs.filter(c => c.date === tDate);
-
-  const todayPnL = todayTrades.reduce((s, t) => s + (Number(t.pnl) || 0), 0);
-  const todayNetDeposit = todayCFs.reduce((s, cf) => s + (cf.type === 'Deposit' ? Number(cf.amount) || 0 : -Number(cf.amount) || 0), 0);
-
-  // 5. Start of Day Balance = Current Equity - Today PnL - Today Net Deposits
-  const startOfDayBal = Math.max(1, currentEquity - todayPnL - todayNetDeposit);
+  const accountKey = targetAcc === 'ALL' ? 'ALL' : targetAcc;
+  if (!state.dailySnapshots[tDate]) state.dailySnapshots[tDate] = {};
+  let snapshot = state.dailySnapshots[tDate][accountKey];
+  const realizedOn = (trade, date) => {
+    const exits = exitEvents(trade);
+    if (exits.length) return exits.filter(e => e.at && bangkokDate(new Date(e.at)) === date).reduce((sum,e)=>sum+(Number(e.pnl)||0),0);
+    return isClosedTrade(trade) && trade.date === date ? Number(trade.pnl)||0 : 0;
+  };
+  const openFloat = accTrades.filter(t=>tradeLifecycle(t)==='OPEN').reduce((sum,t)=>{
+    const remaining=remainingLot(t), pnl=calculateExitPnl(t, Number(t.currentPrice)||actualEntry(t), remaining);
+    return sum+(pnl===null?0:pnl);
+  },0);
+  if (!snapshot) {
+    const beforeDatePnl=accTrades.reduce((sum,t)=>{
+      if (exitEvents(t).length) return sum+exitEvents(t).filter(e=>e.at && bangkokDate(new Date(e.at))<tDate).reduce((s,e)=>s+(Number(e.pnl)||0),0);
+      return sum+(isClosedTrade(t)&&t.date<tDate?(Number(t.pnl)||0):0);
+    },0);
+    const beforeDateCash=accCFs.filter(c=>c.date<tDate).reduce((sum,c)=>sum+(c.type==='Deposit'?1:-1)*(Number(c.amount)||0),0);
+    snapshot={startEquity:Math.max(1,baseBal+beforeDateCash+beforeDatePnl+openFloat),openFloating:openFloat,createdAt:new Date().toISOString(),source:'journal-ledger'};
+    state.dailySnapshots[tDate][accountKey]=snapshot;
+    save(KEY.DAILY_SNAPSHOTS,state.dailySnapshots);
+    if (currentUser) syncToCloud();
+  }
+  const todayTrades=accTrades.filter(t=>tradeOpenedDate(t)===tDate || exitEvents(t).some(e=>e.at&&bangkokDate(new Date(e.at))===tDate) || (!exitEvents(t).length&&t.date===tDate));
+  const todayPnL=accTrades.reduce((sum,t)=>sum+realizedOn(t,tDate),0)+openFloat-(Number(snapshot.openFloating)||0);
+  const todayCFs=accCFs.filter(c=>c.date===tDate);
+  const todayNetDeposit=todayCFs.reduce((sum,cf)=>sum+(cf.type==='Deposit'?1:-1)*(Number(cf.amount)||0),0);
+  const startOfDayBal=Math.max(1,Number(snapshot.startEquity)||baseBal);
+  const currentEquity=startOfDayBal+todayPnL+todayNetDeposit;
 
   // 6. Drawdown Calculations
   const maxDDPct = typeof state.maxDailyDD === 'number' && state.maxDailyDD > 0 ? state.maxDailyDD : 5.0;
   let todayDDUSD = 0;
   let todayDDPct = 0;
-  if (todayPnL < 0) {
-    todayDDUSD = Math.abs(todayPnL);
+  const netToday=todayPnL;
+  if (netToday < 0) {
+    todayDDUSD = Math.abs(netToday);
     todayDDPct = (todayDDUSD / startOfDayBal) * 100;
   }
 
@@ -1110,9 +1317,131 @@ function getCloudUserRef() {
   return (firebaseDb && currentUser) ? firebaseDb.ref(`users/${currentUser.uid}`) : null;
 }
 
+function crc32(bytes){let crc=0xffffffff;for(const byte of bytes){crc^=byte;for(let j=0;j<8;j++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}return(crc^0xffffffff)>>>0;}
+function zipStore(entries){
+  const encoder=new TextEncoder(),locals=[],centrals=[];let offset=0;
+  for(const entry of entries){const name=encoder.encode(entry.name),data=typeof entry.data==='string'?encoder.encode(entry.data):entry.data,crc=crc32(data);const local=new Uint8Array(30+name.length+data.length),v=new DataView(local.buffer);v.setUint32(0,0x04034b50,true);v.setUint16(4,20,true);v.setUint16(6,0,true);v.setUint16(8,0,true);v.setUint16(10,0,true);v.setUint16(12,0x21,true);v.setUint32(14,crc,true);v.setUint32(18,data.length,true);v.setUint32(22,data.length,true);v.setUint16(26,name.length,true);v.setUint16(28,0,true);local.set(name,30);local.set(data,30+name.length);locals.push(local);
+    const central=new Uint8Array(46+name.length),c=new DataView(central.buffer);c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0,true);c.setUint16(10,0,true);c.setUint16(12,0,true);c.setUint16(14,0x21,true);c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,name.length,true);c.setUint16(30,0,true);c.setUint16(32,0,true);c.setUint16(34,0,true);c.setUint16(36,0,true);c.setUint32(38,0,true);c.setUint32(42,offset,true);central.set(name,46);centrals.push(central);offset+=local.length;
+  }
+  const centralSize=centrals.reduce((sum,item)=>sum+item.length,0),end=new Uint8Array(22),ev=new DataView(end.buffer);ev.setUint32(0,0x06054b50,true);ev.setUint16(4,0,true);ev.setUint16(6,0,true);ev.setUint16(8,entries.length,true);ev.setUint16(10,entries.length,true);ev.setUint32(12,centralSize,true);ev.setUint32(16,offset,true);ev.setUint16(20,0,true);return new Blob([...locals,...centrals,end],{type:'application/zip'});
+}
+function unzipStore(buffer){
+  const bytes=new Uint8Array(buffer),view=new DataView(buffer),decoder=new TextDecoder(),files={};let offset=0;
+  while(offset+4<=bytes.length&&view.getUint32(offset,true)===0x04034b50){const method=view.getUint16(offset+8,true),compressed=view.getUint32(offset+18,true),nameLen=view.getUint16(offset+26,true),extraLen=view.getUint16(offset+28,true);if(method!==0)throw new Error('ไฟล์ ZIP นี้ใช้วิธีบีบอัดที่ไม่รองรับ');const name=decoder.decode(bytes.slice(offset+30,offset+30+nameLen)),start=offset+30+nameLen+extraLen;files[name]=bytes.slice(start,start+compressed);offset=start+compressed;}
+  if(!files['backup.json'])throw new Error('ไม่พบ backup.json ในไฟล์ ZIP');return files;
+}
+function bytesToDataUrl(bytes,mime='image/jpeg'){let binary='';for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,Math.min(i+0x8000,bytes.length)));return `data:${mime};base64,${btoa(binary)}`;}
+async function imageBytes(src,storagePath){if(!src)return null;if(String(src).startsWith('data:'))return new Uint8Array(await dataUrlBlob(src).arrayBuffer());if(storagePath&&firebaseStorage){try{return await firebaseStorage.ref(storagePath).getBytes(2*1024*1024);}catch{}}try{const response=await fetch(src);if(!response.ok)throw new Error('download failed');return new Uint8Array(await response.arrayBuffer());}catch{return null;}}
+async function downloadOrShare(blob,filename){
+  const file=typeof File==='function'?new File([blob],filename,{type:blob.type||'application/octet-stream'}):null;
+  if(file&&navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:filename});const status=document.getElementById('export-status');if(status)status.textContent=`พร้อมแชร์ไฟล์ ${filename}`;return;}catch(err){if(err&&err.name==='AbortError')return;}}
+  const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=filename;link.click();setTimeout(()=>URL.revokeObjectURL(url),1500);const status=document.getElementById('export-status');if(status)status.textContent=`สร้าง ${filename} แล้ว ตรวจดูโฟลเดอร์ Downloads หรือเลือกแชร์`;beep('win');
+}
+
+function createMonthlyMarkdown(account,month){
+  const trades=(state.trades||[]).filter(t=>isClosedTrade(t)&&String(t.date||'').startsWith(month)&&(account==='ALL'||(t.account||'Demo')===account));
+  const pnl=trades.reduce((s,t)=>s+(Number(t.pnl)||0),0),wins=trades.filter(t=>Number(t.pnl)>0).length,losses=trades.filter(t=>Number(t.pnl)<0).length,grossWin=trades.filter(t=>Number(t.pnl)>0).reduce((s,t)=>s+Number(t.pnl),0),grossLoss=Math.abs(trades.filter(t=>Number(t.pnl)<0).reduce((s,t)=>s+Number(t.pnl),0)),sessions=['Asia','London','New York','Overlap','Unknown'].map(session=>({session,pnl:trades.filter(t=>tradeSession(t)===session).reduce((s,t)=>s+(Number(t.pnl)||0),0)}));
+  const moves=trades.reduce((s,t)=>s+slMoveEvents(t).length,0),be=trades.filter(t=>slMoveEvents(t).some(e=>e.type==='breakEven')).length;
+  const dailyPnl=new Map();trades.forEach(t=>dailyPnl.set(t.date,(dailyPnl.get(t.date)||0)+(Number(t.pnl)||0)));
+  let cumulative=0,peak=0,maxRealizedDd=0;[...dailyPnl.keys()].sort().forEach(date=>{cumulative+=dailyPnl.get(date);peak=Math.max(peak,cumulative);maxRealizedDd=Math.max(maxRealizedDd,peak-cumulative);});
+  const protectedRs=trades.map(t=>slMoveEvents(t).slice(-1)[0]).filter(e=>e&&e.rAtAdjustment!==null&&e.rAtAdjustment!==undefined&&Number.isFinite(Number(e.rAtAdjustment))).map(e=>Number(e.rAtAdjustment));
+  const symbols=[...new Set(trades.map(t=>t.symbol||'Unknown'))].map(symbol=>{const list=trades.filter(t=>(t.symbol||'Unknown')===symbol),sum=list.reduce((s,t)=>s+(Number(t.pnl)||0),0);return `| ${symbol} | ${list.length} | ${sum>=0?'+':''}$${fmt(sum,2)} |`;}).join('\n');
+  const rows=trades.slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))).map(t=>`| ${t.date||''} | ${t.symbol||''} | ${t.dir||''} | ${tradeSession(t)} | ${fmt(t.entry,2)} → ${fmt(t.exit,2)} | ${fmt(t.lot,2)} | ${Number(t.pnl)>=0?'+':''}${fmt(t.pnl,2)} | ${fmtR(realizedR(t))} | ${slMoveEvents(t).length} |`).join('\n');
+  return `# OWL Trader · Monthly Report\n\n- Month: ${month}\n- Account: ${account}\n- Trades: ${trades.length}\n- Net P&L: ${pnl>=0?'+':''}$${fmt(pnl,2)}\n- Win rate: ${trades.length?(wins/trades.length*100).toFixed(1):'0.0'}% (${wins} wins / ${losses} losses)\n- Profit factor: ${grossLoss? (grossWin/grossLoss).toFixed(2):(grossWin?'∞':'0.00')}\n- Expectancy: ${trades.length?'$'+fmt(pnl/trades.length,2):'$0.00'} per trade\n- Max realized drawdown from monthly P&L curve: $${fmt(maxRealizedDd,2)} (closed trades only)\n- Average last protected R: ${protectedRs.length?`${(protectedRs.reduce((a,b)=>a+b,0)/protectedRs.length).toFixed(2)}R`:'—'}\n- SL moves: ${moves}\n- Trades that reached Break Even: ${be}${trades.length?` (${(be/trades.length*100).toFixed(1)}%)`:''}\n\n## Session result\n\n${sessions.map(s=>`- ${s.session}: ${s.pnl>=0?'+':''}$${fmt(s.pnl,2)}`).join('\n')}\n\n## Asset result\n\n| Asset | Trades | Net P&L |\n|---|---:|---:|\n${symbols||'| — | 0 | $0.00 |'}\n\n## Trades\n\n| Date | Symbol | Side | Session | Entry → Exit | Lot | Net P&L (USD) | R | SL moves |\n|---|---|---|---|---:|---:|---:|---:|---:|\n${rows||'| — | — | — | — | — | — | — | — | — |'}\n`;
+}
+
+function createPortfolioMarkdown(month,account){
+  const chosen=(state.trades||[]).filter(t=>isClosedTrade(t)&&(month==='ALL'||String(t.date||'').startsWith(month))&&(account==='ALL'||(t.account||'Demo')===account));
+  const accounts=[...new Set(chosen.map(t=>t.account||'Demo'))];
+  const rows=accounts.map(name=>{const trades=chosen.filter(t=>(t.account||'Demo')===name),pnl=trades.reduce((s,t)=>s+(Number(t.pnl)||0),0),wins=trades.filter(t=>Number(t.pnl)>0).length;return `| ${name} | ${trades.length} | ${pnl>=0?'+':''}$${fmt(pnl,2)} | ${trades.length?(wins/trades.length*100).toFixed(1):'0.0'}% |`;}).join('\n');
+  const total=chosen.reduce((s,t)=>s+(Number(t.pnl)||0),0);
+  return `# OWL Trader · Portfolio Summary\n\n- Period: ${month==='ALL'?'All time':month}\n- Scope: ${account==='ALL'?'All accounts':account}\n- Total closed trades: ${chosen.length}\n- Combined net P&L: ${total>=0?'+':''}$${fmt(total,2)}\n- Created: ${new Date().toISOString()}\n\n## By account\n\n| Account | Trades | Net P&L | Win rate |\n|---|---:|---:|---:|\n${rows||'| — | 0 | $0.00 | 0.0% |'}\n`;
+}
+
+async function createBackupZip(){
+  const backup={version:12,exportedAt:new Date().toISOString(),balances:state.balances,trades:JSON.parse(JSON.stringify(state.trades||[])),cfs:state.cfs||[],maxDailyDD:state.maxDailyDD,lossLocks:state.lossLocks,dailySnapshots:state.dailySnapshots,contractValues:state.contractValues,deletedTradeIds:state.deletedTradeIds||[],deletedCfIds:state.deletedCfIds||[]};
+  const files=[{name:'backup.json',data:''}];
+  for(const trade of backup.trades){
+    if(trade.entryImage||trade.entryImageUrl){const path=`images/${trade.id}/entry.jpg`,bytes=await imageBytes(trade.entryImage||trade.entryImageUrl,trade.entryImageStoragePath);if(!bytes)throw new Error(`ดึงรูป Entry ของ ${trade.symbol||trade.id} ไม่ได้ จึงหยุดเพื่อไม่ให้ Backup ขาดรูป`);files.push({name:path,data:bytes});trade.entryImage=path;delete trade.entryImageUrl;delete trade.entryImageStoragePath;}
+    const exits=exitEvents(trade);trade.exits=exits;for(let i=0;i<exits.length;i++){const event=exits[i];if(event.image||event.imageUrl){const path=`images/${trade.id}/exit-${event.id||i}.jpg`,bytes=await imageBytes(event.image||event.imageUrl,event.imageStoragePath);if(!bytes)throw new Error(`ดึงรูป Exit ของ ${trade.symbol||trade.id} ไม่ได้ จึงหยุดเพื่อไม่ให้ Backup ขาดรูป`);files.push({name:path,data:bytes});event.image=path;delete event.imageUrl;delete event.imageStoragePath;}}
+  }
+  files[0].data=JSON.stringify(backup,null,2);return zipStore(files);
+}
+
+async function parseBackupFile(file){
+  if(file.name.toLowerCase().endsWith('.zip')){
+    const files=unzipStore(await file.arrayBuffer()),decoder=new TextDecoder(),backup=JSON.parse(decoder.decode(files['backup.json']));
+    for(const trade of backup.trades||[]){if(String(trade.entryImage||'').startsWith('images/')){const bytes=files[trade.entryImage];trade.entryImage=bytes?bytesToDataUrl(bytes):'';}
+      trade.exits=exitEvents(trade);for(const event of trade.exits)if(String(event.image||'').startsWith('images/')){const bytes=files[event.image];event.image=bytes?bytesToDataUrl(bytes):'';}}
+    return backup;
+  }
+  return JSON.parse(await file.text());
+}
+
 function hasLocalUserData() {
   return (Array.isArray(state.trades) && state.trades.length > 0) ||
     (Array.isArray(state.cfs) && state.cfs.length > 0);
+}
+
+function recordsAsMap(records) {
+  const result={};
+  const list=Array.isArray(records)?records:(records&&typeof records==='object'?Object.values(records):[]);
+  list.filter(r=>r&&r.id).forEach(r=>{result[r.id]=result[r.id]?mergeTradeRecord(result[r.id],r):r;});
+  return result;
+}
+
+function mergeTradeRecord(a,b) {
+  if (!a) return b; if (!b) return a;
+  const winner=String(b.updatedAt||b.closedAt||b.openedAt||'')>=String(a.updatedAt||a.closedAt||a.openedAt||'')?b:a;
+  const events=new Map();
+  const history=t=>Array.isArray(t&&t.slHistory)?t.slHistory:(t&&t.slHistory&&typeof t.slHistory==='object'?Object.values(t.slHistory):[]);
+  [...history(a),...history(b)].forEach(e=>{if(e)events.set(e.id||`${e.timestamp||e.at||''}:${e.type||e.note||''}:${e.newSL??e.price??''}`,e);});
+  const exits=new Map();
+  [...exitEvents(a),...exitEvents(b)].forEach(e=>{if(e)exits.set(e.id||`${e.at||''}:${e.price||''}:${e.lot||''}`,e);});
+  const deletedExitIds=[...new Set([...(a.deletedExitIds||[]),...(b.deletedExitIds||[])])];
+  const deletedSlEventIds=[...new Set([...(a.deletedSlEventIds||[]),...(b.deletedSlEventIds||[])])];
+  const merged={...a,...b,...winner,deletedExitIds,deletedSlEventIds,slHistory:[...events.values()].filter(e=>!deletedSlEventIds.includes(e.id)).sort((x,y)=>Number(x.timestamp||Date.parse(x.at)||0)-Number(y.timestamp||Date.parse(y.at)||0)),exits:[...exits.values()].filter(e=>!deletedExitIds.includes(e.id)).sort((x,y)=>Date.parse(x.at||0)-Date.parse(y.at||0))};
+  if (merged.exits.length && merged.pnlMode!=='manual') { merged.pnl=merged.exits.reduce((sum,e)=>sum+(Number(e.pnl)||0),0); merged.pnlMode='auto'; }
+  return merged;
+}
+
+function dataUrlBlob(dataUrl) {
+  const [meta,body]=String(dataUrl).split(','); const binary=atob(body||''); const bytes=new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+  return new Blob([bytes],{type:(meta.match(/^data:(.*?);base64/)||[])[1]||'image/jpeg'});
+}
+
+async function uploadTradeImages(trades) {
+  if(!firebaseStorage||!currentUser)return;
+  for(const trade of trades){
+    if(!trade||!trade.id)continue;
+    if(safeTradeImage(trade.entryImage)?.startsWith('data:')&&!trade.entryImageUrl){
+      const path=`users/${currentUser.uid}/trades/${trade.id}/entry.jpg`;
+      try{const ref=firebaseStorage.ref(path);await ref.put(dataUrlBlob(trade.entryImage),{contentType:'image/jpeg'});trade.entryImageStoragePath=path;trade.entryImageUrl=await ref.getDownloadURL();trade.entryImage=trade.entryImageUrl;}
+      catch(err){console.warn('Entry photo Storage upload failed; keeping local photo.',err);}
+    }
+    for(const event of exitEvents(trade)){
+      if(!event||!safeTradeImage(event.image)?.startsWith('data:')||event.imageUrl)continue;
+      const eventId=event.id||uid(),path=`users/${currentUser.uid}/trades/${trade.id}/exits/${eventId}.jpg`;
+      try{const ref=firebaseStorage.ref(path);await ref.put(dataUrlBlob(event.image),{contentType:'image/jpeg'});event.id=eventId;event.imageStoragePath=path;event.imageUrl=await ref.getDownloadURL();event.image=event.imageUrl;}
+      catch(err){console.warn('Exit photo Storage upload failed; keeping local photo.',err);}
+    }
+  }
+}
+
+function tradeForCloud(trade) {
+  const copy=JSON.parse(JSON.stringify(trade));
+  copy.currentSL=currentStop(copy);copy.currentSl=copy.currentSL;
+  const history=Array.isArray(copy.slHistory)?copy.slHistory:(copy.slHistory&&typeof copy.slHistory==='object'?Object.values(copy.slHistory):[]);
+  copy.slHistory=Object.fromEntries(history.filter(Boolean).map(event=>[event.id||`sl-${event.timestamp||Date.now()}`,event]));
+  if(String(copy.entryImage||'').startsWith('data:'))copy.entryImage=copy.entryImageUrl||'';
+  if(Array.isArray(copy.exits))copy.exits=copy.exits.map(e=>{if(String(e.image||'').startsWith('data:'))e.image=e.imageUrl||'';return e;});
+  return copy;
+}
+
+function cloudPayload() {
+  const legacyBalance=(state.balances&&state.balances.Demo)?state.balances.Demo:10000;
+  return {schemaVersion:2,ownerUid:currentUser.uid,trades:Object.fromEntries((state.trades||[]).filter(t=>t&&t.id).map(t=>[t.id,tradeForCloud(t)])),cfs:recordsAsMap(state.cfs),balances:state.balances||DEFAULT_BALANCES,balance:legacyBalance,maxDailyDD:state.maxDailyDD||5,lossLocks:state.lossLocks||{},dailySnapshots:state.dailySnapshots||{},contractValues:state.contractValues||{},deletedTradeIds:state.deletedTradeIds||[],deletedCfIds:state.deletedCfIds||[],updatedAt:new Date().toISOString()};
 }
 
 function syncToCloud() {
@@ -1124,44 +1453,49 @@ function syncToCloud() {
   state.syncStatus = 'syncing';
   updateSyncBadge();
 
-  const legacyBalance = (state.balances && state.balances['Demo']) ? state.balances['Demo'] : 10000;
-  const payload = {
-    schemaVersion: 1,
-    ownerUid: currentUser.uid,
-    trades: state.trades || [],
-    cfs: state.cfs || [],
-    balances: state.balances || DEFAULT_BALANCES,
-    balance: legacyBalance,
-    maxDailyDD: state.maxDailyDD || 5.0,
-    lossLocks: state.lossLocks || {},
-    updatedAt: new Date().toISOString()
+  const run=async()=>{
+    const localTrades=state.trades||[]; await uploadTradeImages(localTrades);save(KEY.TRADES,localTrades);
+    const payload=cloudPayload();
+    cloudDataRef.transaction(current=>{
+      if(!current)return payload;
+      const cloudTrades=recordsAsMap(current.trades),nextTrades={...cloudTrades};
+      Object.values(payload.trades).forEach(t=>{nextTrades[t.id]=mergeTradeRecord(nextTrades[t.id],t);});
+      const deletedTradeIds=[...new Set([...(current.deletedTradeIds||[]),...(payload.deletedTradeIds||[])])];
+      deletedTradeIds.forEach(id=>delete nextTrades[id]);
+      const cloudCfs=recordsAsMap(current.cfs),nextCfs={...cloudCfs,...payload.cfs};
+      const deletedCfIds=[...new Set([...(current.deletedCfIds||[]),...(payload.deletedCfIds||[])])];
+      deletedCfIds.forEach(id=>delete nextCfs[id]);
+      return {...current,...payload,trades:nextTrades,cfs:nextCfs,deletedTradeIds,deletedCfIds};
+    },(err,result)=>{
+      if(err||!result?.committed){console.error('Firebase Sync Error:',err);state.syncStatus='offline';}
+      else{
+        state.syncStatus='synced';
+      }
+      updateSyncBadge();
+    },false);
   };
-
-  cloudDataRef.set(payload, (err) => {
-    if (err) {
-      console.error("Firebase Sync Error:", err);
-      state.syncStatus = 'offline';
-    } else {
-      state.syncStatus = 'synced';
-    }
-    updateSyncBadge();
-  });
+  Promise.resolve().then(run).catch(err=>{console.error('Firebase Sync Error:',err);state.syncStatus='offline';updateSyncBadge();});
 }
 
 function applyCloudData(data) {
   if (!data) return;
+  state.deletedTradeIds=[...new Set([...(state.deletedTradeIds||[]),...(Array.isArray(data.deletedTradeIds)?data.deletedTradeIds:[])])];
+  state.deletedCfIds=[...new Set([...(state.deletedCfIds||[]),...(Array.isArray(data.deletedCfIds)?data.deletedCfIds:[])])];
+  save(KEY.DELETED_TRADES,state.deletedTradeIds);save(KEY.DELETED_CFS,state.deletedCfIds);
+  const deletedTrades=new Set(state.deletedTradeIds);
   const remoteTrades = Array.isArray(data.trades) ? data.trades : (data.trades ? Object.values(data.trades) : []);
   const localTrades = Array.isArray(state.trades) ? state.trades : [];
   const tradeMap = new Map();
-  remoteTrades.forEach(t => { if (t && t.id) tradeMap.set(t.id, t); });
-  localTrades.forEach(t => { if (t && t.id && !tradeMap.has(t.id)) tradeMap.set(t.id, t); });
+  remoteTrades.forEach(t => { if (t && t.id&&!deletedTrades.has(t.id)) tradeMap.set(t.id,mergeTradeRecord(tradeMap.get(t.id),normalizeTradeSchema(t))); });
+  localTrades.forEach(t => { if (t && t.id&&!deletedTrades.has(t.id)) tradeMap.set(t.id,mergeTradeRecord(tradeMap.get(t.id),t)); });
   state.trades = Array.from(tradeMap.values());
 
+  const deletedCfs=new Set(state.deletedCfIds);
   const remoteCFs = Array.isArray(data.cfs) ? data.cfs : (data.cfs ? Object.values(data.cfs) : []);
   const localCFs = Array.isArray(state.cfs) ? state.cfs : [];
   const cfMap = new Map();
-  remoteCFs.forEach(c => { if (c && c.id) cfMap.set(c.id, c); });
-  localCFs.forEach(c => { if (c && c.id && !cfMap.has(c.id)) cfMap.set(c.id, c); });
+  remoteCFs.forEach(c => { if (c && c.id&&!deletedCfs.has(c.id)) cfMap.set(c.id, c); });
+  localCFs.forEach(c => { if (c && c.id&&!deletedCfs.has(c.id) && !cfMap.has(c.id)) cfMap.set(c.id, c); });
   state.cfs = Array.from(cfMap.values());
 
   if (data.balances) {
@@ -1177,6 +1511,8 @@ function applyCloudData(data) {
     state.lossLocks = { ...(state.lossLocks || {}), ...data.lossLocks };
     save(KEY.LOSS_LOCK, state.lossLocks);
   }
+  if(data.dailySnapshots){state.dailySnapshots={...(state.dailySnapshots||{}),...data.dailySnapshots};save(KEY.DAILY_SNAPSHOTS,state.dailySnapshots);}
+  if(data.contractValues){state.contractValues={...(state.contractValues||{}),...data.contractValues};save(KEY.CONTRACT_VALUES,state.contractValues);}
   save(KEY.TRADES, state.trades);
   save(KEY.CFS, state.cfs);
   save(KEY.BALANCES, state.balances);
@@ -1193,6 +1529,7 @@ function initCloudDatabase() {
   firebaseDb.ref('.info/connected').on('value', (snap) => {
     if (!currentUser) state.syncStatus = 'offline';
     else if (snap.val() !== true) state.syncStatus = 'offline';
+    else { state.syncStatus='syncing'; syncToCloud(); }
     updateSyncBadge();
   });
 
@@ -1216,6 +1553,7 @@ function initCloudDatabase() {
       if (data) {
         applyCloudData(data);
         state.syncStatus = 'synced';
+        if(Array.isArray(data.trades)||Array.isArray(data.cfs)||Number(data.schemaVersion||0)<2)syncToCloud();
         syncCrtView();
         render();
       } else if (hasLocalUserData()) {
@@ -1403,7 +1741,19 @@ function buildNav() {
 }
 
 function buildHome() {
+  const account=state.f.account||'Demo';
+  const trades=(state.trades||[]).filter(t=>(t.account||'Demo')===account);
+  const open=trades.filter(t=>tradeLifecycle(t)==='OPEN');
+  const protectedCount=open.filter(t=>t.dir==='Sell'?currentStop(t)<actualEntry(t):currentStop(t)>actualEntry(t)).length;
+  const risk=getDailyRiskStats(account);
+  const closedToday=trades.filter(t=>isClosedTrade(t)&&(exitEvents(t).some(e=>e.at&&bangkokDate(new Date(e.at))===today())||(!exitEvents(t).length&&t.date===today()))).length;
   return `
+    <div class="dashboard-summary" aria-label="สรุปสถานะการเทรด">
+      <div class="dashboard-tile"><div class="dashboard-tile-label">OPEN POSITIONS</div><div class="dashboard-tile-value">${open.length}</div><div class="dashboard-tile-note">ออเดอร์ที่กำลังถือ</div></div>
+      <div class="dashboard-tile"><div class="dashboard-tile-label">TODAY P&amp;L</div><div class="dashboard-tile-value ${risk.todayPnL>=0?'glow-green':'glow-red'}">${risk.todayPnL>=0?'+':''}$${fmt(risk.todayPnL,2)}</div><div class="dashboard-tile-note">รวมผลลอยตัวของไม้เปิด</div></div>
+      <div class="dashboard-tile"><div class="dashboard-tile-label">SL PROTECTED</div><div class="dashboard-tile-value glow-cyan">${protectedCount}</div><div class="dashboard-tile-note">SL เลยจุดเข้าแล้ว</div></div>
+      <div class="dashboard-tile"><div class="dashboard-tile-label">CLOSED TODAY</div><div class="dashboard-tile-value">${closedToday}</div><div class="dashboard-tile-note">รายการที่ปิดวันนี้</div></div>
+    </div>
     <div class="card">
       <div class="card-title">
         <span>🦉 OWL TRADING STATION</span>
@@ -1421,6 +1771,7 @@ function buildTradeForm() {
   const f=state.f; const symbols=['GOLD','XAUUSD','BTCUSD','US30','NAS100','EURUSD','GBPUSD','Other']; const tfs=['1M','5M','15M','30M','1H','4H','D1','W1'];
   const accList = getAccountList();
   const currentAcc = f.account || 'Demo';
+  const contractValue=Number(f.usdPerPriceUnitPerLot||state.contractValues[f.symbol])||'';
   const lockInfo = getConsecutiveLossLock(currentAcc);
   const previewTrade = { dir:f.dir, plannedEntry:f.entry, initialSl:f.sl, plannedTp:f.plannedTp };
   const planR = plannedRR(previewTrade);
@@ -1428,22 +1779,23 @@ function buildTradeForm() {
   const rewardDistance = f.entry && f.plannedTp ? Math.abs(Number(f.plannedTp)-Number(f.entry)) : null;
 
   return `
-    <label>🎯 พอร์ตบัญชีปลายทาง (LOCKED PERSISTENT)</label>
+    <label>พอร์ตบัญชี</label>
     <select id="f-account">
       ${accList.map(a => `<option value="${a}" ${f.account===a?'selected':''}>${a}</option>`).join('')}
     </select>
     <label>วันที่ทำรายการ</label><input type="date" id="f-date" value="${f.date}">
+    <div class="trade-meta-row"><div><label>Session (เวลาไทย)</label><select id="f-session"><option value="AUTO" ${f.sessionAuto?'selected':''}>อัตโนมัติตอนเปิด · ${marketSessionAt()}</option>${['Asia','London','New York','Overlap','Unknown'].map(s=>`<option value="${s}" ${!f.sessionAuto&&f.session===s?'selected':''}>${s}</option>`).join('')}</select></div><div><label>Timeframe</label><select id="f-tf">${tfs.map(t=>`<option ${f.tf===t?'selected':''}>${t}</option>`).join('')}</select></div></div>
     <label>คู่เงิน / สินทรัพย์</label><select id="f-symbol">${symbols.map(s=>`<option ${f.symbol===s?'selected':''}>${s}</option>`).join('')}</select>
     <label>ทิศทางคำสั่ง</label>
     <div class="status-row" style="margin-bottom:10px">
       <button class="status-btn ${f.dir==='Buy'?'active-tp':'tp'}" data-dir="Buy">▲ BUY</button>
       <button class="status-btn ${f.dir==='Sell'?'active-sl':'sl'}" data-dir="Sell">▼ SELL</button>
     </div>
-    <label>Timeframe</label><select id="f-tf">${tfs.map(t=>`<option ${f.tf===t?'selected':''}>${t}</option>`).join('')}</select>
     <label>Entry Price (ราคาที่เข้าแล้ว)</label><input type="number" id="f-entry" placeholder="0.00" value="${f.entry}" inputmode="decimal">
     <label>Initial Stop Loss (SL เริ่มต้น)</label><input type="number" id="f-sl" placeholder="0.00" value="${f.sl}" inputmode="decimal">
-    <label>Take Profit (เป้าหมาย)</label><input type="number" id="f-planned-tp" placeholder="0.00" value="${f.plannedTp||''}" inputmode="decimal">
+    <label>Take Profit (ถ้ามี)</label><input type="number" id="f-planned-tp" placeholder="ไม่ใส่ก็ได้" value="${f.plannedTp||''}" inputmode="decimal">
     <label>Lot Size</label><input type="number" id="f-lot" placeholder="0.01" value="${f.lot}" inputmode="decimal">
+    <details class="advanced-field"><summary>ตั้งค่าคำนวณ P&amp;L สำหรับ ${escapeHtml(f.symbol)}</summary><label>มูลค่า USD ต่อราคาที่ขยับ 1.00 ต่อ 1 Lot</label><input type="number" id="f-contract-value" min="0" step="any" value="${contractValue}" placeholder="ใส่ตามสเปกโบรกเกอร์"><button class="btn" type="button" id="btn-save-contract">บันทึกเป็นค่าเริ่มต้นของ ${escapeHtml(f.symbol)}</button><small>ไม่ตั้งค่าก็ยังบันทึก P&amp;L เองได้ ค่านี้ไม่เดาสเปกสัญญาให้</small></details>
     <div class="image-upload">
       <label for="f-entry-image">📷 รูปตอนเข้าออเดอร์ (ไม่บังคับ)</label>
       <input type="file" id="f-entry-image" accept="image/*">
@@ -1452,8 +1804,8 @@ function buildTradeForm() {
     </div>
     <div class="rr-preview" id="plan-rr-preview">
       <div class="rr-cell"><div class="rr-label">R:R</div><div class="rr-value ${planR!==null&&planR>=1?'good':planR!==null&&planR<=0?'bad':''}" id="plan-rr-value">${planR===null?'-':`1:${planR.toFixed(2)}`}</div></div>
-      <div class="rr-cell"><div class="rr-label">RISK DIST.</div><div class="rr-value" id="plan-risk-value">${riskDistance===null?'-':fmt(riskDistance,2)}</div></div>
-      <div class="rr-cell"><div class="rr-label">REWARD DIST.</div><div class="rr-value" id="plan-reward-value">${rewardDistance===null?'-':fmt(rewardDistance,2)}</div></div>
+      <div class="rr-cell"><div class="rr-label">ระยะเสี่ยง</div><div class="rr-value" id="plan-risk-value">${riskDistance===null?'-':fmt(riskDistance,2)}</div></div>
+      <div class="rr-cell"><div class="rr-label">ระยะเป้าหมาย</div><div class="rr-value" id="plan-reward-value">${rewardDistance===null?'-':fmt(rewardDistance,2)}</div></div>
     </div>
     <label>สภาวะอารมณ์ตอนเทรด</label>
     <div class="psych-row">
@@ -1555,6 +1907,7 @@ function buildTradeLog(symbols) {
   if (safeFilter.symbol!=='ALL') filtered=filtered.filter(t=>t && t.symbol===safeFilter.symbol);
   if (tradeView === 'CLOSED' && safeFilter.status!=='ALL') filtered=filtered.filter(t=>t && t.status===safeFilter.status);
   if (safeFilter.account!=='ALL') filtered=filtered.filter(t=>t && (t.account||'Demo')===safeFilter.account);
+  if (safeFilter.session&&safeFilter.session!=='ALL') filtered=filtered.filter(t=>tradeSession(t)===safeFilter.session);
   
   const accList = getAccountList();
   return `
@@ -1572,6 +1925,7 @@ function buildTradeLog(symbols) {
       <select id="flt-symbol" style="flex:1;font-size:7px">${symbols.map(s=>`<option ${safeFilter.symbol===s?'selected':''}>${s}</option>`).join('')}</select>
       ${tradeView==='CLOSED'?`<select id="flt-status" style="flex:1;font-size:7px">${['ALL','TP','SL','BE'].map(s=>`<option ${safeFilter.status===s?'selected':''}>${s}</option>`).join('')}</select>`:''}
     </div>
+    <div class="filter-row"><select id="flt-session"><option value="ALL">ทุก Session</option>${['Asia','London','New York','Overlap','Unknown'].map(s=>`<option value="${s}" ${safeFilter.session===s?'selected':''}>${s}</option>`).join('')}</select></div>
     ${tradeView==='CLOSED'?`<button class="btn btn-green" id="btn-export-filtered-csv" style="margin-bottom:10px; font-size:6.5px; padding:8px 4px;">
       📊 EXPORT CURRENT FILTER (CSV FOR AGENT SHARK / BEE)
     </button>`:''}
@@ -1582,14 +1936,16 @@ function buildTradeEditPanel(t) {
   const symbols=['GOLD','XAUUSD','BTCUSD','US30','NAS100','EURUSD','GBPUSD','Other'];
   const accounts=getAccountList();
   const isClosed=tradeLifecycle(t)==='CLOSED';
+  const exits=exitEvents(t);
   return `
     <div class="manage-box edit-box">
-      <div style="color:#FFD54F;font-size:9px;margin-bottom:8px">✎ EDIT ${isClosed?'TRADE RECORD':'OPEN TRADE'}</div>
+      <div class="section-heading"><span>แก้ไข ${isClosed?'รายการเทรด':'ออเดอร์ที่เปิด'}</span><span class="subtle">บันทึกทันทีเมื่อกดบันทึก</span></div>
       <div class="manage-grid">
-        <div><label>Date</label><input type="date" id="edit-date" value="${escapeHtml(t.date||today())}"></div>
-        <div><label>Account</label><select id="edit-account">${accounts.map(a=>`<option value="${escapeHtml(a)}" ${a===(t.account||'Demo')?'selected':''}>${escapeHtml(a)}</option>`).join('')}</select></div>
-        <div><label>Symbol</label><select id="edit-symbol">${symbols.map(s=>`<option value="${s}" ${s===t.symbol?'selected':''}>${s}</option>`).join('')}</select></div>
-        <div><label>Direction</label><select id="edit-dir"><option value="Buy" ${t.dir==='Buy'?'selected':''}>BUY</option><option value="Sell" ${t.dir==='Sell'?'selected':''}>SELL</option></select></div>
+        <div><label>วันที่</label><input type="date" id="edit-date" value="${escapeHtml(t.date||today())}"></div>
+        <div><label>Session · เวลาไทย</label><select id="edit-session">${['Asia','London','New York','Overlap','Unknown'].map(s=>`<option ${tradeSession(t)===s?'selected':''}>${s}</option>`).join('')}</select></div>
+        <div><label>บัญชี</label><select id="edit-account">${accounts.map(a=>`<option value="${escapeHtml(a)}" ${a===(t.account||'Demo')?'selected':''}>${escapeHtml(a)}</option>`).join('')}</select></div>
+        <div><label>สินทรัพย์</label><select id="edit-symbol">${symbols.map(s=>`<option value="${s}" ${s===t.symbol?'selected':''}>${s}</option>`).join('')}</select></div>
+        <div><label>ทิศทาง</label><select id="edit-dir"><option value="Buy" ${t.dir==='Buy'?'selected':''}>BUY</option><option value="Sell" ${t.dir==='Sell'?'selected':''}>SELL</option></select></div>
         <div><label>Entry</label><input type="number" id="edit-entry" value="${actualEntry(t)||plannedEntry(t)}" inputmode="decimal"></div>
         <div><label>Initial SL</label><input type="number" id="edit-initial-sl" value="${initialStop(t)}" inputmode="decimal"></div>
         <div><label>Current SL</label><input type="number" id="edit-current-sl" value="${t.currentSl||initialStop(t)}" inputmode="decimal"></div>
@@ -1597,10 +1953,16 @@ function buildTradeEditPanel(t) {
         <div><label>Lot Size</label><input type="number" id="edit-lot" value="${t.lot||''}" inputmode="decimal"></div>
         <div><label>Current Price</label><input type="number" id="edit-current-price" value="${t.currentPrice||''}" inputmode="decimal"></div>
         <div><label>Exit Price</label><input type="number" id="edit-exit" value="${t.exit||''}" inputmode="decimal"></div>
-        <div><label>Net P&amp;L (USD)</label><input type="number" id="edit-pnl" value="${Number(t.pnl)||0}" inputmode="decimal"></div>
+        <div><label>P&amp;L รวม (USD)</label><input type="number" id="edit-pnl" value="${Number(t.pnl)||0}" inputmode="decimal" data-manual="${t.pnlMode==='manual'||!exits.length?'true':'false'}"><button type="button" class="trade-action" id="recalc-total-pnl">รวม/คำนวณ P&amp;L ใหม่</button></div>
       </div>
+      <div class="psych-row edit-psych"><label>อารมณ์ตอนเทรด</label>${[['conf','มั่นใจ'],['fear','กลัว'],['greed','โลภ']].map(([k,label])=>`<label class="check-chip"><input type="checkbox" id="edit-psych-${k}" ${(t.psychology||{})[k]?'checked':''}>${label}</label>`).join('')}</div>
+      <details class="advanced-field"><summary>รูปภาพและรายการปิดบางส่วน (${exits.length})</summary>
+        <label>รูปตอนเข้า</label><input type="file" accept="image/*" id="edit-entry-image"><div id="edit-entry-preview">${buildImagePreview((state.editImageDrafts[t.id]||{}).entry||t.entryImageUrl||t.entryImage,'data-clear-edit-entry')}</div>
+        ${exits.map((e,i)=>`<div class="exit-edit-card"><strong>รายการปิด ${i+1}</strong><div class="manage-grid"><div><label>ราคาออก</label><input type="number" id="edit-exit-price-${i}" value="${Number(e.price)||0}" step="any"></div><div><label>Lot</label><input type="number" id="edit-exit-lot-${i}" value="${Number(e.lot)||0}" step="any"></div><div><label>P&amp;L (USD)</label><input type="number" id="edit-exit-pnl-${i}" value="${Number(e.pnl)||0}" step="any" data-manual="${e.pnlMode==='manual'?'true':'false'}"></div><div><label>เหตุผล</label><select id="edit-exit-reason-${i}">${['TP Hit','SL Hit','Manual Close'].map(r=>`<option ${e.reason===r?'selected':''}>${r}</option>`).join('')}</select></div></div><button type="button" class="trade-action" data-recalc-exit-pnl="${i}">คำนวณ P&amp;L ใหม่</button><label class="check-chip"><input type="checkbox" id="delete-exit-event-${i}">ลบรายการปิดนี้</label><label>รูปตอนออก (ไม่บังคับ)</label><input type="file" accept="image/*" data-edit-exit-image="${i}"><div>${buildImagePreview((state.editImageDrafts[t.id]||{})[`exit${i}`]||e.imageUrl||e.image,`data-clear-edit-exit="${i}"`)}</div></div>`).join('')}
+      </details>
+      ${slMoveEvents(t).length?`<details class="advanced-field"><summary>ประวัติการขยับ SL (${slMoveEvents(t).length})</summary>${slMoveEvents(t).map((e,i)=>`<div class="exit-edit-card"><strong>การขยับ SL ${i+1} · ${fmtDate(bangkokDate(new Date(e.timestamp||e.at||Date.now())))}</strong><div class="manage-grid"><div><label>SL เดิม</label><input type="number" id="edit-sl-old-${i}" value="${Number(e.oldSL)||0}" step="any"></div><div><label>SL ใหม่</label><input type="number" id="edit-sl-new-${i}" value="${Number(e.newSL)||0}" step="any"></div><div><label>ราคาตลาดตอนขยับ</label><input type="number" id="edit-sl-price-${i}" value="${Number(e.priceAtAdjustment)||0}" step="any"></div><div><label>ประเภท</label><select id="edit-sl-type-${i}">${[['breakEven','Break Even'],['trailing','Trailing'],['manual','Manual']].map(([v,l])=>`<option value="${v}" ${e.type===v?'selected':''}>${l}</option>`).join('')}</select></div></div><label class="check-chip"><input type="checkbox" id="delete-sl-event-${i}">ลบเหตุการณ์นี้</label></div>`).join('')}</details>`:''}
       ${isClosed?`<div class="manage-grid"><div><label>Status</label><select id="edit-status"><option value="TP" ${t.status==='TP'?'selected':''}>TP</option><option value="SL" ${t.status==='SL'?'selected':''}>SL</option><option value="BE" ${t.status==='BE'?'selected':''}>BE</option></select></div><div><label>Exit Reason</label><select id="edit-exit-reason"><option ${t.exitReason==='TP Hit'?'selected':''}>TP Hit</option><option ${t.exitReason==='SL Hit'?'selected':''}>SL Hit</option><option ${t.exitReason==='Manual Close'?'selected':''}>Manual Close</option></select></div></div>`:''}
-      <div style="display:flex;gap:6px;margin-top:8px"><button class="btn btn-green" data-save-edit-trade="${t.id}" style="flex:1">SAVE EDIT</button><button class="btn" data-cancel-edit-trade="${t.id}" style="flex:1">CANCEL</button></div>
+      <div class="edit-actions"><button class="btn btn-green" data-save-edit-trade="${t.id}">บันทึกการแก้ไข</button><button class="btn" data-cancel-edit-trade="${t.id}">ยกเลิก</button></div>
     </div>`;
 }
 
@@ -1627,6 +1989,7 @@ function buildTradeItem(t) {
       <div class="trade-row"><span class="trade-label">TIMEFRAME</span><span class="trade-value">${t.tf||'1H'}</span></div>
       <div class="trade-row"><span class="trade-label">NET P&L (USD)</span><span class="${pnlClass}">${pnlSign}$${fmt(t.pnl,2)}</span></div>
       <div class="trade-row"><span class="trade-label">PLAN / RESULT</span><span class="trade-value">${plannedRR(t)===null?'-':`1:${plannedRR(t).toFixed(2)}`} / ${fmtR(realizedR(t))}</span></div>
+      <div class="trade-row"><span class="trade-label">SESSION</span><span class="trade-value">${escapeHtml(tradeSession(t))} · ${escapeHtml(t.date||'')}</span></div>
       ${t.exitReason?`<div class="trade-row"><span class="trade-label">EXIT REASON</span><span class="trade-value">${t.exitReason}</span></div>`:''}
        ${emTags?`<div style="margin-top:4px;font-size:10px">${emTags}</div>`:''}
        <div class="trade-actions"><button class="trade-action primary" data-edit-trade="${t.id}">${state.editTradeId===t.id?'CLOSE EDIT':'EDIT RECORD'}</button></div>
@@ -1644,7 +2007,7 @@ function buildActiveTradeItem(t) {
   const protectedR = levelR(t, t.currentSl || initialStop(t));
   const realized = realizedR(t);
   const remaining = remainingLot(t);
-  const moves = Array.isArray(t.slHistory) ? t.slHistory : [];
+  const moves = slMoveEvents(t);
   const exits = exitEvents(t);
   return `
     <div class="trade-item">
@@ -1656,12 +2019,13 @@ function buildActiveTradeItem(t) {
       <div class="trade-row"><span class="trade-label">${lifecycle==='PLANNED'?'PLAN ENTRY / TP':'ENTRY / TP'}</span><span class="trade-value">${fmt(plannedEntry(t),2)} → ${fmt(plannedTarget(t),2)}</span></div>
       <div class="trade-row"><span class="trade-label">INITIAL / CURRENT SL</span><span class="trade-value">${fmt(initialStop(t),2)} / ${fmt(t.currentSl||initialStop(t),2)}</span></div>
       <div class="trade-row"><span class="trade-label">LOT REMAINING</span><span class="trade-value">${fmt(remaining,2)} / ${fmt(t.lot,2)}</span></div>
+      <div class="trade-row"><span class="trade-label">SESSION · CURRENT SL</span><span class="trade-value">${escapeHtml(tradeSession(t))} · ${fmt(t.currentSl||initialStop(t),2)}</span></div>
       <div class="rr-preview">
         <div class="rr-cell"><div class="rr-label">PLAN</div><div class="rr-value">${plan===null?'-':`1:${plan.toFixed(2)}`}</div></div>
         <div class="rr-cell"><div class="rr-label">FLOAT</div><div class="rr-value ${currentR!==null&&currentR>=0?'good':'bad'}">${isOpen?fmtR(currentR):'-'}</div></div>
         <div class="rr-cell"><div class="rr-label">PROTECTED / DONE</div><div class="rr-value ${((realized||0)+(protectedR||0))>=0?'good':'bad'}">${isOpen?fmtR(protectedR):fmtR(realized)}</div></div>
       </div>
-      ${moves.length?`<div class="timeline"><strong>SL:</strong> ${moves.map(m=>fmt(m.price,2)).join(' → ')}</div>`:''}
+      ${moves.length?`<div class="timeline"><strong>SL:</strong> ${moves.map(m=>`${escapeHtml(m.type)} ${fmt(m.newSL??m.price,2)}${Number.isFinite(Number(m.rAtAdjustment))?` (${fmtR(m.rAtAdjustment)})`:''}`).join(' → ')}</div>`:''}
       ${exits.length?`<div class="timeline"><strong>EXITS:</strong> ${exits.map(e=>`${fmt(e.price,2)} (${fmt(e.lot,2)} lot / ${Number(e.pnl)>=0?'+':''}$${fmt(e.pnl,2)})`).join(' · ')}</div>`:''}
       ${lifecycle!=='CANCELLED'?`<div class="trade-actions">
         <button class="trade-action primary" data-manage-trade="${t.id}">${isManaging?'CLOSE PANEL':isOpen?'UPDATE / CLOSE':'CONFIRM ENTRY'}</button>
@@ -1690,8 +2054,25 @@ function buildManageTradePanel(t) {
       <button class="btn btn-green" data-confirm-open="${t.id}">► OPEN POSITION</button>
     </div>`;
   const remaining = remainingLot(t);
+  const entry=actualEntry(t), currentSl=currentStop(t), currentPrice=Number(t.currentPrice)||entry;
+  const favorable=t.dir==='Sell'?currentPrice<entry:currentPrice>entry;
+  const beyondEntry=t.dir==='Sell'?currentSl<entry:currentSl>entry;
+  const atEntry=Math.abs(currentSl-entry)<1e-9;
+  const beDisabled=!favorable||beyondEntry||atEntry;
+  const slMode=state.slEditMode[t.id]||'';
+  const slError=state.slError[t.id]||'';
   return `
     <div class="manage-box">
+      <section class="sl-manager">
+        <div class="section-heading"><span>จัดการ Stop Loss</span><span class="subtle">Current ${fmt(currentSl,2)}</span></div>
+        <div class="sl-action-row">
+          <button class="trade-action primary" data-break-even="${t.id}" ${beDisabled?'disabled':''}>↗ Break Even</button>
+          <button class="trade-action" data-open-trail="${t.id}">⌁ Trail SL</button>
+        </div>
+        <div class="sl-hint">${!favorable?'Break Even ใช้ได้เมื่อราคาวิ่งเป็นบวกเลย Entry':beyondEntry?'SL อยู่เลย Entry แล้ว ไม่ควรเลื่อนกลับมาเพิ่มความเสี่ยง':atEntry?'SL อยู่ที่ Entry แล้ว':'เลื่อน SL ได้เฉพาะทางที่ลดความเสี่ยง'}</div>
+        ${slMode==='trail'?`<div class="trail-editor"><div class="mode-switch"><button type="button" class="${state.slDistanceMode?'':'active'}" data-sl-mode="price">ระบุราคา SL</button><button type="button" class="${state.slDistanceMode?'active':''}" data-sl-mode="distance">ระยะจากราคาปัจจุบัน</button></div><label id="trail-sl-label">${state.slDistanceMode?'ระยะราคา (เช่น 10.00)':'ราคา SL ใหม่'}</label><input type="number" id="trail-sl-value" step="any" value="${state.slDistanceMode?'':currentSl}" placeholder="${state.slDistanceMode?'กรอกระยะราคา':'กรอกราคา SL'}" inputmode="decimal"><small>หน่วยเป็นราคาจริงของสินทรัพย์ ไม่ใช่ pip/tick</small><button class="btn btn-green" data-save-trail="${t.id}">บันทึก SL ใหม่</button></div>`:''}
+        ${slError?`<div class="inline-error">${escapeHtml(slError)}</div>`:''}
+      </section>
       <div class="manage-grid">
         <div><label>Current Price</label><input type="number" id="manage-current-price" value="${t.currentPrice||''}" placeholder="กรอกเอง" inputmode="decimal"></div>
         <div><label>Current SL</label><input type="number" id="manage-current-sl" value="${t.currentSl||initialStop(t)}" inputmode="decimal"></div>
@@ -1701,8 +2082,8 @@ function buildManageTradePanel(t) {
       <div class="manage-grid">
         <div><label>Exit Price</label><input type="number" id="manage-exit-price" placeholder="ราคาที่ปิด" inputmode="decimal"></div>
         <div><label>Exit Lot</label><input type="number" id="manage-exit-lot" value="${remaining}" max="${remaining}" inputmode="decimal"></div>
-        <div><label>Net P&amp;L (USD)</label><input type="number" id="manage-exit-pnl" placeholder="+/- สุทธิ" inputmode="decimal"></div>
-        <div><label>Exit Reason</label><select id="manage-exit-reason"><option>TP Hit</option><option>SL Hit</option><option>Trailing SL</option><option>Manual Close</option><option>Break Even</option></select></div>
+        <div><label>Net P&amp;L (USD)</label><input type="number" id="manage-exit-pnl" placeholder="${contractValueFor(t)?'คำนวณให้อัตโนมัติ แก้ตัวเลขได้':'กรอกสุทธิเอง'}" inputmode="decimal"><button type="button" class="trade-action" id="recalc-manage-exit-pnl">คำนวณอัตโนมัติใหม่</button><small id="exit-pnl-hint">${contractValueFor(t)?`คำนวณจากตัวคูณ ${fmt(contractValueFor(t),4)} ไม่รวมค่าคอมมิชชัน/Swap · แก้ช่องนี้เพื่อระบุเอง`:'ตั้งค่าตัวคูณในรายละเอียดสินทรัพย์ หรือกรอกเอง'}</small></div>
+        <div><label>Exit Reason</label><select id="manage-exit-reason"><option>TP Hit</option><option>SL Hit</option><option>Manual Close</option></select></div>
       </div>
       <div class="image-upload">
         <label for="manage-exit-image">📷 รูปตอนออกออเดอร์ (ไม่บังคับ)</label>
@@ -1710,8 +2091,59 @@ function buildManageTradePanel(t) {
         <span class="image-upload-hint">แนบภาพได้กับรายการปิดบางส่วนหรือปิดทั้งหมด</span>
         <div id="manage-exit-image-preview">${buildImagePreview((state.exitImageDrafts||{})[t.id]||'', `data-clear-exit-image="${t.id}"`)}</div>
       </div>
-      <button class="btn btn-green" data-record-exit="${t.id}">► RECORD PARTIAL / CLOSE</button>
+      <button class="btn btn-green" data-record-exit="${t.id}">บันทึกการปิดบางส่วน / ปิดไม้</button>
     </div>`;
+}
+
+function refreshExitPnlEstimate() {
+  const trade=state.trades.find(t=>t&&t.id===state.manageTradeId);
+  const input=document.getElementById('manage-exit-pnl');
+  if (!trade || !input || input.dataset.manual==='true' || !contractValueFor(trade)) return;
+  const price=Number(document.getElementById('manage-exit-price')?.value), lot=Number(document.getElementById('manage-exit-lot')?.value);
+  if (!price || !lot) { input.value=''; return; }
+  const pnl=calculateExitPnl(trade,price,lot);
+  input.value=pnl===null?'':pnl.toFixed(2);
+}
+
+function addSLMove(trade,newSL,type,price) {
+  const oldSL=currentStop(trade);
+  const check=validateSLMove(trade.dir,oldSL,newSL);
+  if(!check.ok)throw new Error(check.msg);
+  const entry=actualEntry(trade),risk=Math.abs(entry-initialStop(trade));
+  const now=Date.now();
+  const event={id:firebaseDb&&firebaseDb.ref?firebaseDb.ref().push().key:uid(),timestamp:now,at:new Date(now).toISOString(),oldSL,newSL:Number(newSL),type,priceAtAdjustment:Number(price)||entry,rAtAdjustment:risk?directionMove(trade,entry,Number(price)||entry)/risk:null,price:Number(newSL),note:type==='breakEven'?'Break Even':type==='trailing'?'Trailing SL':'Manual SL update'};
+  const history=Array.isArray(trade.slHistory)?trade.slHistory:(trade.slHistory&&typeof trade.slHistory==='object'?Object.values(trade.slHistory):[]);
+  const updated={...trade,currentSl:Number(newSL),currentSL:Number(newSL),currentPrice:Number(price)||trade.currentPrice,updatedAt:new Date(now).toISOString(),slHistory:[...history.filter(e=>e&&e.type),event]};
+  return {updated,event};
+}
+
+async function saveSLAdjustment(tradeId,newSL,type,price) {
+  const local=state.trades.find(t=>t&&t.id===tradeId);if(!local)return false;
+  try{
+    let updated;
+    if(firebaseDb&&currentUser&&cloudDataRef&&navigator.onLine){
+      const ref=cloudDataRef.child('trades').child(tradeId);
+      let validationError='';
+      const tx=await new Promise((resolve,reject)=>ref.transaction(remote=>{
+        const source=remote?mergeTradeRecord(remote,local):local;
+        const oldSL=currentStop(source);
+        const check=validateSLMove(source.dir,oldSL,newSL);
+        if(!check.ok){validationError=check.msg;return;}
+        if((source.dir==='Buy'&&Number(newSL)>=Number(price))||(source.dir==='Sell'&&Number(newSL)<=Number(price))){validationError='SL ใหม่ต้องอยู่ด้านที่ยังไม่ถูกแตะของราคาปัจจุบัน';return;}
+        return tradeForCloud(addSLMove(source,newSL,type,price).updated);
+      },(error,result)=>error?reject(error):resolve(result),false));
+      if(!tx.committed){if(validationError)throw new Error(validationError);throw new Error('ยังบันทึก SL บน Firebase ไม่สำเร็จ');}
+      updated=mergeTradeRecord(local,tx.snapshot.val());
+    }else{
+      updated=addSLMove(local,newSL,type,price).updated;
+    }
+    const index=state.trades.findIndex(t=>t&&t.id===tradeId);state.trades[index]=updated;
+    save(KEY.TRADES,state.trades);state.slError[tradeId]='';state.slEditMode[tradeId]='';
+    if(firebaseDb&&currentUser&&navigator.onLine)state.syncStatus='synced';else syncToCloud();
+    beep('win');render();return true;
+  }catch(error){
+    state.slError[tradeId]=error.message||'บันทึกการขยับ SL ไม่สำเร็จ';render();return false;
+  }
 }
 
 function buildCFLog() {
@@ -1827,12 +2259,27 @@ function buildWeekdayBreakdown(filteredTrades) {
     </div>`;
 }
 
+function buildSLAdjustmentStats(trades) {
+  const safe=Array.isArray(trades)?trades:[];
+  const counts=safe.map(t=>slMoveEvents(t).length);
+  const be=safe.filter(t=>slMoveEvents(t).some(e=>e.type==='breakEven')).length;
+  const lastEvents=safe.map(t=>slMoveEvents(t).slice(-1)[0]).filter(e=>e&&e.rAtAdjustment!==null&&e.rAtAdjustment!==undefined&&Number.isFinite(Number(e.rAtAdjustment)));
+  const avgProtected=lastEvents.length?lastEvents.reduce((sum,e)=>sum+Number(e.rAtAdjustment),0)/lastEvents.length:null;
+  const closedRs=safe.map(realizedR).filter(Number.isFinite);
+  const avgClosed=closedRs.length?closedRs.reduce((a,b)=>a+b,0)/closedRs.length:null;
+  const totalMoves=counts.reduce((a,b)=>a+b,0);
+  const timeline=safe.filter(t=>slMoveEvents(t).length).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).slice(0,8);
+  return `<section class="stats-block sl-stats"><div class="stats-block-title">ประวัติการปกป้อง Stop Loss</div><div class="inner-grid"><div class="stat-subbox"><div class="stat-sublabel">เฉลี่ยครั้งที่ขยับ / เทรด</div><div class="stat-subvalue glow-cyan">${safe.length?(totalMoves/safe.length).toFixed(2):'0.00'}</div></div><div class="stat-subbox"><div class="stat-sublabel">เคย Break Even</div><div class="stat-subvalue glow-green">${safe.length?((be/safe.length)*100).toFixed(1):'0.0'}%</div></div><div class="stat-subbox"><div class="stat-sublabel">R เฉลี่ยที่ปกป้องล่าสุด</div><div class="stat-subvalue glow-green">${avgProtected===null?'—':`${avgProtected>=0?'+':''}${avgProtected.toFixed(2)}R`}</div></div><div class="stat-subbox"><div class="stat-sublabel">R ปิดจริงเฉลี่ย (ฐาน Initial SL)</div><div class="stat-subvalue">${avgClosed===null?'—':`${avgClosed>=0?'+':''}${avgClosed.toFixed(2)}R`}</div></div></div><div class="sl-timeline-list">${timeline.length?timeline.map(t=>`<div class="sl-timeline-row"><strong>${escapeHtml(t.symbol)} · ${fmtDate(t.date)}</strong><div class="sl-pixel-track">${slMoveEvents(t).map(e=>{const r=Number(e.rAtAdjustment)||0;const width=Math.min(100,Math.max(4,Math.abs(r)*20));return `<span class="sl-pixel ${r<0?'negative':''}" style="width:${width}%" title="${escapeHtml(e.type)} ${r.toFixed(2)}R"></span>`;}).join('')}</div><small>${slMoveEvents(t).map(e=>`${escapeHtml(e.type)} ${Number(e.rAtAdjustment)>=0?'+':''}${Number(e.rAtAdjustment||0).toFixed(2)}R`).join(' · ')}</small></div>`).join(''):'<div class="empty">ยังไม่มีเหตุการณ์ขยับ SL ในช่วงที่เลือก</div>'}</div></section>`;
+}
+
 function buildStats() {
-  const p = state.statsPeriod || { mode: 'all', account: 'ALL' }; 
+  const p = state.statsPeriod || { mode: 'all', account: 'ALL', session:'ALL', symbol:'ALL' };
   const targetAcc = p.account || 'ALL'; 
   const allTrades = (Array.isArray(state.trades) ? state.trades : []).filter(isClosedTrade);
   let filtered = filterByPeriod(allTrades, p);
   if (targetAcc !== 'ALL') filtered = filtered.filter(t => t && (t.account || 'Demo') === targetAcc);
+  if(p.session&&p.session!=='ALL')filtered=filtered.filter(t=>tradeSession(t)===p.session);
+  if(p.symbol&&p.symbol!=='ALL')filtered=filtered.filter(t=>t&&t.symbol===p.symbol);
 
   let accStartBal = 0;
   const safeBalances = state.balances || DEFAULT_BALANCES;
@@ -1842,10 +2289,10 @@ function buildStats() {
     accStartBal = Number(safeBalances[targetAcc]) || 0;
   }
 
-  const todayTrades=allTrades.filter(tr=>tr && tr.date===today() && (targetAcc === 'ALL' || (tr.account || 'Demo') === targetAcc));
-  const todayPnl=todayTrades.reduce((s,tr)=>s+(Number(tr.pnl)||0),0); 
+  const todayTrades=allTrades.filter(tr=>tr && (tradeOpenedDate(tr)===today()||exitEvents(tr).some(e=>e.at&&bangkokDate(new Date(e.at))===today())) && (targetAcc === 'ALL' || (tr.account || 'Demo') === targetAcc));
+  const todayPnl=todayTrades.reduce((sum,tr)=>sum+realizedPnlOnDate(tr,today()),0);
   const st=computeStats(filtered, accStartBal); 
-  const chartTrades = allTrades.filter(t => targetAcc === 'ALL' || (t.account||'Demo') === targetAcc);
+  const chartTrades = allTrades.filter(t => (targetAcc === 'ALL' || (t.account||'Demo') === targetAcc) && (!p.session||p.session==='ALL'||tradeSession(t)===p.session) && (!p.symbol||p.symbol==='ALL'||t.symbol===p.symbol));
   const chartCashflows = (Array.isArray(state.cfs)?state.cfs:[]).filter(cf => targetAcc === 'ALL' || (cf.account||'Demo') === targetAcc);
   
   const safeCFs = Array.isArray(state.cfs) ? state.cfs : [];
@@ -1871,6 +2318,7 @@ function buildStats() {
           ${accList.map(a => `<option value="${a}" ${p.account===a?'selected':''}>${a}</option>`).join('')}
         </select>
       </div>
+      <div class="filter-row stats-extra-filters"><select id="stats-session"><option value="ALL">ทุก Session</option>${['Asia','London','New York','Overlap','Unknown'].map(s=>`<option value="${s}" ${p.session===s?'selected':''}>${s}</option>`).join('')}</select><select id="stats-symbol"><option value="ALL" ${p.symbol==='ALL'?'selected':''}>ทุกสินทรัพย์</option>${['GOLD','XAUUSD','BTCUSD','US30','NAS100','EURUSD','GBPUSD','Other'].map(s=>`<option value="${s}" ${p.symbol===s?'selected':''}>${s}</option>`).join('')}</select></div>
 
       <!-- 📦 BLOCK 1: ACCOUNT PROFILE -->
       <div class="stats-block">
@@ -1906,6 +2354,8 @@ function buildStats() {
           </div>
         </div>
       </div>
+
+      ${buildSLAdjustmentStats(filtered)}
 
       <!-- 📦 BLOCK 3: WEEKDAY PERFORMANCE MODULE -->
       ${buildWeekdayBreakdown(filtered)}
@@ -2033,6 +2483,7 @@ function buildPieChart(st) {
 function buildSettings() {
   const accList = getAccountList();
   const safeBalances = state.balances || DEFAULT_BALANCES;
+  const reportMonth=today().slice(0,7),reportAccount=state.f.account||'Demo';
   return `
     <div class="card">
       <div class="card-title"><span>⚙ CONFIG OPERATIONS</span></div>
@@ -2073,6 +2524,12 @@ function buildSettings() {
         `).join('')}
       </div>
       <button class="btn btn-green" id="btn-save-all-bal" style="margin-bottom:8px">💾 SAVE ALL BALANCES</button>
+
+      <div class="divider"></div>
+      <div class="section-heading"><span>ตัวคูณ P&amp;L ตามสัญญาโบรกเกอร์</span><span class="subtle">ต่อราคา 1.00 / 1 Lot</span></div>
+      <p class="helper-copy">ตั้ง USD ต่อการขยับราคา 1.00 ต่อ 1 Lot ให้ตรงกับสัญญาของโบรกเกอร์ ระบบจะคำนวณ P&amp;L ให้อัตโนมัติและยังแก้ตัวเลขจริงตอนปิดได้</p>
+      <div class="contract-profile-grid">${['GOLD','XAUUSD','BTCUSD','US30','NAS100','EURUSD','GBPUSD','Other'].map(s=>`<label>${s}<input type="number" step="any" min="0" data-contract-symbol="${s}" value="${state.contractValues[s]||''}" placeholder="ยังไม่ตั้ง"></label>`).join('')}</div>
+      <button class="btn btn-green" id="btn-save-contract-profiles">บันทึกตัวคูณสินทรัพย์</button>
       
       <div style="margin-top:10px;">
         <label>➕ สร้างบัญชีพอร์ตใหม่ (DYNAMIC ACCOUNT)</label>
@@ -2083,11 +2540,11 @@ function buildSettings() {
       </div>
 
       <div class="divider"></div>
-      <div style="color:#FFD54F;font-size:7px;margin-bottom:8px">💾 DATA DISK & AI AGENTS EXPORT</div>
-      <button class="btn btn-green" id="btn-export-all-csv" style="margin-bottom:8px">📊 EXPORT ALL TRADES (CSV FOR AGENT SHARK / BEE)</button>
-      <button class="btn btn-green" id="btn-backup" style="margin-bottom:8px">▼ BACKUP CORE DATA (JSON)</button>
-      <button class="btn" id="btn-import-trigger" style="margin-bottom:8px">▲ IMPORT DATA DISK</button>
-      <input type="file" id="btn-import" accept=".json" style="display:none">
+      <div class="section-heading"><span>ส่งออกและสำรองข้อมูล</span><span class="subtle">Obsidian · CSV · Backup</span></div>
+      <div class="manage-grid"><div><label>บัญชีรายงาน</label><select id="export-account"><option value="${escapeHtml(reportAccount)}">${escapeHtml(reportAccount)}</option><option value="ALL">รวมทุกบัญชี</option>${accList.filter(a=>a!==reportAccount).map(a=>`<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('')}</select></div><div><label>เดือนรายงาน</label><input type="month" id="export-month" value="${reportMonth}"></div></div>
+      <div class="export-actions"><button class="btn btn-green" id="btn-export-monthly-md">รายงานรายเดือน (.md)</button><button class="btn" id="btn-export-portfolio-md">สรุปพอร์ตรายเดือน (.md)</button><button class="btn" id="btn-export-portfolio-all-md">สรุปพอร์ตทั้งหมด (.md)</button><button class="btn" id="btn-export-raw-json">ส่งออกข้อมูลดิบ (.json)</button><button class="btn" id="btn-export-all-csv">ส่งออก Trades (.csv)</button><button class="btn btn-green" id="btn-backup">สำรองข้อมูลพร้อมรูป (.zip)</button><button class="btn" id="btn-import-trigger">นำเข้า ZIP หรือ JSON</button></div>
+      <div id="export-status" class="export-status" aria-live="polite"></div>
+      <input type="file" id="btn-import" accept=".json,.zip,application/zip" style="display:none">
       
       <div class="divider"></div>
       <div style="color:#FF4E63;font-size:7px;margin-bottom:8px">⚠ DANGER ZONE DEPOT</div>
@@ -2201,14 +2658,23 @@ function attachEvents() {
 
   const liveF = {
     'f-date': v => state.f.date = v,
-    'f-symbol': v => state.f.symbol = v,
+    'f-symbol': v => { state.f.symbol = v; state.f.usdPerPriceUnitPerLot=state.contractValues[v]||''; const factor=document.getElementById('f-contract-value'); if(factor)factor.value=state.f.usdPerPriceUnitPerLot; },
     'f-tf': v => state.f.tf = v,
     'f-entry': v => state.f.entry = v,
     'f-sl': v => state.f.sl = v,
     'f-planned-tp': v => state.f.plannedTp = v,
-    'f-lot': v => state.f.lot = v
+    'f-lot': v => state.f.lot = v,
+    'f-contract-value': v => state.f.usdPerPriceUnitPerLot = v
   };
   Object.entries(liveF).forEach(([id, fn]) => { const el = document.getElementById(id); if (el) el.addEventListener('input', e => { fn(e.target.value); updatePlanPreview(); }); });
+  const sessionInput=document.getElementById('f-session'); if(sessionInput)sessionInput.addEventListener('change',e=>{state.f.sessionAuto=e.target.value==='AUTO';state.f.session=state.f.sessionAuto?marketSessionAt(new Date()):e.target.value;render();});
+  const saveContract=document.getElementById('btn-save-contract');
+  if(saveContract)saveContract.addEventListener('click',()=>{
+    const value=Number(document.getElementById('f-contract-value')?.value);
+    if(!value||value<=0){alert('ใส่มูลค่า USD ต่อราคา 1.00 ต่อ 1 Lot จากข้อมูลสัญญาของโบรกเกอร์');return;}
+    state.contractValues[state.f.symbol]=value; state.f.usdPerPriceUnitPerLot=value;
+    save(KEY.CONTRACT_VALUES,state.contractValues); syncToCloud(); beep('win'); render();
+  });
 
   const fAcc = document.getElementById('f-account');
   if (fAcc) fAcc.addEventListener('change', e => updateActiveAccount(e.target.value));
@@ -2254,6 +2720,74 @@ function attachEvents() {
     finally { if (saveButton) saveButton.disabled = false; }
   });
 
+  const editEntryImage=document.getElementById('edit-entry-image');
+  if(editEntryImage)editEntryImage.addEventListener('change',async e=>{
+    const file=e.target.files&&e.target.files[0];if(!file)return;
+    try{const img=await compressTradeImage(file);state.editImageDrafts[state.editTradeId]={...(state.editImageDrafts[state.editTradeId]||{}),entry:img};const preview=document.getElementById('edit-entry-preview');if(preview)preview.innerHTML=buildImagePreview(img,'data-clear-edit-entry');bindEditImageClear();}
+    catch(err){alert(err.message||'เตรียมรูปไม่สำเร็จ');e.target.value='';}
+  });
+  document.querySelectorAll('[data-edit-exit-image]').forEach(input=>input.addEventListener('change',async e=>{
+    const file=e.target.files&&e.target.files[0];if(!file)return;const index=Number(e.target.dataset.editExitImage),tradeId=state.editTradeId;
+    try{const img=await compressTradeImage(file);state.editImageDrafts[tradeId]={...(state.editImageDrafts[tradeId]||{}),[`exit${index}`]:img};const preview=input.parentElement.querySelector('div:last-child');if(preview)preview.innerHTML=buildImagePreview(img,`data-clear-edit-exit="${index}"`);bindEditImageClear();}
+    catch(err){alert(err.message||'เตรียมรูปไม่สำเร็จ');e.target.value='';}
+  }));
+  function bindEditImageClear(){
+    document.querySelectorAll('[data-clear-edit-entry]').forEach(btn=>btn.onclick=()=>{state.editImageDrafts[state.editTradeId]={...(state.editImageDrafts[state.editTradeId]||{}),entry:null};document.getElementById('edit-entry-preview').innerHTML='';});
+    document.querySelectorAll('[data-clear-edit-exit]').forEach(btn=>btn.onclick=()=>{state.editImageDrafts[state.editTradeId]={...(state.editImageDrafts[state.editTradeId]||{}),[`exit${btn.dataset.clearEditExit}`]:null};btn.closest('.image-preview').remove();});
+  }
+  bindEditImageClear();
+
+  const editPnlInput=document.getElementById('edit-pnl');
+  if(editPnlInput)editPnlInput.addEventListener('input',()=>{editPnlInput.dataset.manual='true';});
+  ['edit-exit-price-','edit-exit-lot-'].forEach(prefix=>document.querySelectorAll(`[id^="${prefix}"]`).forEach(input=>input.addEventListener('input',()=>{
+    const index=Number(input.id.slice(prefix.length)),pnlInput=document.getElementById(`edit-exit-pnl-${index}`);
+    if(!pnlInput||pnlInput.dataset.manual==='true')return;
+    const trade=state.trades.find(t=>t&&t.id===state.editTradeId),price=Number(document.getElementById(`edit-exit-price-${index}`)?.value),lot=Number(document.getElementById(`edit-exit-lot-${index}`)?.value);
+    const estimate=trade&&calculateExitPnl(trade,price,lot);if(estimate!==null)pnlInput.value=estimate.toFixed(2);
+  })));
+  document.querySelectorAll('[data-recalc-exit-pnl]').forEach(button=>button.addEventListener('click',()=>{
+    const index=Number(button.dataset.recalcExitPnl),trade=state.trades.find(t=>t&&t.id===state.editTradeId),price=Number(document.getElementById(`edit-exit-price-${index}`)?.value),lot=Number(document.getElementById(`edit-exit-lot-${index}`)?.value),estimate=trade&&calculateExitPnl(trade,price,lot);
+    if(estimate===null){alert('ยังคำนวณไม่ได้ กรุณาตั้งตัวคูณ P&L ของสินทรัพย์ก่อน');return;}
+    const input=document.getElementById(`edit-exit-pnl-${index}`);input.value=estimate.toFixed(2);input.dataset.manual='false';
+  }));
+  const recalcTotal=document.getElementById('recalc-total-pnl');
+  if(recalcTotal)recalcTotal.addEventListener('click',()=>{
+    const trade=state.trades.find(t=>t&&t.id===state.editTradeId),exits=trade&&exitEvents(trade);let value=null;
+    if(exits&&exits.length){value=exits.reduce((sum,event,index)=>sum+(Number(document.getElementById(`edit-exit-pnl-${index}`)?.value)||0),0);}
+    else if(trade){const price=Number(document.getElementById('edit-exit')?.value)||Number(trade.exit),lot=Number(document.getElementById('edit-lot')?.value)||Number(trade.lot);value=calculateExitPnl(trade,price,lot);}
+    if(value===null){alert('ยังคำนวณไม่ได้ กรุณาตั้งตัวคูณ P&L ของสินทรัพย์ก่อน');return;}
+    const input=document.getElementById('edit-pnl');input.value=value.toFixed(2);input.dataset.manual='false';
+  });
+
+  ['manage-exit-price','manage-exit-lot'].forEach(id=>{const input=document.getElementById(id);if(input)input.addEventListener('input',refreshExitPnlEstimate);});
+  const exitPnlInput=document.getElementById('manage-exit-pnl');
+  if(exitPnlInput)exitPnlInput.addEventListener('input',()=>{exitPnlInput.dataset.manual='true';const hint=document.getElementById('exit-pnl-hint');if(hint)hint.textContent='ใช้ค่าที่แก้เอง';});
+  const recalcExitPnl=document.getElementById('recalc-manage-exit-pnl');
+  if(recalcExitPnl)recalcExitPnl.addEventListener('click',()=>{if(!contractValueFor(state.trades.find(t=>t&&t.id===state.manageTradeId))){alert('ตั้งค่าตัวคูณ P&L ของสินทรัพย์นี้ก่อน');return;}exitPnlInput.dataset.manual='false';refreshExitPnlEstimate();const hint=document.getElementById('exit-pnl-hint');if(hint)hint.textContent='คำนวณอัตโนมัติ ไม่รวมค่าคอมมิชชันและ Swap · แก้ตัวเลขได้';});
+  refreshExitPnlEstimate();
+
+  document.querySelectorAll('[data-open-trail]').forEach(el=>el.addEventListener('click',()=>{
+    state.slEditMode[el.dataset.openTrail]='trail'; state.slError[el.dataset.openTrail]=''; state.slDistanceMode=false; render();
+  }));
+  document.querySelectorAll('[data-sl-mode]').forEach(el=>el.addEventListener('click',()=>{state.slDistanceMode=el.dataset.slMode==='distance';render();}));
+  document.querySelectorAll('[data-break-even]').forEach(el=>el.addEventListener('click',async()=>{
+    const trade=state.trades.find(t=>t&&t.id===el.dataset.breakEven);if(!trade)return;
+    const entry=actualEntry(trade),oldSl=Number(trade.currentSl||initialStop(trade)),price=Number(trade.currentPrice)||entry;
+    const favorable=trade.dir==='Sell'?price<entry:price>entry,beyond=trade.dir==='Sell'?oldSl<entry:oldSl>entry;
+    if(!favorable||beyond||Math.abs(oldSl-entry)<1e-9)return;
+    if(!confirm(`ย้าย SL ไปที่ Entry (${fmt(entry,2)})?`))return;
+    await saveSLAdjustment(trade.id,entry,'breakEven',price);
+  }));
+  document.querySelectorAll('[data-save-trail]').forEach(el=>el.addEventListener('click',async()=>{
+    const trade=state.trades.find(t=>t&&t.id===el.dataset.saveTrail);if(!trade)return;
+    const raw=Number(document.getElementById('trail-sl-value')?.value),price=Number(trade.currentPrice)||actualEntry(trade);
+    const newSl=state.slDistanceMode?(trade.dir==='Sell'?price+raw:price-raw):raw;
+    const validation=validateSLMove(trade.dir,Number(trade.currentSl||initialStop(trade)),newSl);
+    if(!Number.isFinite(newSl)||newSl<=0||!validation.ok){state.slError[trade.id]=validation.ok?'กรอกราคา SL ที่ถูกต้อง':validation.msg;render();return;}
+    if((trade.dir==='Buy'&&newSl>=price)||(trade.dir==='Sell'&&newSl<=price)){state.slError[trade.id]='SL ใหม่ต้องอยู่ด้านที่ยังไม่ถูกแตะของราคาปัจจุบัน';render();return;}
+    await saveSLAdjustment(trade.id,newSl,'trailing',price);
+  }));
+
   document.querySelectorAll('[data-dir]').forEach(el => { el.addEventListener('click', () => { state.f.dir = el.dataset.dir; render(); }); });
   document.querySelectorAll('[data-psych]').forEach(el => { el.addEventListener('click', () => { const k = el.dataset.psych; state.f[k] = !state.f[k]; el.classList.toggle('checked'); beep('click'); }); });
   document.querySelectorAll('[data-trade-view]').forEach(el => { el.addEventListener('click', () => { state.tradeView = el.dataset.tradeView; state.manageTradeId = null; render(); }); });
@@ -2265,8 +2799,11 @@ function attachEvents() {
   const fltAcc = document.getElementById('flt-account'); if (fltAcc) fltAcc.addEventListener('change', e => updateActiveAccount(e.target.value));
   const fltSym = document.getElementById('flt-symbol'); if (fltSym) fltSym.addEventListener('change', e => { if (!state.filter) state.filter = { account: 'ALL', symbol: 'ALL', status: 'ALL', period: { mode: 'all' } }; state.filter.symbol = e.target.value; render(); });
   const fltSt = document.getElementById('flt-status'); if (fltSt) fltSt.addEventListener('change', e => { if (!state.filter) state.filter = { account: 'ALL', symbol: 'ALL', status: 'ALL', period: { mode: 'all' } }; state.filter.status = e.target.value; render(); });
+  const fltSession=document.getElementById('flt-session');if(fltSession)fltSession.addEventListener('change',e=>{state.filter.session=e.target.value;render();});
   
   const statsAcc = document.getElementById('stats-account'); if (statsAcc) statsAcc.addEventListener('change', e => updateActiveAccount(e.target.value));
+  const statsSession=document.getElementById('stats-session');if(statsSession)statsSession.addEventListener('change',e=>{state.statsPeriod.session=e.target.value;render();});
+  const statsSymbol=document.getElementById('stats-symbol');if(statsSymbol)statsSymbol.addEventListener('change',e=>{state.statsPeriod.symbol=e.target.value;render();});
 
   bindPeriodFilter('log', state.filter ? state.filter.period : { mode: 'all' }, (p) => { state.filter.period = p; render(); });
   bindPeriodFilter('stats', state.statsPeriod || { mode: 'all', account: 'ALL' }, (p) => { state.statsPeriod = p; render(); });
@@ -2276,11 +2813,11 @@ function attachEvents() {
   if (btnTrade) btnTrade.addEventListener('click', () => {
     const f = state.f;
     const entry=Number(f.entry), stop=Number(f.sl), target=Number(f.plannedTp), lot=Number(f.lot);
-    if (!entry || !stop || !target || !lot || lot <= 0) {
-      alert('กรอก Entry Price, Initial SL, Take Profit และ Lot ให้ครบถ้วน');
+    if (!entry || !stop || !lot || lot <= 0) {
+      alert('กรอก Entry Price, Initial SL และ Lot ให้ครบถ้วน ส่วน Take Profit ใส่ได้ถ้ามี');
       return;
     }
-    const directionValid = f.dir === 'Sell' ? stop > entry && target < entry : stop < entry && target > entry;
+    const directionValid = f.dir === 'Sell' ? stop > entry && (!target||target < entry) : stop < entry && (!target||target > entry);
     if (!directionValid) {
       alert(f.dir === 'Sell' ? 'ออเดอร์ SELL ต้องมี SL สูงกว่า Entry และ TP ต่ำกว่า Entry' : 'ออเดอร์ BUY ต้องมี SL ต่ำกว่า Entry และ TP สูงกว่า Entry');
       return;
@@ -2301,6 +2838,7 @@ function attachEvents() {
 
     if (!Array.isArray(state.trades)) state.trades = [];
     const openedAt = new Date().toISOString();
+    const contractValue=Number(f.usdPerPriceUnitPerLot||state.contractValues[f.symbol])||null;
     const newTrade = {
       id: uid(),
       date: f.date,
@@ -2312,19 +2850,22 @@ function attachEvents() {
       actualEntry: entry,
       initialSl: stop,
       currentSl: stop,
+      currentSL: stop,
       sl: stop,
       plannedTp: target,
       exit: 0,
       exits: [],
-      slHistory: [{ price:stop, at:new Date().toISOString(), note:'Initial SL' }],
+      currentPrice: entry,
+      slHistory: [],
       lot,
       pnl: 0,
       status: 'OPEN',
       tf: f.tf,
       psychology: { conf: f.conf, fear: f.fear, greed: f.greed },
       account: f.account,
+      session: f.sessionAuto ? marketSessionAt(new Date(openedAt)) : (f.session || marketSessionAt(new Date(openedAt))),
+      usdPerPriceUnitPerLot: contractValue,
       entryImage: f.entryImage || '',
-      currentPrice: entry,
       openedAt,
       createdAt: openedAt
     };
@@ -2333,7 +2874,7 @@ function attachEvents() {
     syncToCloud();
     beep('win');
     const currentAccount = state.f.account;
-    state.f = { ...state.f, entry: '', plannedTp: '', sl: '', lot: '', conf: false, fear: false, greed: false, entryImage:'', account: currentAccount };
+    state.f = { ...state.f, date:today(), session:marketSessionAt(), sessionAuto:true, entry: '', plannedTp: '', sl: '', lot: '', conf: false, fear: false, greed: false, entryImage:'', account: currentAccount };
     state.page = 'LOG'; state.tradeView = 'ACTIVE'; state.manageTradeId = newTrade.id;
     render();
   });
@@ -2393,23 +2934,53 @@ function attachEvents() {
       const tp = Number(document.getElementById('edit-tp')?.value);
       const lot = Number(document.getElementById('edit-lot')?.value);
       const dir = document.getElementById('edit-dir')?.value || t.dir;
-      const valid = entry && initialSl && tp && lot > 0 && (dir === 'Sell' ? initialSl > entry && tp < entry : initialSl < entry && tp > entry);
-      if (!valid) { alert('ตรวจสอบ Entry, Initial SL, Take Profit, Lot และทิศทางให้ถูกต้อง'); return; }
+      const valid = entry && initialSl && lot > 0 && (dir === 'Sell' ? initialSl > entry && (!tp||tp < entry) : initialSl < entry && (!tp||tp > entry));
+      if (!valid) { alert('ตรวจสอบ Entry, Initial SL, Lot และทิศทางให้ถูกต้อง (Take Profit ใส่ได้ถ้ามี)'); return; }
+      const pnlInput=document.getElementById('edit-pnl'),pnlIsManual=pnlInput?.dataset.manual==='true';
       t.date = document.getElementById('edit-date')?.value || t.date;
+      t.session = document.getElementById('edit-session')?.value || tradeSession(t);
       t.account = document.getElementById('edit-account')?.value || t.account || 'Demo';
       t.symbol = document.getElementById('edit-symbol')?.value || t.symbol;
       t.dir = dir;
       t.plannedEntry = entry; t.actualEntry = entry; t.entry = entry;
-      t.initialSl = initialSl; t.sl = initialSl; t.currentSl = currentSl || initialSl;
+      t.initialSl = initialSl; t.sl = initialSl; t.currentSl = currentSl || initialSl; t.currentSL=t.currentSl;
       t.plannedTp = tp; t.lot = lot;
       t.currentPrice = Number(document.getElementById('edit-current-price')?.value) || t.currentPrice || entry;
       t.exit = Number(document.getElementById('edit-exit')?.value) || t.exit || 0;
-      t.pnl = Number(document.getElementById('edit-pnl')?.value) || 0;
+      const editedPnl=Number(pnlInput?.value);t.pnl=Number.isFinite(editedPnl)?editedPnl:(Number(t.pnl)||0);t.pnlMode=pnlIsManual?'manual':'auto';
+      t.psychology={conf:!!document.getElementById('edit-psych-conf')?.checked,fear:!!document.getElementById('edit-psych-fear')?.checked,greed:!!document.getElementById('edit-psych-greed')?.checked};
+      const drafts=state.editImageDrafts[t.id]||{};
+      if(Object.prototype.hasOwnProperty.call(drafts,'entry')){t.entryImage=drafts.entry||'';delete t.entryImageUrl;delete t.entryImageStoragePath;}
+      t.deletedExitIds=Array.isArray(t.deletedExitIds)?t.deletedExitIds:[];
+      const updatedExits=[];
+      exitEvents(t).forEach((exit,i)=>{
+        if(document.getElementById(`delete-exit-event-${i}`)?.checked){if(exit.id)t.deletedExitIds=[...new Set([...t.deletedExitIds,exit.id])];return;}
+        exit.price=Number(document.getElementById(`edit-exit-price-${i}`)?.value)||0;
+        exit.lot=Number(document.getElementById(`edit-exit-lot-${i}`)?.value)||0;
+        exit.pnl=Number(document.getElementById(`edit-exit-pnl-${i}`)?.value)||0;
+        exit.pnlMode=document.getElementById(`edit-exit-pnl-${i}`)?.dataset.manual==='true'?'manual':'auto';exit.reason=document.getElementById(`edit-exit-reason-${i}`)?.value||exit.reason;
+        if(Object.prototype.hasOwnProperty.call(drafts,`exit${i}`)){exit.image=drafts[`exit${i}`]||'';delete exit.imageUrl;delete exit.imageStoragePath;}
+        updatedExits.push(exit);
+      });
+      t.exits=updatedExits;
+      t.deletedSlEventIds=Array.isArray(t.deletedSlEventIds)?t.deletedSlEventIds:[];
+      slMoveEvents(t).forEach((event,i)=>{
+        if(document.getElementById(`delete-sl-event-${i}`)?.checked){if(event.id)t.deletedSlEventIds=[...new Set([...t.deletedSlEventIds,event.id])];t.slHistory=t.slHistory.filter(item=>item!==event);return;}
+        event.oldSL=Number(document.getElementById(`edit-sl-old-${i}`)?.value)||0;
+        event.newSL=Number(document.getElementById(`edit-sl-new-${i}`)?.value)||0;
+        event.priceAtAdjustment=Number(document.getElementById(`edit-sl-price-${i}`)?.value)||0;
+        event.type=document.getElementById(`edit-sl-type-${i}`)?.value||event.type;
+      });
+      if(!pnlIsManual){
+        if(exitEvents(t).length){t.pnl=exitEvents(t).reduce((sum,e)=>sum+(Number(e.pnl)||0),0);t.pnlMode='auto';}
+        else if(isClosedTrade(t)){const autoPnl=calculateExitPnl(t,Number(t.exit),Number(t.lot));if(autoPnl!==null)t.pnl=autoPnl;}
+      }
       if (tradeLifecycle(t) === 'CLOSED') {
         t.status = document.getElementById('edit-status')?.value || t.status;
         t.exitReason = document.getElementById('edit-exit-reason')?.value || t.exitReason || 'Manual Close';
       }
       t.updatedAt = new Date().toISOString();
+      delete state.editImageDrafts[t.id];
       save(KEY.TRADES, state.trades); syncToCloud(); beep('click'); state.editTradeId = null; render();
     });
   });
@@ -2442,8 +3013,8 @@ function attachEvents() {
       const lot=Number(document.getElementById('manage-plan-lot')?.value);
       const valid=t.dir==='Sell'?stop>entry&&target<entry:stop<entry&&target>entry;
       if (!entry || !stop || !target || !lot || lot<=0 || !valid) { alert('ตรวจสอบ Entry, Initial SL, Planned TP และ Lot ให้ตรงกับทิศทาง'); return; }
-      t.plannedEntry=entry; t.entry=entry; t.initialSl=stop; t.sl=stop; t.currentSl=stop; t.plannedTp=target; t.lot=lot;
-      t.slHistory=[{price:stop,at:new Date().toISOString(),note:'Initial SL'}]; t.updatedAt=new Date().toISOString();
+      t.plannedEntry=entry; t.entry=entry; t.initialSl=stop; t.sl=stop; t.currentSl=stop; t.currentSL=stop; t.plannedTp=target; t.lot=lot;
+      t.slHistory=[]; t.updatedAt=new Date().toISOString();
       save(KEY.TRADES, state.trades); syncToCloud(); beep('click'); render();
     });
   });
@@ -2474,7 +3045,7 @@ function attachEvents() {
   });
 
   document.querySelectorAll('[data-update-live]').forEach(el => {
-    el.addEventListener('click', () => {
+    el.addEventListener('click', async () => {
       const t = state.trades.find(x => x && x.id === el.dataset.updateLive);
       if (!t) return;
       const priceInput = document.getElementById('manage-current-price');
@@ -2486,11 +3057,11 @@ function attachEvents() {
         alert(t.dir === 'Buy' ? 'Current SL ของ BUY ต้องต่ำกว่า Current Price' : 'Current SL ของ SELL ต้องสูงกว่า Current Price'); return;
       }
       if (Number(t.currentSl || initialStop(t)) !== currentSl) {
-        if (!Array.isArray(t.slHistory)) t.slHistory = [{ price:initialStop(t), at:t.createdAt, note:'Initial SL' }];
-        t.slHistory.push({ price:currentSl, at:new Date().toISOString(), note:'SL update' });
+        await saveSLAdjustment(t.id,currentSl,'manual',currentPrice);
+      } else {
+        t.currentPrice = currentPrice; t.updatedAt = new Date().toISOString();
+        save(KEY.TRADES, state.trades); syncToCloud(); beep('click'); render();
       }
-      t.currentPrice = currentPrice; t.currentSl = currentSl; t.updatedAt = new Date().toISOString();
-      save(KEY.TRADES, state.trades); syncToCloud(); beep('click'); render();
     });
   });
 
@@ -2501,15 +3072,15 @@ function attachEvents() {
       const price = Number(document.getElementById('manage-exit-price')?.value);
       const lot = Number(document.getElementById('manage-exit-lot')?.value);
       const pnlRaw = document.getElementById('manage-exit-pnl')?.value;
-      const pnl = Number(pnlRaw);
+      const pnl = pnlRaw===''?calculateExitPnl(t,price,lot):Number(pnlRaw);
       const reason = document.getElementById('manage-exit-reason')?.value || 'Manual Close';
       const remaining = remainingLot(t);
-      if (!price || !lot || lot <= 0 || pnlRaw === '' || !Number.isFinite(pnl)) { alert('กรอก Exit Price, Exit Lot และ Net P&L ให้ครบ'); return; }
+      if (!price || !lot || lot <= 0 || pnl===null || !Number.isFinite(pnl)) { alert(contractValueFor(t)?'กรอก Exit Price และ Exit Lot ให้ครบ':'กรอก Exit Price, Exit Lot และ Net P&L ให้ครบ หรือกำหนดตัวคูณ P&L ของสินทรัพย์นี้'); return; }
       if (lot > remaining + 0.0000001) { alert(`Exit Lot ต้องไม่เกิน ${fmt(remaining,2)} lot ที่เหลือ`); return; }
       if (!Array.isArray(t.exits)) t.exits = [];
       const exitImage = (state.exitImageDrafts||{})[t.id] || '';
-      t.exits.push({ price, lot, pnl, reason, at:new Date().toISOString(), image:exitImage });
-      t.pnl = t.exits.reduce((sum, e) => sum + (Number(e.pnl) || 0), 0);
+      t.exits.push({ id:uid(), price, lot, pnl, pnlMode:document.getElementById('manage-exit-pnl')?.dataset.manual==='true'?'manual':'auto', slAtExit:Number(t.currentSl||initialStop(t)), reason, at:new Date().toISOString(), image:exitImage });
+      t.pnl = t.exits.reduce((sum, e) => sum + (Number(e.pnl) || 0), 0); t.pnlMode='auto';
       t.currentPrice = price; t.updatedAt = new Date().toISOString();
       if (remainingLot(t) <= 0.0000001) {
         const totalLot = t.exits.reduce((sum,e)=>sum+(Number(e.lot)||0),0) || 1;
@@ -2517,9 +3088,9 @@ function attachEvents() {
         t.exitReason = reason; t.lifecycle = 'CLOSED'; t.closedAt = new Date().toISOString();
         t.status = Number(t.pnl) > 0 ? 'TP' : Number(t.pnl) < 0 ? 'SL' : 'BE';
         if (t.status === 'SL') {
-          const losses = state.trades.filter(x => x && isClosedTrade(x) && x.date === t.date && (x.account||'Demo') === (t.account||'Demo') && Number(x.pnl) < 0);
+          const losses = state.trades.filter(x => x && isClosedTrade(x) && tradeOpenedDate(x)===today() && (x.account||'Demo') === (t.account||'Demo') && Number(x.pnl) < 0);
           if (losses.length >= 2) {
-            const lockKey = `${t.account||'Demo'}_${t.date}`;
+            const lockKey = `${t.account||'Demo'}_${today()}`;
             if (!state.lossLocks) state.lossLocks = {};
             state.lossLocks[lockKey] = Date.now() + (2 * 60 * 60 * 1000);
             save(KEY.LOSS_LOCK, state.lossLocks);
@@ -2535,6 +3106,7 @@ function attachEvents() {
   document.querySelectorAll('[data-del-trade]').forEach(el => {
     el.addEventListener('click', () => {
       if (!confirm('ยืนยันลบประวัติไม้เทรดนี้ถาวร?')) return;
+      state.deletedTradeIds=[...new Set([...(state.deletedTradeIds||[]),el.dataset.delTrade])];save(KEY.DELETED_TRADES,state.deletedTradeIds);
       state.trades = state.trades.filter(t => t && t.id !== el.dataset.delTrade);
       save(KEY.TRADES, state.trades);
       syncToCloud();
@@ -2545,6 +3117,7 @@ function attachEvents() {
   document.querySelectorAll('[data-del-cf]').forEach(el => {
     el.addEventListener('click', () => {
       if (!confirm('ลบรายการกระแสเงินสดนี้?')) return;
+      state.deletedCfIds=[...new Set([...(state.deletedCfIds||[]),el.dataset.delCf])];save(KEY.DELETED_CFS,state.deletedCfIds);
       state.cfs = state.cfs.filter(c => c && c.id !== el.dataset.delCf);
       save(KEY.CFS, state.cfs);
       syncToCloud();
@@ -2614,6 +3187,24 @@ function attachEvents() {
     });
   }
 
+  const saveContractProfiles=document.getElementById('btn-save-contract-profiles');
+  if(saveContractProfiles)saveContractProfiles.addEventListener('click',()=>{
+    document.querySelectorAll('[data-contract-symbol]').forEach(input=>{const value=Number(input.value),symbol=input.dataset.contractSymbol;if(value>0)state.contractValues[symbol]=value;else delete state.contractValues[symbol];});
+    save(KEY.CONTRACT_VALUES,state.contractValues);syncToCloud();beep('win');const status=document.getElementById('export-status');if(status)status.textContent='บันทึกตัวคูณ P&L แล้ว';render();
+  });
+
+  const monthlyMd=document.getElementById('btn-export-monthly-md');
+  if(monthlyMd)monthlyMd.addEventListener('click',()=>{const account=document.getElementById('export-account')?.value||state.f.account,month=document.getElementById('export-month')?.value||today().slice(0,7);downloadOrShare(new Blob([createMonthlyMarkdown(account,month)],{type:'text/markdown;charset=utf-8'}),`owl-trader-${account}-${month}.md`);});
+  const portfolioMd=document.getElementById('btn-export-portfolio-md');
+  if(portfolioMd)portfolioMd.addEventListener('click',()=>{const account=document.getElementById('export-account')?.value||'ALL',month=document.getElementById('export-month')?.value||today().slice(0,7);downloadOrShare(new Blob([createPortfolioMarkdown(month,account)],{type:'text/markdown;charset=utf-8'}),`owl-portfolio-${account}-${month}.md`);});
+  const portfolioAllMd=document.getElementById('btn-export-portfolio-all-md');
+  if(portfolioAllMd)portfolioAllMd.addEventListener('click',()=>downloadOrShare(new Blob([createPortfolioMarkdown('ALL','ALL')],{type:'text/markdown;charset=utf-8'}),`owl-portfolio-all-${today()}.md`));
+  const rawJson=document.getElementById('btn-export-raw-json');
+  if(rawJson)rawJson.addEventListener('click',()=>{
+    const data={version:12,exportedAt:new Date().toISOString(),balances:state.balances,trades:state.trades||[],cfs:state.cfs||[],maxDailyDD:state.maxDailyDD,lossLocks:state.lossLocks,dailySnapshots:state.dailySnapshots,contractValues:state.contractValues,deletedTradeIds:state.deletedTradeIds||[],deletedCfIds:state.deletedCfIds||[]};
+    downloadOrShare(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),`owl-trader-raw-${today()}.json`);
+  });
+
   document.querySelectorAll('[data-del-acc]').forEach(el => {
     el.addEventListener('click', () => {
       const acc = el.dataset.delAcc;
@@ -2678,6 +3269,7 @@ function attachEvents() {
   const btnClear = document.getElementById('btn-clear-trades');
   if (btnClear) btnClear.addEventListener('click', () => {
     if (!confirm('⚠️ คำเตือนขั้นเด็ดขาด: ต้องการลบประวัติการเทรดทั้งหมดออกจากระบบจริงหรือไม่?')) return;
+    state.deletedTradeIds=[...new Set([...(state.deletedTradeIds||[]),...(state.trades||[]).map(t=>t&&t.id).filter(Boolean)])];save(KEY.DELETED_TRADES,state.deletedTradeIds);
     state.trades = [];
     save(KEY.TRADES, []);
     syncToCloud();
@@ -2685,19 +3277,11 @@ function attachEvents() {
   });
 
   const btnBackup = document.getElementById('btn-backup');
-  if (btnBackup) btnBackup.addEventListener('click', () => {
-    const data = {
-      version: 10,
-      exportedAt: new Date().toISOString(),
-      balances: state.balances,
-      trades: state.trades,
-      cfs: state.cfs,
-      maxDailyDD: state.maxDailyDD,
-      lossLocks: state.lossLocks
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `owl-trader-v4.0-backup-${today()}.json`; a.click(); URL.revokeObjectURL(url); beep('win');
+  if (btnBackup) btnBackup.addEventListener('click', async () => {
+    btnBackup.disabled=true;btnBackup.textContent='กำลังเตรียม Backup...';
+    try{const blob=await createBackupZip();await downloadOrShare(blob,`owl-trader-backup-${today()}.zip`);}
+    catch(error){alert(`สร้าง Backup ไม่สำเร็จ: ${error.message||'unknown error'}`);}
+    finally{btnBackup.disabled=false;btnBackup.textContent='สำรองข้อมูลพร้อมรูป (.zip)';}
   });
 
   const btnImportTrigger = document.getElementById('btn-import-trigger');
@@ -2705,13 +3289,14 @@ function attachEvents() {
 
   const importInput = document.getElementById('btn-import');
   if (importInput) importInput.addEventListener('change', e => {
-    const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
-    reader.onload = ev => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async ev => {
       try {
-        const data = JSON.parse(ev.target.result); let importedTrades = []; let importedCfs = [];
+        const data=file.name.toLowerCase().endsWith('.zip')?await parseBackupFile(file):JSON.parse(ev.target.result); let importedTrades = []; let importedCfs = [];
         if (Array.isArray(data)) { importedTrades = data; }
         else if (data && Array.isArray(data.trades)) {
-          importedTrades = data.trades; importedCfs = data.cfs || [];
+          importedTrades = data.trades.map(normalizeTradeSchema); importedCfs = data.cfs || [];
           if (data.balances) {
             state.balances = { ...DEFAULT_BALANCES, ...data.balances };
           } else if (data.balance) {
@@ -2725,15 +3310,20 @@ function attachEvents() {
             state.lossLocks = { ...data.lossLocks };
             save(KEY.LOSS_LOCK, state.lossLocks);
           }
+          if(data.dailySnapshots){state.dailySnapshots=data.dailySnapshots;save(KEY.DAILY_SNAPSHOTS,state.dailySnapshots);}
+          if(data.contractValues){state.contractValues=data.contractValues;save(KEY.CONTRACT_VALUES,state.contractValues);}
           save(KEY.BALANCES, state.balances);
         } else { alert('โครงสร้างข้อมูลดิสก์ไม่ถูกต้อง!'); return; }
         if (!confirm(`พบฐานข้อมูลเทรด ${importedTrades.length} ไม้\nยืนยันนำเข้าเพื่อเขียนทับระบบปัจจุบันและซิงก์คลาวด์?`)) return;
         state.trades = importedTrades; save(KEY.TRADES, state.trades);
         state.cfs = importedCfs; save(KEY.CFS, state.cfs);
+        state.deletedTradeIds=Array.isArray(data.deletedTradeIds)?data.deletedTradeIds:[];state.deletedCfIds=Array.isArray(data.deletedCfIds)?data.deletedCfIds:[];
+        save(KEY.DELETED_TRADES,state.deletedTradeIds);save(KEY.DELETED_CFS,state.deletedCfIds);
         syncToCloud(); beep('win'); render();
         alert('✅ IMPORT & CLOUD SYNC COMPLETELY!');
-      } catch (err) { alert('❌ JSON Corrupted! อ่านไฟล์ล้มเหลว'); }
-    }; reader.readAsText(file); e.target.value = '';
+      } catch (err) { alert(`อ่าน Backup ไม่สำเร็จ: ${err.message||'ไฟล์เสียหรือรูปแบบไม่รองรับ'}`); }
+    };
+    if(file.name.toLowerCase().endsWith('.zip'))reader.readAsArrayBuffer(file);else reader.readAsText(file);e.target.value='';
   });
 
   const calPrev = document.getElementById('cal-prev');
